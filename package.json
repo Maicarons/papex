@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "npm run docs:build && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",

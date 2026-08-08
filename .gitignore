@@ -28,9 +28,7 @@ bun.lockb
 *.tsbuildinfo
 next-env.d.ts
 
-# drizzle
-/drizzle/**/*.json
-/drizzle/meta/
+# drizzle migrations (sql + meta journal) MUST be tracked for `drizzle-kit migrate`
 
 # vitepress build output (served at /docs by the Next.js app)
 /.docs-dist/
