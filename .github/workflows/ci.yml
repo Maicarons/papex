@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm install
@@ -31,7 +31,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Generate & Migrate (prod only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: npm run db:generate && npm run db:migrate
