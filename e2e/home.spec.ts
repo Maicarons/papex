@@ -5,9 +5,9 @@ test.describe("首页", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { name: "Papex 论文平台" }),
+      page.getByRole("heading", { name: "Papex 学术文献平台" }),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "最新提交" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "最新收录" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "学科分类" })).toBeVisible();
   });
 
