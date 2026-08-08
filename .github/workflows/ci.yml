@@ -10,9 +10,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      # CI uses an ephemeral in-workflow Postgres service (see `services` below).
+      # Production builds on Vercel supply their own DATABASE_URL via Vercel env.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/papex
+      DATABASE_URL_UNPOOLED: postgres://postgres:postgres@localhost:5432/papex
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: papex
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +44,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Migrate database
+        run: npm run db:migrate
 
       - name: Build
         run: npm run build
