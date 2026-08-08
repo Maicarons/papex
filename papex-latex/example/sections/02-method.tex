@@ -1,0 +1,27 @@
+\section{方法}
+给定文献集合 $\mathcal{V}$ 与引用关系 $\mathcal{E}\subset \mathcal{V}\times\mathcal{V}$，我们的目标是学习一个打分函数 $s(u,v)$ 估计论文 $u$ 引用论文 $v$ 的概率。Papex-GNN 由语义编码与异构图聚合两个阶段组成。
+
+\subsection{语义编码}
+对每篇论文 $v$，将其标题与摘要拼接为文本 $t_v$，送入预训练中文编码器 $\mathrm{Enc}(\cdot)$，得到维度为 $d$ 的句向量：
+\begin{equation}
+  \mathbf{h}_v^{(0)} = \mathrm{Enc}(t_v) \in \mathbb{R}^{d}.
+\end{equation}
+该向量作为节点 $v$ 的初始特征，使图模型从第一步便具备语义判别力。
+
+\subsection{异构图注意力聚合}
+我们构建两类无向边：\textbf{主题相似边} $\mathcal{E}_{\mathrm{sim}}$（基于初始语义相似度动态构建）与\textbf{作者协作边} $\mathcal{E}_{\mathrm{co}}$（共享作者）。对每一类边 $r\in\{\mathrm{sim},\mathrm{co}\}$，采用注意力聚合：
+\begin{equation}
+  \alpha_{vu}^{r} = \frac{\exp\!\big(\mathrm{LeakyReLU}(\mathbf{a}_r^{\top}[\mathbf{W}_r\mathbf{h}_v \mathbin\Vert \mathbf{W}_r\mathbf{h}_u])\big)}
+  {\sum_{u'\in\mathcal{N}_r(v)}\exp\!\big(\mathrm{LeakyReLU}(\mathbf{a}_r^{\top}[\mathbf{W}_r\mathbf{h}_v \mathbin\Vert \mathbf{W}_r\mathbf{h}_{u'}])\big)},
+\end{equation}
+其中 $\mathbf{W}_r$ 为类型相关变换矩阵，$\mathbf{a}_r$ 为注意力向量，$\mathcal{N}_r(v)$ 表示在关系 $r$ 下的邻居。最终节点表征为两类边表征的加权拼接：
+\begin{equation}
+  \mathbf{z}_v = \big\Vert_{r} \sigma\!\left(\sum_{u\in\mathcal{N}_r(v)} \alpha_{vu}^{r}\,\mathbf{W}_r\mathbf{h}_u\right).
+\end{equation}
+
+\subsection{训练目标}
+采用成对排序损失（pairwise ranking loss），对每条真实引用 $(u,v^+)$ 采样若干负例 $v^-$：
+\begin{equation}
+  \mathcal{L} = \sum_{(u,v^+)} \sum_{v^-} \max\big(0,\, m - s(u,v^+) + s(u,v^-)\big),
+\end{equation}
+其中 $s(u,v)=\mathbf{z}_u^{\top}\mathbf{z}_v$，$m$ 为间隔超参数。

@@ -1,0 +1,16 @@
+# latexmkrc -- Papex 构建配置
+# 放在 papex-template.tex 同目录，latexmk 会自动读取。
+# 也可在命令行用 -r latexmkrc 显式指定。
+
+# 使用 XeLaTeX 引擎
+$pdf_mode = 5;          # 5 = xelatex
+$xelatex = 'xelatex -interaction=nonstopmode -synctex=1 %O %S';
+
+# 参考文献：biblatex + biber
+$bibtex = 'biber %O %B';
+
+# 连续编译直到稳定（含参考文献交叉引用）
+$max_repeat = 5;
+
+# 清理辅助文件（保留 .pdf/.tex/.bib/.cls/.sty 与 _papex_* 片段）
+$clean_ext = 'aux bcf run.xml nav out toc lof lot idx ind ilg log fdb_latexmk fls synctex.gz';

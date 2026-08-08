@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: papex
+      POSTGRES_PASSWORD: papex
+      POSTGRES_DB: papex
+    ports:
+      - "5432:5432"
+    volumes:
+      - papex-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U papex -d papex"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://papex:papex@db:5432/papex"
+      DATABASE_URL_UNPOOLED: "postgresql://papex:papex@db:5432/papex"
+      AUTH_SECRET: "dev-only-secret-change-me-please-32chars-minimum"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  papex-db:

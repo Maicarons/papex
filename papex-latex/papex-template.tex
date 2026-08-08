@@ -1,0 +1,56 @@
+% papex-template.tex -- Papex XeLaTeX 主文档
+%
+% 用途：配合 papex.cls 与 papex-build.py 使用。
+%       构建器从 papex.json 读取元数据，生成若干 _papex_*.tex 片段与主文档一起编译。
+%
+% 作者只需：
+%   1. 在下方「用户配置区」按需调整（通常无需改动）；
+%   2. 撰写 sections/*.tex 章节源文件；
+%   3. 运行 `python papex-build.py archive.tar.gz` 或 `make`。
+%
+% 注意：不要在此手动写 \title / \author —— 它们由 _papex_meta.tex 自动注入。
+%       如需手动覆盖，可在 \input{_papex_meta.tex} 之后重新定义。
+
+\documentclass[11pt]{papex}
+
+% ===================== 用户配置区（可选） =====================
+% 覆盖字体集（本地有系统中文字体时可改为 windows / mac / ubuntu）：
+% \documentclass[11pt,fontset=fandol]{papex}
+%
+% 双栏排版：取消下一行注释
+% \documentclass[11pt,twocolumn]{papex}
+%
+% 覆盖页面尺寸（需放在 \begin{document} 之前）：
+% \geometry{margin=2.5cm}
+%
+% 额外宏包（按需）：
+% \usepackage{algorithm,algorithmic}
+% \usepackage{tikz}
+% ============================================================
+
+% ---- 自动生成区：由 papex-build.py 从 papex.json 注入 ----
+% 这些文件在每次构建时重新生成；请勿手工编辑。
+\input{_papex_meta.tex}        % \title, \author, \affil, \papexPaperId, \papexKeywords, ...
+\addbibresource{references.bib}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{_papex_abstract.tex}    % 摘要正文（来自 papex.json 的 paper.abstract）
+\end{abstract}
+
+% ---- 正文：各章节由生成器按 papex.json 的 sections 顺序 \input ----
+\input{_papex_sections.tex}
+
+% ---- 致谢 / 基金（可选，来自 papex.json 的 acknowledgments / funding） ----
+\input{_papex_backmatter.tex}
+
+% ---- 参考文献 ----
+\printbibliography[heading=bibintoc,title={参考文献}]
+
+% ---- 附录（可选，来自 papex.json 的 appendices） ----
+\input{_papex_appendices.tex}
+
+\end{document}
