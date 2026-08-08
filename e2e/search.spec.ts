@@ -4,8 +4,8 @@ test.describe("检索", () => {
   test("首页搜索框提交后跳转到论文列表并命中结果", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByPlaceholder("检索标题、摘要、作者…").fill("Papex");
-    await page.getByRole("button", { name: "搜索" }).click();
+    await page.getByPlaceholder("检索标题、摘要、作者或分类…").fill("Papex");
+    await page.getByRole("button", { name: "检索" }).click();
 
     await expect(page).toHaveURL(/\/papers\?q=Papex/);
 
