@@ -149,7 +149,6 @@ export const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: "en", label: "en" },
 ];
 
-let sectionSeq = 0;
 function nextSectionId(existing: string[]): string {
   let n = existing.length + 1;
   let candidate = `sec-${n}`;
