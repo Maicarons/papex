@@ -1,0 +1,59 @@
+\section{实验}
+\subsection{数据集}
+我们从公开中文学术平台收集了 $52\,148$ 篇论文及其引用关系，按 $8{:}1{:}1$ 划分训练、验证与测试集。统计信息如表~\ref{tab:stats} 所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{数据集统计}
+  \label{tab:stats}
+  \begin{tabular}{lc}
+    \toprule
+    指标 & 数值 \\
+    \midrule
+    论文数 & $52\,148$ \\
+    引用边数 & $318\,904$ \\
+    作者数 & $76\,330$ \\
+    平均引用数 & $6.12$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{基线方法}
+我们对比了三类基线：(1) \textbf{TF-IDF}：基于词频—逆文档频率的余弦相似度；(2) \textbf{GCN}：仅用语义初始化特征的同构图卷积；(3) \textbf{HAN}：异构图注意力网络（随机初始化特征）。
+
+\subsection{结果与分析}
+主结果如表~\ref{tab:main} 所示。Papex-GNN 在 Recall@10 上达到 $0.487$，较最强的基线 HAN 提升 $12.4$ 个百分点。值得注意的是，GCN 在引入语义初始化后已显著优于 TF-IDF，说明\emph{语义特征}是性能增益的主要来源；而 Papex-GNN 进一步叠加异构结构建模，带来额外提升。
+
+\begin{table}[htbp]
+  \centering
+  \caption{各方法在测试集上的性能（Recall@10 / MRR）}
+  \label{tab:main}
+  \begin{tabular}{lcc}
+    \toprule
+    方法 & Recall@10 & MRR \\
+    \midrule
+    TF-IDF            & $0.263$ & $0.141$ \\
+    GCN (semantic)    & $0.352$ & $0.198$ \\
+    HAN (random)      & $0.363$ & $0.205$ \\
+    \textbf{Papex-GNN}& $\mathbf{0.487}$ & $\mathbf{0.271}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{消融实验}
+我们分别移除语义编码（替换为随机初始化）与异构边（仅保留引用边），结果见表~\ref{tab:ablation}。两项移除均导致明显退化，印证了两个模块各自的必要性。
+
+\begin{table}[htbp]
+  \centering
+  \caption{消融实验（Recall@10）}
+  \label{tab:ablation}
+  \begin{tabular}{lc}
+    \toprule
+    变体 & Recall@10 \\
+    \midrule
+    Papex-GNN (完整)          & $0.487$ \\
+    \quad 去掉语义编码        & $0.319$ \\
+    \quad 去掉异构边          & $0.441$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}

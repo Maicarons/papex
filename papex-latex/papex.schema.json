@@ -1,0 +1,285 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://papex.dev/schema/papex.json/v1",
+  "title": "Papex Submission Manifest (papex.json)",
+  "description": "Manifest shipped inside a papex source archive (tar.gz). It mirrors the papex database row model (papers / paper_versions / authors / citations) and adds LaTeX-build-specific fields (sections, references, build options). The 'paper hosting' backend reads this file to create a submission; the XeLaTeX toolchain reads it to auto-fill metadata and assemble the document.",
+  "type": "object",
+  "required": ["schemaVersion", "paper", "authors", "sections"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the papex.json contract. Current: 1.0.0"
+    },
+    "$schema": {
+      "type": "string",
+      "description": "Optional $schema pointer (ignored by the backend; used by editors)."
+    },
+    "paper": {
+      "type": "object",
+      "required": ["title", "abstract", "primaryCategoryId"],
+      "additionalProperties": false,
+      "description": "Core metadata. Maps onto papers + paper_versions rows.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^\\d{4}\\.\\d{5}$",
+          "description": "Functional paper id (YYMM.NNNNN). Optional. If it matches an existing paper owned by the submitter, the upload is treated as a NEW VERSION of that paper; otherwise it is ignored and the platform assigns a fresh id."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400,
+          "description": "Paper title. Becomes papers.title and paper_versions.title."
+        },
+        "subtitle": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Optional subtitle rendered under the title."
+        },
+        "abstract": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000,
+          "description": "Abstract. Becomes paper_versions.abstract."
+        },
+        "keywords": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 120 },
+          "description": "Keywords / index terms printed after the abstract."
+        },
+        "primaryCategoryId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Primary category code, e.g. 'cs.LG'. MUST exist in the categories table. Becomes papers.primaryCategoryId."
+        },
+        "secondaryCategoryIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Additional category codes. Becomes paper_categories rows (is_primary=false)."
+        },
+        "doi": {
+          "type": "string",
+          "description": "Optional DOI. Becomes paper_versions.doi."
+        },
+        "license": {
+          "type": "string",
+          "description": "License identifier. Defaults to 'CC-BY-4.0'. Becomes paper_versions.license.",
+          "default": "CC-BY-4.0"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Informational version number (the platform still assigns its own latest_version)."
+        },
+        "versionNote": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Version note, e.g. 'v2: camera-ready'. Becomes paper_versions.comments."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["zh", "en", "auto"],
+          "default": "auto",
+          "description": "Primary language hint. 'auto' lets the toolchain detect CJK automatically."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Submission / publication date (YYYY-MM-DD)."
+        },
+        "venue": {
+          "type": "string",
+          "description": "Optional venue / conference / journal name."
+        },
+        "subject": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional one-line subject used in listing cards."
+        }
+      }
+    },
+    "authors": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Author list. Order is taken from the explicit 'order' field, falling back to array position. Becomes paper_authors + authors rows.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "orcid": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$",
+            "description": "ORCID iD (16 chars, with dashes)."
+          },
+          "affiliation": {
+            "type": "string",
+            "description": "Free-text affiliation line. Rendered as an authblk affiliation block."
+          },
+          "email": { "type": "string", "format": "email" },
+          "homepage": { "type": "string", "format": "uri" },
+          "order": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Author order (0-based). Defaults to position in the array."
+          },
+          "corresponding": {
+            "type": "boolean",
+            "default": false,
+            "description": "Mark as corresponding author (footnote + contact line)."
+          },
+          "equalContribution": {
+            "type": "boolean",
+            "default": false,
+            "description": "Mark as equal contribution (shared footnote marker)."
+          },
+          "footnote": {
+            "type": "string",
+            "description": "Optional free-text author note appended to the author's footnote."
+          }
+        }
+      }
+    },
+    "references": {
+      "type": "array",
+      "description": "Bibliography entries. Either provide this array (the toolchain generates references.bib) OR ship a references.bib file in the archive (preferred if you need fine control). Becomes citation rows in the reference graph.",
+      "items": {
+        "type": "object",
+        "required": ["key"],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:+.-]+$",
+            "description": "BibTeX citation key, e.g. 'vaswani2017'. Used as \\cite{key} in sections."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["article", "book", "inproceedings", "incollection", "booklet", "conference", "mastersthesis", "phdthesis", "techreport", "misc", "unpublished", "online"],
+            "default": "misc"
+          },
+          "title": { "type": "string" },
+          "author": {
+            "type": "string",
+            "description": "BibTeX author list, e.g. 'Vaswani, A. and Shazeer, N. and Parmar, N.'"
+          },
+          "editor": { "type": "string" },
+          "journal": { "type": "string" },
+          "booktitle": { "type": "string" },
+          "publisher": { "type": "string" },
+          "institution": { "type": "string" },
+          "school": { "type": "string" },
+          "year": { "type": "integer", "minimum": 0, "maximum": 3000 },
+          "volume": { "type": "string" },
+          "number": { "type": "string" },
+          "pages": { "type": "string", "description": "Use '--' for ranges, e.g. '5998--6008'." },
+          "doi": {
+            "type": "string",
+            "description": "DOI of the cited work -> citations.target_doi (used to resolve the internal citation graph)."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the cited work -> citations.target_url."
+          },
+          "arxivId": {
+            "type": "string",
+            "description": "arXiv id of the cited work -> citations.target_arxiv_id (used to resolve the internal citation graph)."
+          },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered body structure. Each entry points to a .tex file (relative to the archive root) containing the section's LaTeX source. The toolchain \\input{}s them in order.",
+      "items": {
+        "type": "object",
+        "required": ["file"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "Stable id (used for labels / TOC anchors)." },
+          "title": {
+            "type": "string",
+            "description": "Section heading. If omitted, the .tex file is expected to start with its own \\section{...}."
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^[^\\\\]*\\.tex$",
+            "description": "Path to the section source, relative to the archive root, e.g. 'sections/intro.tex'."
+          },
+          "level": {
+            "type": "string",
+            "enum": ["part", "chapter", "section", "subsection", "subsubsection"],
+            "default": "section",
+            "description": "Heading level used when 'title' is provided."
+          }
+        }
+      }
+    },
+    "appendices": {
+      "type": "array",
+      "description": "Optional appendices, emitted after the bibliography under a \\appendix block.",
+      "items": {
+        "type": "object",
+        "required": ["file"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "file": { "type": "string", "pattern": "^[^\\\\]*\\.tex$" }
+        }
+      }
+    },
+    "acknowledgments": {
+      "type": "string",
+      "description": "Acknowledgments paragraph (rendered as an unnumbered section before the bibliography)."
+    },
+    "funding": {
+      "type": "string",
+      "description": "Funding statement (appended to acknowledgments)."
+    },
+    "build": {
+      "type": "object",
+      "description": "Optional LaTeX build hints.",
+      "additionalProperties": false,
+      "properties": {
+        "documentclass": {
+          "type": "string",
+          "default": "papex",
+          "description": "Document class to load. The official class is 'papex' (papex.cls)."
+        },
+        "fontset": {
+          "type": "string",
+          "description": "ctex fontset hint, e.g. 'windows' | 'mac' | 'ubuntu' | 'fandol' | 'auto'."
+        },
+        "mainFont": { "type": "string", "description": "Override Latin main font (fontspec family name)." },
+        "cjkFont": { "type": "string", "description": "Override CJK main font (fontspec family name, used by \\setCJKmainfont)." },
+        "geometry": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "paper": { "type": "string", "default": "a4paper" },
+            "margin": { "type": "string", "default": "2.5cm" }
+          }
+        },
+        "bibStyle": {
+          "type": "string",
+          "enum": ["numeric", "authoryear"],
+          "default": "numeric",
+          "description": "biblatex citation style."
+        },
+        "columns": {
+          "type": "integer",
+          "enum": [1, 2],
+          "default": 1
+        },
+        "hyperref": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}
