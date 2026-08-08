@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1786159110097,
+      "tag": "0000_roadmap",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786166363864,
+      "tag": "0001_empty_iron_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786173754000,
+      "tag": "0002_needy_dreaming_celestial",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786183238623,
+      "tag": "0003_add_rbac_co_review_messages",
+      "breakpoints": true
+    }
+  ]
+}
