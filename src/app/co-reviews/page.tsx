@@ -4,10 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { ClipboardCheck, Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useI18n } from "@/i18n/i18n-provider";
 import { formatDate } from "@/lib/utils";
 
 interface CoReview {
@@ -29,7 +27,6 @@ const STATUS_LABEL: Record<CoReview["status"], string> = {
 };
 
 export default function MyCoReviewsPage() {
-  const { t } = useI18n();
   const [items, setItems] = React.useState<CoReview[]>([]);
   const [loading, setLoading] = React.useState(true);
 

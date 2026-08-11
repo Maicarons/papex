@@ -332,4 +332,18 @@ export const en: Dictionary = {
     viewProfile: "View my profile",
     notFound: "Profile not found.",
   },
+  citations: {
+    thisPaper: "This paper",
+    referencedCount: "References {n} papers",
+    citedBy: "Cited {n} times",
+    incomingLabel: "← Cited by the following papers",
+    outgoingLabel: "References the following →",
+    addTitle: "Add citation",
+    addHint: "Fill in at least the paper id, DOI, or title",
+    added: "Citation added",
+    addFailed: "Failed to add",
+    phArxiv: "Paper id, e.g. 2401.12345",
+    phDoi: "DOI, e.g. 10.1234/abc",
+    phTitle: "Or enter a title",
+  },
 };

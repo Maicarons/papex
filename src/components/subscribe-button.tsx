@@ -25,6 +25,8 @@ export function SubscribeButton({
         body: JSON.stringify({ type, refId }),
       });
       if (res.status === 401) {
+        // Full reload (not router.push) so the client session state resets on re-auth.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = "/login";
         return;
       }

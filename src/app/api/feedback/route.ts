@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createTicket, addReply } from "@/lib/services/tickets";
 import { createMessage } from "@/lib/services/messages";

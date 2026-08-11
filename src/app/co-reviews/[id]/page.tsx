@@ -2,14 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, Check, X, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useI18n } from "@/i18n/i18n-provider";
 import { formatDate } from "@/lib/utils";
 
 interface CoReview {
@@ -45,9 +44,7 @@ const DECISION_LABEL: Record<string, string> = {
 };
 
 export default function CoReviewDetailPage() {
-  const { t } = useI18n();
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const id = Number(params.id);
 
   const [review, setReview] = React.useState<CoReview | null>(null);

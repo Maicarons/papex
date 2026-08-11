@@ -57,15 +57,6 @@ const SAMPLE_SECTIONS: { id: string; title: string; level: PapexSection["level"]
   },
 ];
 
-function sanitizeId(raw: string): string {
-  const s = raw
-    .trim()
-    .replace(/[^A-Za-z0-9_-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  return s || `sec-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 function nextId(existing: string[]): string {
   let n = existing.length + 1;
   let cand = `sec-${n}`;

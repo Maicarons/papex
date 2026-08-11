@@ -1,4 +1,4 @@
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import { PDFParse } from "pdf-parse";
 
 export interface ParsedPdf {
   text: string;
@@ -22,28 +22,35 @@ const DOI_RE = /10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/;
 
 /**
  * Parse a PDF buffer into text plus light metadata heuristics.
- * Imports the lib entry directly to avoid pdf-parse's test-file side effect.
+ * Uses pdf-parse v2, whose API is class-based: construct `PDFParse` with the
+ * binary data, then `getText()` resolves to a `TextResult` ({ text, pages, total }).
  */
 export async function parsePdf(buffer: Buffer): Promise<ParsedPdf> {
-  const data = await pdfParse(buffer);
-  const text = (data.text ?? "").replace(/\r/g, "").trim();
-  const lines = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
+  const parser = new PDFParse({ data: new Uint8Array(buffer) });
+  try {
+    const result = await parser.getText();
+    const text = (result.text ?? "").replace(/\r/g, "").trim();
+    const numPages = result.pages?.length ?? result.total ?? 0;
+    const lines = text
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
 
-  const title = lines[0]?.slice(0, 400);
+    const title = lines[0]?.slice(0, 400);
 
-  let abstract: string | undefined;
-  const ai = lines.findIndex((l) => /^abstract\b/i.test(l));
-  if (ai >= 0) {
-    const slice = lines.slice(ai + 1, ai + 12).join(" ");
-    // Trim up to the next section header if present.
-    abstract = slice.split(/\n?(?:keywords|index terms|1\.\s*introduction)\b/i)[0].trim().slice(0, 20000);
-    if (!abstract) abstract = undefined;
+    let abstract: string | undefined;
+    const ai = lines.findIndex((l) => /^abstract\b/i.test(l));
+    if (ai >= 0) {
+      const slice = lines.slice(ai + 1, ai + 12).join(" ");
+      // Trim up to the next section header if present.
+      abstract = slice.split(/\n?(?:keywords|index terms|1\.\s*introduction)\b/i)[0].trim().slice(0, 20000);
+      if (!abstract) abstract = undefined;
+    }
+
+    return { text, numPages, title, abstract };
+  } finally {
+    await parser.destroy();
   }
-
-  return { text, numPages: data.numpages ?? 0, title, abstract };
 }
 
 /**

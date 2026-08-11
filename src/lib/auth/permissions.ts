@@ -9,12 +9,8 @@ import {
 } from "@/lib/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import {
-  PERMISSIONS,
-  PERMISSION_GROUPS,
   PERMISSION_KEYS,
   DEFAULT_ROLE_PERMISSIONS,
-  SYSTEM_ROLE_KEYS,
-  type PermissionDef,
 } from "@/lib/permission-catalog";
 
 export {
@@ -32,6 +28,29 @@ export {
 
 export interface PermissionUser {
   id: string;
+}
+
+export interface PermissionOverride {
+  key: string;
+  grant: boolean;
+}
+
+/**
+ * Pure: combine a base permission list with per-user allow/deny overrides.
+ * Deny of a permission the user does not hold is a no-op; deny always wins
+ * over any prior grant. Extracted from getEffectivePermissions so the
+ * resolution algebra can be unit-tested without a database.
+ */
+export function applyOverrides(
+  basePerms: string[],
+  overrides: PermissionOverride[],
+): Set<string> {
+  const effective = new Set(basePerms);
+  for (const o of overrides) {
+    if (o.grant) effective.add(o.key);
+    else effective.delete(o.key);
+  }
+  return effective;
 }
 
 /**
@@ -87,12 +106,12 @@ export async function getEffectivePermissions(userId: string): Promise<Set<strin
     .select({ key: userPermissions.permissionKey, grant: userPermissions.grant })
     .from(userPermissions)
     .where(eq(userPermissions.userId, userId));
-  for (const o of overrides) {
-    if (o.grant) effective.add(o.key);
-    else effective.delete(o.key);
-  }
+  const overrideList: PermissionOverride[] = overrides.map((o) => ({
+    key: o.key,
+    grant: o.grant,
+  }));
 
-  return effective;
+  return applyOverrides([...effective], overrideList);
 }
 
 /** Returns true when the user holds the given permission. */

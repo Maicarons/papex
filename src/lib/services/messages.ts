@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { messages, messageKindEnum, users } from "@/lib/db/schema";
+import { messages, users } from "@/lib/db/schema";
 import { desc, eq, and, count, inArray } from "drizzle-orm";
 import { MESSAGE_KINDS, MESSAGE_CATEGORY_META, type MessageKind } from "@/lib/message-meta";
 

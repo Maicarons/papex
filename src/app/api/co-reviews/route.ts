@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { userCan } from "@/lib/auth/permissions";
-import { assignCoReview, listCoReviews, listAssignablePapers } from "@/lib/services/co-reviews";
+import { assignCoReview, listCoReviews } from "@/lib/services/co-reviews";
 import { assignCoReviewSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";

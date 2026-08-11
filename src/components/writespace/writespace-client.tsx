@@ -9,7 +9,6 @@ import { SectionsEditor } from "./sections-editor";
 import { ExportPanel, type ExportResult } from "./export-panel";
 import {
   type WritespaceDraft,
-  type PapexManifest,
   createDefaultDraft,
   validateDraft,
 } from "@/lib/writespace/manifest";
@@ -33,7 +32,9 @@ export function WritespaceClient({
   const [savedAt, setSavedAt] = React.useState(false);
   const skipFirstSave = React.useRef(true);
 
-  // 载入本地草稿
+  // 载入本地草稿：必须在挂载后读取，不能用惰性 useState 初始化（否则客户端首屏与
+  // SSR 输出不一致会触发 hydration mismatch）。此处的同步 setState 是刻意且只执行一次。
+  /* eslint-disable react-hooks/set-state-in-effect */
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -48,6 +49,7 @@ export function WritespaceClient({
       /* 忽略损坏的草稿 */
     }
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // 自动保存到本地（跳过首次，避免覆盖已载入的草稿）
   React.useEffect(() => {
@@ -145,8 +147,6 @@ export function WritespaceClient({
     setDraft(next);
     setResult(null);
   };
-
-  const manifest: PapexManifest = draft.manifest;
 
   return (
     <div className="mx-auto max-w-4xl">

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { userCan } from "@/lib/auth/permissions";
-import { createMessages, listRecipientUserIds, MESSAGE_KINDS } from "@/lib/services/messages";
+import { createMessages, listRecipientUserIds } from "@/lib/services/messages";
 import type { MessageKind } from "@/lib/message-meta";
 
 export const dynamic = "force-dynamic";
