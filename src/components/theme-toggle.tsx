@@ -7,8 +7,14 @@ import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+  // Hydration-safe "is mounted" flag: server snapshot is false (matches SSR
+  // output), client snapshot flips to true after hydration. Replaces the
+  // useState+useEffect mounted pattern (no setState-in-effect).
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   return (
     <Button

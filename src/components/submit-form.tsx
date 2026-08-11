@@ -146,6 +146,7 @@ export function SubmitForm({
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="删除该作者"
                   onClick={() => setAuthors((prev) => prev.filter((_, i) => i !== idx))}
                 >
                   <Trash2 className="h-4 w-4" />

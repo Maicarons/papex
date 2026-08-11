@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, MessageSquare, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck } from "lucide-react";
+import { FileText, Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -90,7 +90,7 @@ export function SiteHeader() {
               <MessagesBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
+                  <Button variant="ghost" size="icon" className="rounded-full" aria-label="用户菜单">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>{initials(user.displayName)}</AvatarFallback>
                     </Avatar>
