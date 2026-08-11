@@ -8,7 +8,7 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 
 - **前端 + 后端均为 Next.js（App Router）**：Server Components 直连数据库读取，Route Handlers 提供 REST API。
 - **数据层**：Drizzle ORM + PostgreSQL，全文检索基于 PostgreSQL `tsvector`。
-- **UI**：shadcn/ui 风格（Radix 原语 + Tailwind CSS），Lucide 图标，next-themes 暗色模式。
+- **UI**：shadcn/ui 风格（Radix 原语 + Tailwind CSS 4，CSS-first 配置 + `@tailwindcss/postcss`），Lucide 图标，next-themes 暗色模式；图表用 ECharts 6。
 - **状态**：Zustand 管理客户端筛选/交互态。
 - **认证**：jose(JWT) + bcryptjs，httpOnly cookie 会话，中间件保护写操作路由。
 
@@ -18,6 +18,7 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 
 - [功能矩阵](#功能矩阵)
 - [技术架构](#技术架构)
+- [技术栈版本](#技术栈版本)
 - [目录结构](#目录结构)
 - [数据模型设计](#数据模型设计)
 - [功能模块划分](#功能模块划分)
@@ -53,7 +54,7 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 | 多语言全文检索 | CJK 走 `pg_trgm` 三元组 ILIKE，拉丁文走 `tsvector`（english/simple） | ✅ |
 | 批量 PDF 解析 | pdf-parse 抽取文本/元数据 + 正则抽取参考文献（文献编号 / DOI） | ✅ |
 | 引用图 | `citations` 表记录 DOI/文献编号 引用关系，手绘 SVG 关系图 | ✅ |
-| 管理后台统计 | 投稿/分类/作者/审核聚合面板（手绘 SVG 图表） | ✅ |
+| 管理后台统计 | 投稿/分类/作者/审核聚合面板（ECharts 6 图表） | ✅ |
 
 ---
 
@@ -91,6 +92,29 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 - `lib/services/*`：业务查询/变更函数（服务端 only），被页面与 API 共用，避免重复逻辑。
 - `app/api/**`：REST 边界，负责入参校验（zod）、鉴权、调用 service。
 - `components/**`：展示与交互，客户端组件通过 `fetch('/api/...')` 调用。
+
+---
+
+## 技术栈版本
+
+> 当前主版本（2026-08 升级后）。详见仓库根目录 `UPGRADE.md`。
+
+| 领域 | 技术 | 版本 |
+| --- | --- | --- |
+| 框架 | Next.js（App Router） | 16.3 |
+| UI 运行时 | React | 19 |
+| 样式 | Tailwind CSS（CSS-first + `@tailwindcss/postcss`） | 4.3 |
+| 语言 | TypeScript | 5.9 |
+| 数据层 | Drizzle ORM（postgres-js） | 0.45 |
+| 图表 | ECharts | 6.1 |
+| 校验 | Zod | 4.4 |
+| 认证 | jose（JWT）+ bcryptjs | 6 / 3 |
+| 图标 | lucide-react | 1.x |
+| 状态 | Zustand | 5 |
+| Lint / 测试 | ESLint 9（flat config）+ Vitest 3 | — |
+| PDF 解析 | pdf-parse（class-based API） | 2.4 |
+
+> TypeScript 暂定 `5.9`：`typescript-eslint` 8.x 对 TS 7 的支持仍在跟进，待其发布后迁移至 TS 7。
 
 ---
 
