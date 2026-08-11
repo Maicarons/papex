@@ -330,6 +330,20 @@ export const zh = {
     viewProfile: "查看我的主页",
     notFound: "未找到用户资料。",
   },
+  citations: {
+    thisPaper: "本论文",
+    referencedCount: "引用 {n} 篇",
+    citedBy: "被引 {n} 次",
+    incomingLabel: "← 被以下论文引用",
+    outgoingLabel: "引用以下文献 →",
+    addTitle: "添加引用",
+    addHint: "请至少填写文献编号、DOI 或标题",
+    added: "已添加引用",
+    addFailed: "添加失败",
+    phArxiv: "文献编号，如 2401.12345",
+    phDoi: "DOI，如 10.1234/abc",
+    phTitle: "或填写标题",
+  },
 };
 
 export type Dictionary = typeof zh;

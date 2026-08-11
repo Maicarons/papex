@@ -7,9 +7,8 @@ import {
   userRoles,
   userPermissions,
 } from "@/lib/db/schema";
-import { eq, inArray, desc, and, like, sql, count } from "drizzle-orm";
+import { eq, inArray, desc, and, sql, count } from "drizzle-orm";
 import {
-  PERMISSIONS,
   PERMISSION_KEYS,
   DEFAULT_ROLE_PERMISSIONS,
   SYSTEM_ROLE_KEYS,

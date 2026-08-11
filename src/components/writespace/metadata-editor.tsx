@@ -15,7 +15,6 @@ import {
 } from "./fields";
 import {
   type WritespaceDraft,
-  type PapexManifest,
   type PapexAuthor,
   type PapexReference,
   type PapexBuild,

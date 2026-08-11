@@ -47,20 +47,42 @@ type Token =
   | { type: "not" }
   | { type: "term"; value: string };
 
-function tokenize(input: string): Token[] {
+export function tokenize(input: string): Token[] {
   const tokens: Token[] = [];
-  // Split keeping quoted phrases, parens, and bare words intact.
-  const re = /\s+|\(|\)|"[^"]*"|'[^']*'|[^\s()]+/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(input)) !== null) {
-    const t = m[0];
-    if (/^\s+$/.test(t)) continue;
-    if (t === "(") tokens.push({ type: "lparen" });
-    else if (t === ")") tokens.push({ type: "rparen" });
-    else if (t.toLowerCase() === "and") tokens.push({ type: "and" });
-    else if (t.toLowerCase() === "or") tokens.push({ type: "or" });
-    else if (t === "-" || t.toLowerCase() === "not") tokens.push({ type: "not" });
-    else tokens.push({ type: "term", value: t });
+  const n = input.length;
+  let i = 0;
+  const isSpace = (c: string) => c === " " || c === "\t" || c === "\n" || c === "\r";
+  while (i < n) {
+    const c = input[i];
+    if (isSpace(c)) { i++; continue; }
+    if (c === "(") { tokens.push({ type: "lparen" }); i++; continue; }
+    if (c === ")") { tokens.push({ type: "rparen" }); i++; continue; }
+    // Read a word run, but keep any quoted phrase (e.g. ti:"a b") intact so
+    // spaces inside quotes are not treated as token boundaries.
+    let buf = "";
+    while (i < n) {
+      const ch = input[i];
+      if (isSpace(ch) || ch === "(" || ch === ")") break;
+      if (ch === '"' || ch === "'") {
+        const q = ch;
+        buf += ch; i++;
+        while (i < n && input[i] !== q) { buf += input[i]; i++; }
+        if (i < n) { buf += input[i]; i++; } // consume closing quote
+        continue;
+      }
+      buf += ch; i++;
+    }
+    const low = buf.toLowerCase();
+    if (low === "and") tokens.push({ type: "and" });
+    else if (low === "or") tokens.push({ type: "or" });
+    else if (low === "not") tokens.push({ type: "not" });
+    else if (buf === "-") tokens.push({ type: "not" });
+    else if (buf.startsWith("-") && buf.length > 1) {
+      tokens.push({ type: "not" });
+      tokens.push({ type: "term", value: buf.slice(1) });
+    } else {
+      tokens.push({ type: "term", value: buf });
+    }
   }
   return tokens;
 }
@@ -73,7 +95,7 @@ type Node = {
   leaf?: { field?: "title" | "abstract" | "author" | "category" | "arxiv"; term: string };
 };
 
-function parse(tokens: Token[]): Node | null {
+export function parse(tokens: Token[]): Node | null {
   let pos = 0;
   const peek = () => tokens[pos];
 
@@ -92,7 +114,10 @@ function parse(tokens: Token[]): Node | null {
     let left = parseNot();
     while (
       peek() &&
-      (peek()!.type === "and" || peek()!.type === "term" || peek()!.type === "lparen")
+      (peek()!.type === "and" ||
+        peek()!.type === "term" ||
+        peek()!.type === "lparen" ||
+        peek()!.type === "not")
     ) {
       const right = parseNot();
       if (left && right) left = { op: "and", children: [left, right] };

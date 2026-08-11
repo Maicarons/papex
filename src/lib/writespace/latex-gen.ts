@@ -13,7 +13,6 @@ import type {
   PapexAuthor,
   PapexManifest,
   PapexReference,
-  PapexSection,
   RefType,
   SectionLevel,
 } from "./manifest";
@@ -53,9 +52,14 @@ export function latexEscape(value: unknown): string {
 
 export function bibtexEscape(value: unknown): string {
   if (value == null) return "";
-  return String(value)
-    .replace(/[{}]/g, (m) => (m === "{" ? "\\{" : "\\}"))
-    .replace(/[\\%&#]/g, (m) => "\\" + m);
+  // Single-pass scan: each special char is escaped exactly once. Doing braces
+  // then backslash/&/%/# in two sequential passes would re-escape the `\`
+  // inserted for braces, producing `\\{` instead of `\{`.
+  return String(value).replace(/[\\%&#{}]/g, (m) => {
+    if (m === "{") return "\\{";
+    if (m === "}") return "\\}";
+    return "\\" + m;
+  });
 }
 
 function sortedAuthors(authors: PapexAuthor[]): PapexAuthor[] {

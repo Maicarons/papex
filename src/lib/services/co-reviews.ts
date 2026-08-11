@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { coReviews, papers, paperVersions } from "@/lib/db/schema";
-import { desc, eq, and, asc } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import { createMessage } from "@/lib/services/messages";
 import { displayName } from "@/lib/services/tickets";
 import { getPaperDetail } from "@/lib/services/papers";

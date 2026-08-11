@@ -74,7 +74,7 @@ export function useI18n(): I18nContextValue {
       dict,
       setLocale: () => {},
       t: (path: string) => path,
-      format: (template, vars) => template,
+      format: (template, _vars) => template,
     };
   }
   return ctx;
