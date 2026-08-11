@@ -15,10 +15,20 @@ export default async function HomePage() {
   // I18nProvider corrects to the user's locale cookie after hydration.
   const dict = getDictionary("zh");
   const t = (path: string) => translate(dict, path);
-  const [{ rows }, tree] = await Promise.all([
-    listPapers({ pageSize: 8, page: 1 }),
-    getCategoryTree(),
-  ]);
+  // 无 DB（如构建环境缺 DATABASE_URL）时回退空数据，保证预渲染不硬失败；
+  // 运行时带 DB 时由 revalidate=300 自动刷新出真实内容。
+  let rows: Awaited<ReturnType<typeof listPapers>>["rows"] = [];
+  let tree: Awaited<ReturnType<typeof getCategoryTree>> = [];
+  try {
+    const [papers, catTree] = await Promise.all([
+      listPapers({ pageSize: 8, page: 1 }),
+      getCategoryTree(),
+    ]);
+    rows = papers.rows;
+    tree = catTree;
+  } catch {
+    // 忽略：DB 不可达，使用上方空默认值
+  }
   const topCats = tree.slice(0, 8);
 
   return (

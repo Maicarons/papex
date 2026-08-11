@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 import type { CitationOut } from "@/lib/services/citations";
 
@@ -9,6 +12,7 @@ function truncate(s: string | null, n = 30): string {
 interface NodeSpec {
   key: string;
   label: string;
+  full: string;
   href?: string;
   x: number;
   y: number;
@@ -34,6 +38,9 @@ export function CitationGraph({
   outgoing: CitationOut[];
   incoming: CitationOut[];
 }) {
+  const [hovered, setHovered] = React.useState<string | null>(null);
+  const centerKey = "center";
+
   const maxN = Math.max(outgoing.length, incoming.length, 1);
   const height = maxN * (NODE_H + GAP) + PAD * 2;
   const centerY = height / 2 - NODE_H / 2;
@@ -41,40 +48,82 @@ export function CitationGraph({
   const leftNodes: NodeSpec[] = incoming.map((c, i) => ({
     key: `in-${c.id}`,
     label: truncate(c.resolvedTitle) || "未知来源",
+    full: c.resolvedTitle || "未知来源",
     href: `/papers/${c.paperId}`,
     x: COL_LEFT,
     y: PAD + i * (NODE_H + GAP),
   }));
 
   const rightNodes: NodeSpec[] = outgoing.map((c, i) => {
-    const label = truncate(c.targetTitle) || c.targetArxivId || c.targetDoi || "外部文献";
-    const href = c.targetPaperId
-      ? `/papers/${c.targetPaperId}`
-      : c.targetUrl
-        ? c.targetUrl
-        : undefined;
-    return { key: `out-${c.id}`, label, href, x: COL_RIGHT, y: PAD + i * (NODE_H + GAP) };
+    const full = c.targetTitle || c.targetArxivId || c.targetDoi || "外部文献";
+    return {
+      key: `out-${c.id}`,
+      label: truncate(full),
+      full,
+      href: c.targetPaperId
+        ? `/papers/${c.targetPaperId}`
+        : c.targetUrl
+          ? c.targetUrl
+          : undefined,
+      x: COL_RIGHT,
+      y: PAD + i * (NODE_H + GAP),
+    };
   });
 
   const centerNode: NodeSpec = {
-    key: "center",
+    key: centerKey,
     label: truncate(paperTitle, 26),
+    full: paperTitle,
     href: `/papers/${paperId}`,
     x: COL_CENTER,
     y: centerY,
   };
 
-  const edges: { x1: number; y1: number; x2: number; y2: number }[] = [];
+  const edges: {
+    from: string;
+    to: string;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  }[] = [];
   for (const n of leftNodes) {
-    edges.push({ x1: n.x + NODE_W, y1: n.y + NODE_H / 2, x2: centerNode.x, y2: centerNode.y + NODE_H / 2 });
+    edges.push({
+      from: n.key,
+      to: centerKey,
+      x1: n.x + NODE_W,
+      y1: n.y + NODE_H / 2,
+      x2: centerNode.x,
+      y2: centerNode.y + NODE_H / 2,
+    });
   }
   for (const n of rightNodes) {
-    edges.push({ x1: centerNode.x + NODE_W, y1: centerNode.y + NODE_H / 2, x2: n.x, y2: n.y + NODE_H / 2 });
+    edges.push({
+      from: centerKey,
+      to: n.key,
+      x1: centerNode.x + NODE_W,
+      y1: centerNode.y + NODE_H / 2,
+      x2: n.x,
+      y2: n.y + NODE_H / 2,
+    });
   }
 
+  const isNeighbor = (key: string, other: string) =>
+    edges.some(
+      (e) =>
+        (e.from === key && e.to === other) || (e.to === key && e.from === other),
+    );
+
+  const nodeActive = (key: string) =>
+    hovered === null || key === hovered || isNeighbor(key, hovered);
+  const edgeActive = (e: { from: string; to: string }) =>
+    hovered === null || e.from === hovered || e.to === hovered;
+
   const renderNode = (n: NodeSpec) => {
+    const active = nodeActive(n.key);
     const inner = (
-      <g>
+      <g opacity={active ? 1 : 0.35} className="transition-opacity">
+        <title>{n.full}</title>
         <rect
           x={n.x}
           y={n.y}
@@ -95,12 +144,31 @@ export function CitationGraph({
         </text>
       </g>
     );
+    const handlers = {
+      onMouseEnter: () => setHovered(n.key),
+      onMouseLeave: () => setHovered(null),
+      onFocus: () => setHovered(n.key),
+      onBlur: () => setHovered(null),
+    };
+    const prefix = n.key.startsWith("in-")
+      ? "引用来源："
+      : n.key.startsWith("out-")
+        ? "引用目标："
+        : "";
     return n.href ? (
-      <Link key={n.key} href={n.href} className="hover:opacity-80">
+      <Link
+        key={n.key}
+        href={n.href}
+        className="hover:opacity-80 focus:outline-none"
+        aria-label={`${prefix}${n.full}`}
+        {...handlers}
+      >
         {inner}
       </Link>
     ) : (
-      <g key={n.key}>{inner}</g>
+      <g key={n.key} tabIndex={0} aria-label={n.full} className="focus:outline-none" {...handlers}>
+        {inner}
+      </g>
     );
   };
 
@@ -127,9 +195,10 @@ export function CitationGraph({
           y1={e.y1}
           x2={e.x2}
           y2={e.y2}
-          className="stroke-muted-foreground/50"
-          strokeWidth={1}
+          className={edgeActive(e) ? "stroke-primary" : "stroke-muted-foreground/50"}
+          strokeWidth={edgeActive(e) ? 1.5 : 1}
           markerEnd="url(#arrow)"
+          opacity={edgeActive(e) ? 1 : 0.3}
         />
       ))}
       {leftNodes.map(renderNode)}

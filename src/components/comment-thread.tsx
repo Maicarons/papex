@@ -31,8 +31,19 @@ export function CommentThread({ paperId }: { paperId: string }) {
   }, [paperId]);
 
   React.useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    fetch(`/api/papers/${paperId}/comments`)
+      .then((res) => res.json())
+      .then((data: { comments: CommentNode[] }) => {
+        if (!active) return;
+        setTree(data.comments);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [paperId]);
 
   async function post(parentId: number | undefined, text: string) {
     if (!text.trim()) return;
@@ -44,6 +55,8 @@ export function CommentThread({ paperId }: { paperId: string }) {
         body: JSON.stringify({ body: text, parentId }),
       });
       if (res.status === 401) {
+        // Full reload (not router.push) so the client session state resets on re-auth.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = "/login";
         return;
       }

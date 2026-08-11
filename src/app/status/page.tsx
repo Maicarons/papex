@@ -125,8 +125,26 @@ export default function StatusPage() {
   }, []);
 
   React.useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    fetch("/api/health", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) throw new Error("bad status");
+        return res.json();
+      })
+      .then((json: Health) => {
+        if (!active) return;
+        setData(json);
+      })
+      .catch(() => {
+        if (active) setError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!autoRefresh) return;

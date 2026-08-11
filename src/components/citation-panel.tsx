@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CitationGraph } from "@/components/citation-graph";
 import type { CitationOut } from "@/lib/services/citations";
+import { useI18n } from "@/i18n/i18n-provider";
+import { format } from "@/i18n";
 
 export function CitationPanel({
   paperId,
@@ -19,6 +21,7 @@ export function CitationPanel({
   initialIncoming: CitationOut[];
   canEdit: boolean;
 }) {
+  const { t } = useI18n();
   const [outgoing, setOutgoing] = React.useState(initialOutgoing);
   const [incoming, setIncoming] = React.useState(initialIncoming);
   const [arxiv, setArxiv] = React.useState("");
@@ -39,7 +42,7 @@ export function CitationPanel({
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!arxiv && !doi && !title) {
-      setMsg("请至少填写文献编号、DOI 或标题");
+      setMsg(t("citations.addHint"));
       return;
     }
     setBusy(true);
@@ -54,11 +57,11 @@ export function CitationPanel({
       setArxiv("");
       setDoi("");
       setTitle("");
-      setMsg("已添加引用");
+      setMsg(t("citations.added"));
       await refresh();
     } else {
       const j = await res.json().catch(() => ({}));
-      setMsg(j.error ?? "添加失败");
+      setMsg(j.error ?? t("citations.addFailed"));
     }
   }
 
@@ -66,9 +69,9 @@ export function CitationPanel({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1">
-          <Link2 className="h-4 w-4" /> 引用 {outgoing.length} 篇
+          <Link2 className="h-4 w-4" /> {format(t("citations.referencedCount"), { n: outgoing.length })}
         </span>
-        <span>被引 {incoming.length} 次</span>
+        <span>{format(t("citations.citedBy"), { n: incoming.length })}</span>
       </div>
 
       {(outgoing.length > 0 || incoming.length > 0) && (
@@ -76,13 +79,13 @@ export function CitationPanel({
           <CardContent className="pt-4">
             <CitationGraph
               paperId={paperId}
-              paperTitle="本论文"
+              paperTitle={t("citations.thisPaper")}
               outgoing={outgoing}
               incoming={incoming}
             />
             <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-              <span>← 被以下论文引用</span>
-              <span>引用以下文献 →</span>
+              <span>{t("citations.incomingLabel")}</span>
+              <span>{t("citations.outgoingLabel")}</span>
             </div>
           </CardContent>
         </Card>
@@ -91,26 +94,26 @@ export function CitationPanel({
       {canEdit && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">添加引用</CardTitle>
+            <CardTitle className="text-base">{t("citations.addTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={add} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Input
                 value={arxiv}
                 onChange={(e) => setArxiv(e.target.value)}
-                placeholder="文献编号，如 2401.12345"
+                placeholder={t("citations.phArxiv")}
                 className="sm:w-48"
               />
               <Input
                 value={doi}
                 onChange={(e) => setDoi(e.target.value)}
-                placeholder="DOI，如 10.1234/abc"
+                placeholder={t("citations.phDoi")}
                 className="sm:w-48"
               />
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="或填写标题"
+                placeholder={t("citations.phTitle")}
                 className="sm:flex-1"
               />
               <Button type="submit" disabled={busy} size="sm">

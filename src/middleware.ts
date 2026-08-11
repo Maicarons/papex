@@ -1,9 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { rateLimit } from "@/lib/rate-limit";
 
 const COOKIE = "papex_session";
 const PROTECTED_PREFIXES = ["/me", "/submit", "/admin", "/co-reviews", "/writespace"];
 const EDIT_RE = /^\/papers\/[^/]+\/edit$/;
+
+// 基础 API 限流策略（按客户端 IP）
+const API_LIMIT = 120; // 通用接口：每 IP 每分钟最多 120 次
+const AUTH_LIMIT = 10; // 认证类接口（登录/注册）：每 IP 每分钟最多 10 次
+const WINDOW_MS = 60_000;
+
+function clientIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
 
 async function verify(token?: string) {
   if (!token) return null;
@@ -21,6 +35,31 @@ async function verify(token?: string) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // 基础 API 限流：在到达 handler 前拦截滥用（爆破登录 / 刷注册 / 刷反馈等）。
+  // 仅返回 429，不影响正常流量。
+  if (pathname.startsWith("/api/")) {
+    const ip = clientIp(req);
+    const isAuth = pathname.startsWith("/api/auth/");
+    const { ok, retryAfterSec } = rateLimit(
+      `mw:${ip}:${isAuth ? "auth" : "api"}`,
+      isAuth ? AUTH_LIMIT : API_LIMIT,
+      WINDOW_MS,
+    );
+    if (!ok) {
+      return new NextResponse(
+        JSON.stringify({ error: "too_many_requests", retryAfterSec }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": String(retryAfterSec),
+          },
+        },
+      );
+    }
+  }
+
   const needsAuth =
     PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
     EDIT_RE.test(pathname);
@@ -37,5 +76,12 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/me/:path*", "/submit/:path*", "/admin/:path*", "/writespace/:path*", "/papers/:id/edit"],
+  matcher: [
+    "/me/:path*",
+    "/submit/:path*",
+    "/admin/:path*",
+    "/writespace/:path*",
+    "/papers/:id/edit",
+    "/api/:path*",
+  ],
 };
