@@ -38,7 +38,10 @@ export async function proxy(req: NextRequest) {
 
   // 基础 API 限流：在到达 handler 前拦截滥用（爆破登录 / 刷注册 / 刷反馈等）。
   // 仅返回 429，不影响正常流量。
-  if (pathname.startsWith("/api/")) {
+  // 注：显式设置 RATE_LIMIT_DISABLED=1 时整体跳过限流（用于 e2e / 本地测试），
+  // 生产环境默认开启。
+  const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === "1";
+  if (pathname.startsWith("/api/") && !rateLimitDisabled) {
     const ip = clientIp(req);
     const isAuth = pathname.startsWith("/api/auth/");
     const { ok, retryAfterSec } = rateLimit(

@@ -333,6 +333,31 @@ export const en: Dictionary = {
     viewProfile: "View my profile",
     notFound: "Profile not found.",
   },
+  apiKeys: {
+    title: "API Keys",
+    subtitle:
+      "Generate API keys for scripts or third-party integrations. A key inherits the permissions of your account role.",
+    createTitle: "Create a new key",
+    createBtn: "Create key",
+    creating: "Creating…",
+    nameLabel: "Name",
+    namePlaceholder: "e.g. local script / CI pipeline",
+    writeScope: "Allow write (write)",
+    writeScopeHint:
+      "Enable to call mutating endpoints like submit/review; read-only restricts to public GET endpoints.",
+    listTitle: "Your keys",
+    empty: "You have no API keys yet.",
+    lastUsed: "Last used",
+    never: "Never",
+    revoked: "Revoked",
+    revoke: "Revoke",
+    confirmRevoke:
+      "Revoke this key? Requests using it will be rejected immediately.",
+    secretWarning: "Copy and store this secret now — it is shown only once:",
+    copy: "Copy",
+    copied: "Copied",
+    dismiss: "I've saved it",
+  },
   citations: {
     thisPaper: "This paper",
     referencedCount: "References {n} papers",

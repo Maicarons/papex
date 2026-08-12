@@ -498,6 +498,41 @@ export const moderationLogs = pgTable(
   (_t) => ({ paperIdx: index("moderation_logs_paper_idx").on(_t.paperId) }),
 );
 
+// ----------------------------- API Keys (programmatic access) -----------------------------
+//
+// Programmatic access tokens. A key is owned by a user and inherits that user's
+// identity + effective RBAC permissions (see src/lib/auth/api-key.ts). We store
+// only a SHA-256 hash of the secret; the plaintext is returned to the owner
+// exactly once at creation time.
+
+export const apiKeyScopeEnum = pgEnum("api_key_scope", [
+  "read", // public read-only endpoints
+  "write", // mutating endpoints the owner is permitted to call
+]);
+
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    // First 12 chars of the raw key, shown in the UI so owners can recognise it.
+    keyPrefix: text("key_prefix").notNull(),
+    // SHA-256 hex of the raw key. Never store the raw value.
+    keyHash: text("key_hash").notNull().unique(),
+    scopes: apiKeyScopeEnum("scopes").array().notNull().default(["read", "write"]),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    userIdx: index("api_keys_user_idx").on(_t.userId),
+  }),
+);
+
 // ----------------------------- Relations (typed joins) -----------------------------
 
 import { relations } from "drizzle-orm";
@@ -542,6 +577,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   userPermissions: many(userPermissions),
   assignedCoReviews: many(coReviews, { relationName: "assignedBy" }),
   receivedCoReviews: many(coReviews, { relationName: "reviewer" }),
+  apiKeys: many(apiKeys),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
