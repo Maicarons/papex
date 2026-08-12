@@ -344,6 +344,13 @@ export const zh = {
     phDoi: "DOI，如 10.1234/abc",
     phTitle: "或填写标题",
   },
+  endorsements: {
+    endorseBtn: "背书该用户",
+    endorsed: "已背书",
+    alreadyEndorsed: "你已为该分类背书过",
+    selectCategory: "选择分类",
+    fromCategory: "分类",
+  },
 };
 
 export type Dictionary = typeof zh;

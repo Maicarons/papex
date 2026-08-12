@@ -53,6 +53,11 @@ export async function POST(req: Request) {
     if (msg === "PAPER_NOT_FOUND") return NextResponse.json({ error: "论文不存在" }, { status: 404 });
     if (msg === "ID_GENERATION_FAILED")
       return NextResponse.json({ error: "编号生成失败，请重试" }, { status: 500 });
+    if (msg === "ENDORSEMENT_REQUIRED")
+      return NextResponse.json(
+        { error: "首次在该分类投稿需先获得该分类的背书" },
+        { status: 403 },
+      );
     return NextResponse.json({ error: "提交失败" }, { status: 500 });
   }
 }

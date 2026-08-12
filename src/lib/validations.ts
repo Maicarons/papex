@@ -82,6 +82,13 @@ export const coReviewSubmitSchema = z.object({
   comment: z.string().min(1, "评审意见不能为空").max(5000),
 });
 
+// ----------------------------- Endorsements -----------------------------
+
+export const endorseSchema = z.object({
+  endorseeId: z.string().min(1, "请选择被背书人"),
+  categoryId: z.string().min(1, "请选择分类"),
+});
+
 export const updateProfileSchema = z.object({
   displayName: z.string().min(1, "显示名称不能为空").max(80),
   bio: z.string().max(2000).optional().or(z.literal("")),
@@ -117,3 +124,4 @@ export type CommentInput = z.infer<typeof commentSchema>;
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;
 export type ModerateInput = z.infer<typeof moderateSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type EndorseInput = z.infer<typeof endorseSchema>;

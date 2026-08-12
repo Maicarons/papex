@@ -346,4 +346,11 @@ export const en: Dictionary = {
     phDoi: "DOI, e.g. 10.1234/abc",
     phTitle: "Or enter a title",
   },
+  endorsements: {
+    endorseBtn: "Endorse this user",
+    endorsed: "Endorsed",
+    alreadyEndorsed: "You have already endorsed this category",
+    selectCategory: "Select category",
+    fromCategory: "Category",
+  },
 };
