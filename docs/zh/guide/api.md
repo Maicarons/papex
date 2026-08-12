@@ -2,12 +2,75 @@
 
 Papex 提供一组基于 HTTP 的 JSON API（前缀 `/api`）。以下为常用端点。
 
-## 认证
+## 在线文档
+
+完整的机器可读 **OpenAPI 3.1** 规范托管在 [`/api/openapi.json`](/api/openapi.json)，
+交互式（可在线调试）文档站（基于 [Scalar](https://scalar.com)）位于
+**[/api-docs](/api-docs)**。打开即可浏览全部端点、查看请求/响应结构，并直接在浏览器中发起请求。
+
+## 文档如何保持同步（代码优先）
+
+OpenAPI 文档是**由代码生成**的，而非手写。每个路由都拥有一份同目录片段 `route.openapi.ts`，它是该端点文档的唯一真相源；静态部分（info、`components/schemas`、`components/responses`、security）则位于 `src/lib/openapi/base.ts`。
+
+生成器（`src/lib/openapi/generate.ts`）会扫描所有片段、合并进 base，并写出 `src/lib/openapi/spec.generated.ts`——这份文件由 `/api/openapi.json` 提供。
+
+```bash
+# 编辑片段后重新生成（/api/openapi.json 与 /api-docs 随之更新）
+npm run openapi:generate
+```
+
+该命令已接入 `predev` 与 `prebuild`，因此在 `next dev` / `next build` 前总会自动重建。**请勿手动编辑 `spec.generated.ts`**——每次运行都会被覆盖。
+
+### 为新接口编写文档
+
+当你新增路由 `src/app/api/foo/bar/route.ts` 时，在同目录创建 `route.openapi.ts`：
+
+```ts
+export default {
+  "/api/foo/bar": {
+    get: {
+      tags: ["Discovery"],
+      summary: "描述它的作用",
+      // security: []            // 公开端点省略此项
+      responses: {
+        200: { description: "OK", content: { "application/json": { schema: { type: "object" } } } },
+      },
+    },
+  },
+} as const;
+```
+
+运行 `npm run openapi:generate`（或直接启动/构建），该端点就会自动出现在 `/api/openapi.json` 与 `/api-docs` 中。共用 schema 放在 `src/lib/openapi/base.ts`（如 `#/components/schemas/PaperListItem`）。
+
+## 鉴权
+
+支持两种认证方式：
+
+1. **会话 Cookie**（`papex_session`）——登录后由浏览器自动携带，适用于同源请求。
+2. **API Key**（`Authorization: Bearer pk_…`）——用于脚本与第三方集成。在
+   **设置 → API 密钥**（`/settings/api-keys`）创建。密钥绑定你的账号并继承其角色的 RBAC 权限，
+   因此所有支持会话 Cookie 的端点同样支持 API Key。密钥明文**仅在创建时展示一次**，服务端只保存其 SHA-256 哈希。
+
+使用 API Key 的示例：
+
+```bash
+curl -H "Authorization: Bearer pk_live_xxxx" https://your-host/api/papers?pageSize=1
+```
+
+公开（无需登录）的端点——如论文列表、搜索、分类、作者、健康检查——对匿名访问、会话 Cookie 与 API Key 同样可用。
+
+## 认证端点
 
 - `POST /api/auth/register` — 注册 `{username, email, displayName, password}`
 - `POST /api/auth/login` — 登录 `{identifier, password}`
 - `POST /api/auth/logout` — 退出
 - `GET /api/auth/me` — 当前用户
+
+## API 密钥
+
+- `GET /api/settings/api-keys` — 列出我的密钥
+- `POST /api/settings/api-keys` — 创建密钥 `{name, scopes?:["read"|"write"], environment?:"live"|"test", expiresAt?:ISODate|null}`
+- `DELETE /api/settings/api-keys?id=<keyId>` — 吊销密钥
 
 ## 论文
 

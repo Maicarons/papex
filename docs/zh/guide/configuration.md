@@ -17,6 +17,16 @@ AUTH_SECRET=change-me-to-a-long-random-string
 AUTH_SESSION_TTL=604800
 ```
 
+### API 密钥
+
+API 密钥让脚本与第三方集成无需浏览器会话即可调用接口。在 **设置 → API 密钥**（`/settings/api-keys`）创建，明文仅在创建时展示一次。密钥以 SHA-256 哈希存储并绑定你的账号，因此继承其角色的 RBAC 权限——无需额外配置。调用时通过请求头携带：
+
+```http
+Authorization: Bearer pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+公开端点（论文、搜索、分类、作者、健康检查）同样支持匿名访问。
+
 ## 邮件（可选）
 
 站内信与工单系统默认不依赖邮件。如需发送通知邮件，可配置 SMTP：

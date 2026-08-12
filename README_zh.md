@@ -47,7 +47,8 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 | 订阅与提醒 | `subscriptions`（分类/作者/论文）+ 提醒列表 | ✅ |
 | 个人主页与用户系统 | `/u/[username]` + 认证 | ✅ |
 | 投稿审核流程 | `admin/review` 队列 + moderation 状态机 | ✅ |
-| 开放 API 接口 | `/api/*` REST | ✅ |
+| 开放 API 接口 | `/api/*` REST + OpenAPI 3.1 规范 + 交互文档 | ✅ |
+| API 密钥管理 | `/settings/api-keys` — 编程访问，继承 RBAC | ✅ |
 | 暗色模式 | next-themes + CSS 变量 | ✅ |
 | 响应式布局 | Tailwind 容器 + 移动优先 | ✅ |
 | Endorsement（背书） | `endorsements` 表 + 首次投稿背书校验 | 🟡 基础版 |
@@ -294,12 +295,17 @@ docker compose up -d        # 含 Postgres + Next 服务
 
 ## API 速览
 
+完整的 OpenAPI 3.1 规范托管在 `/api/openapi.json`，交互式文档（Scalar）位于 **[/api-docs](/api-docs)**。该规范采用**代码优先**：每个路由的文档写在同目录的 `route.openapi.ts`，由 `npm run openapi:generate`（已接入 `predev`/`prebuild`）合并进 `src/lib/openapi/spec.generated.ts`。
+
+**鉴权：** 接口同时支持会话 Cookie（`papex_session`）与 API Key（`Authorization: Bearer pk_…`）。API Key 在 **设置 → API 密钥** 创建，继承所属用户的 RBAC 权限。公开端点对匿名、Cookie、API Key 均可用。
+
 | Method | Path | 说明 | 鉴权 |
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` | 注册 | 公开 |
 | POST | `/api/auth/login` | 登录 | 公开 |
 | POST | `/api/auth/logout` | 登出 | 登录 |
 | GET | `/api/auth/me` | 当前用户 | 登录 |
+| GET/POST/DELETE | `/api/settings/api-keys` | 列出 / 创建 / 吊销 API 密钥 | 登录 |
 | GET | `/api/papers` | 论文列表（分页/筛选） | 公开 |
 | POST | `/api/papers` | 新投稿 | 登录 |
 | GET | `/api/papers/[id]` | 论文详情 | 公开 |
