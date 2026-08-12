@@ -1,21 +1,21 @@
-# 关于 Papex
+# About Papex
 
-Papex 是一个**开源、独立**的学术文献管理与发现平台，目标是为研究者提供开放、透明、可自托管的文献基础设施。
+Papex is an **open-source, independent** platform for managing and discovering academic literature. Our goal is to provide researchers with open, transparent and self-hostable infrastructure.
 
-## 我们的使命
+## Our mission
 
-Papex 致力于降低学术文献基础设施的门槛：从投稿、版本管理到全文检索与开放 API，一切皆可自由部署与扩展。我们重视开放标准与社区协作，而非锁定。
+Papex lowers the barrier to academic literature infrastructure: from submission and versioning to full-text search and open APIs, everything can be freely deployed and extended. We value open standards and community collaboration over lock-in.
 
-## 核心特性
+## Key features
 
-- **投稿与版本管理**：多版本论文、摘要与作者信息维护。
-- **全文检索**：基于全文索引的快速检索，覆盖标题、摘要与作者，并支持中英混合检索。
-- **开放 API**：开放 HTTP API，便于二次开发与集成。
-- **站内信与工单**：内置站内信、工单与反馈系统，便于社区支持。
-- **同行评审（协审）**：完整协审闭环，指派、回应、提交意见与回执，并联动统一通知。
-- **权限与用户管理**：基于角色的细粒度权限，支持按角色或用户粒度控制操作权限。
-- **主题与国际化**：支持明暗主题与中英文界面。
+- **Submission & versioning**: multi-version papers with maintained abstracts and author metadata.
+- **Full-text search**: fast indexing across titles, abstracts and authors, including mixed Chinese/English.
+- **Open API**: an open HTTP API for integrations and custom tooling.
+- **Messages & tickets**: built-in internal messages, tickets and feedback for community support.
+- **Co-review (peer review)**: a complete loop of assign, respond, submit opinion and receipt, with unified notifications.
+- **Permissions & user management**: a role-based fine-grained permission system with per-role or per-user control.
+- **Theming & i18n**: light/dark themes and a Chinese/English interface.
 
-## 开源协议
+## Open source
 
-Papex 以 [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) 协议开源，可自由用于商业与非商业场景。欢迎通过工单与反馈参与项目建设。
+Papex is licensed under [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) and is free for commercial and non-commercial use. Contributions are welcome via tickets and feedback.

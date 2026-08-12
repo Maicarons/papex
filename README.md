@@ -1,331 +1,330 @@
-# Papex — 开源论文管理与展示系统
+# Papex — Open-Source Academic Literature Platform
 
-> 开源学术论文管理与展示平台 · Apache-2.0 · 全栈 Next.js · 可部署 Vercel
+> Open-source academic literature management & showcase platform · Apache-2.0 · Full-stack Next.js · Deployable on Vercel
 
-Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆盖学术论文提交、检索与展示的核心能力：
-论文提交与版本管理、预览与下载、学科分类、全文检索与筛选、作者与机构、评论讨论、订阅提醒、
-个人主页与用户系统、投稿审核流程、开放 API、暗色模式与响应式布局。
+Papex is an open-source (Apache-2.0) platform for managing and showcasing academic literature. It covers the core capabilities of academic paper submission, discovery and presentation: paper submission and versioning, preview and download, subject categorization, full-text search and filtering, authors and affiliations, comments and discussion, subscription alerts, personal profiles and user accounts, a moderation/review workflow, an open API, dark mode and a responsive layout.
 
-- **前端 + 后端均为 Next.js（App Router）**：Server Components 直连数据库读取，Route Handlers 提供 REST API。
-- **数据层**：Drizzle ORM + PostgreSQL，全文检索基于 PostgreSQL `tsvector`。
-- **UI**：shadcn/ui 风格（Radix 原语 + Tailwind CSS 4，CSS-first 配置 + `@tailwindcss/postcss`），Lucide 图标，next-themes 暗色模式；图表用 ECharts 6。
-- **状态**：Zustand 管理客户端筛选/交互态。
-- **认证**：jose(JWT) + bcryptjs，httpOnly cookie 会话，中间件保护写操作路由。
+- **Front end and back end are both Next.js (App Router)**: Server Components read the database directly, Route Handlers expose the REST API.
+- **Data layer**: Drizzle ORM + PostgreSQL, full-text search backed by PostgreSQL `tsvector`.
+- **UI**: shadcn/ui style (Radix primitives + Tailwind CSS 4, CSS-first config + `@tailwindcss/postcss`), Lucide icons, next-themes dark mode; charts use ECharts 6.
+- **State**: Zustand for client-side filtering/interaction state.
+- **Auth**: jose (JWT) + bcryptjs, httpOnly cookie session, middleware protecting write-operation routes.
 
 ---
 
-## 目录
+## Table of Contents
 
-- [功能矩阵](#功能矩阵)
-- [技术架构](#技术架构)
-- [技术栈版本](#技术栈版本)
-- [目录结构](#目录结构)
-- [数据模型设计](#数据模型设计)
-- [功能模块划分](#功能模块划分)
-- [核心流程](#核心流程)
-- [本地开发](#本地开发)
-- [数据库迁移与种子](#数据库迁移与种子)
-- [部署](#部署)
-- [API 速览](#api-速览)
-- [路线图](#路线图)
+- [Feature Matrix](#feature-matrix)
+- [Technical Architecture](#technical-architecture)
+- [Tech Stack Versions](#tech-stack-versions)
+- [Directory Structure](#directory-structure)
+- [Data Model](#data-model)
+- [Feature Modules](#feature-modules)
+- [Core Flows](#core-flows)
+- [Local Development](#local-development)
+- [Database Migration & Seed](#database-migration--seed)
+- [Deployment](#deployment)
+- [API Overview](#api-overview)
+- [Roadmap](#roadmap)
 
 ---
 
-## 功能矩阵
+## Feature Matrix
 
-| 平台核心能力 | Papex 实现 | 状态 |
+| Core capability | Papex implementation | Status |
 | --- | --- | --- |
-| 论文提交（PDF/元数据） | `/submit` 表单 + API | ✅ |
-| 版本管理（v1, v2… 永久存档） | `paper_versions` 表 + 版本切换页 | ✅ |
-| 论文预览与下载 | 详情页摘要/PDF 链接 + 下载 API | ✅ |
-| 学科分类与标签 | `categories` 8 大类 + 子类，交叉列表 | ✅ |
-| 全文检索与筛选 | `tsvector` 全文索引 + 多维过滤 API | ✅ |
-| 作者与机构信息 | `authors`/`affiliations` + 作者主页 | ✅ |
-| 评论与讨论 | `comments` 楼中楼 + API | ✅ |
-| 订阅与提醒 | `subscriptions`（分类/作者/论文）+ 提醒列表 | ✅ |
-| 个人主页与用户系统 | `/u/[username]` + 认证 | ✅ |
-| 投稿审核流程 | `admin/review` 队列 + moderation 状态机 | ✅ |
-| 开放 API 接口 | `/api/*` REST | ✅ |
-| 暗色模式 | next-themes + CSS 变量 | ✅ |
-| 响应式布局 | Tailwind 容器 + 移动优先 | ✅ |
-| Endorsement（背书） | `endorsements` 表 + 首次投稿背书校验 | 🟡 基础版 |
-| RSS / 邮件提醒 | RSS 路由 + Resend / SMTP 邮件投递（可配置） | ✅ |
-| 高级布尔检索 | 字段限定（ti/abs/au/cat/id）+ AND/OR/NOT + 括号分组 | ✅ |
-| 多语言全文检索 | CJK 走 `pg_trgm` 三元组 ILIKE，拉丁文走 `tsvector`（english/simple） | ✅ |
-| 批量 PDF 解析 | pdf-parse 抽取文本/元数据 + 正则抽取参考文献（文献编号 / DOI） | ✅ |
-| 引用图 | `citations` 表记录 DOI/文献编号 引用关系，手绘 SVG 关系图 | ✅ |
-| 管理后台统计 | 投稿/分类/作者/审核聚合面板（ECharts 6 图表） | ✅ |
+| Paper submission (PDF / metadata) | `/submit` form + API | Yes |
+| Versioning (v1, v2… permanently archived) | `paper_versions` table + version switcher page | Yes |
+| Paper preview & download | detail page abstract / PDF link + download API | Yes |
+| Subject categories & tags | `categories` 8 top-level + subcategories, cross-listing | Yes |
+| Full-text search & filtering | `tsvector` full-text index + multi-dimensional filter API | Yes |
+| Authors & affiliations | `authors` / `affiliations` + author profile | Yes |
+| Comments & discussion | `comments` threaded replies + API | Yes |
+| Subscriptions & alerts | `subscriptions` (category/author/paper) + alert list | Yes |
+| Personal profile & user system | `/u/[username]` + auth | Yes |
+| Submission moderation flow | `admin/review` queue + moderation state machine | Yes |
+| Open API | `/api/*` REST | Yes |
+| Dark mode | next-themes + CSS variables | Yes |
+| Responsive layout | Tailwind containers + mobile-first | Yes |
+| Endorsement | `endorsements` table + first-submission endorsement gate | Basic |
+| RSS / email alerts | RSS route + Resend / SMTP delivery (configurable) | Yes |
+| Advanced boolean search | field scoping (ti/abs/au/cat/id) + AND/OR/NOT + parentheses | Yes |
+| Multilingual full-text search | CJK via `pg_trgm` trigram ILIKE, Latin via `tsvector` (english/simple) | Yes |
+| Batch PDF parsing | pdf-parse extracts text/metadata + regex references (paper id / DOI) | Yes |
+| Citation graph | `citations` table records DOI/paper-id relations, hand-drawn SVG graph | Yes |
+| Admin analytics | submission/category/author/review aggregate panel (ECharts 6) | Yes |
 
 ---
 
-## 技术架构
+## Technical Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                         Browser (RSC + Client)                 │
-│   Server Components 直读 DB  ·  Client Components 调 /api       │
-└───────────────┬───────────────────────────┬──────────────────┘
-                │ 读 (Server)               │ 写/交互 (Client fetch)
-                ▼                           ▼
-┌───────────────────────────┐   ┌──────────────────────────────┐
-│  Next.js App Router        │   │  Next.js Route Handlers       │
-│  app/**/page.tsx           │   │  app/api/**/route.ts          │
-│  lib/services/* (查询逻辑) │   │  lib/services/* (变更逻辑)     │
-└───────────────┬───────────┘   └──────────────┬───────────────┘
-                │                              │
-                └──────────┬───────────────────┘
-                           ▼
-                ┌──────────────────────┐
-                │  Drizzle ORM         │
-                │  (postgres-js 驱动)  │
-                └──────────┬───────────┘
-                           ▼
-                ┌──────────────────────┐
-                │  PostgreSQL          │
-                │  (Vercel Postgres /  │
-                │   Neon / 自托管)      │
-                └──────────────────────┘
++-----------------------------Browser (RSC + Client)-----------------------------+
+|   Server Components read DB directly  ·  Client Components call /api           |
++------------------+-------------------------------+----------------------------+
+                   | read (Server)                 | write/interaction (Client fetch)
+                   v                               v
++--------------------------------+   +----------------------------------+
+|  Next.js App Router            |   |  Next.js Route Handlers          |
+|  app/**/page.tsx               |   |  app/api/**/route.ts             |
+|  lib/services/* (queries)      |   |  lib/services/* (mutations)      |
++---------------+----------------+   +----------------+------------------+
+                |                                  |
+                +------------------+-----------------+
+                                   v
+                     +--------------------------+
+                     |  Drizzle ORM             |
+                     |  (postgres-js driver)    |
+                     +------------+-------------+
+                                  v
+                     +--------------------------+
+                     |  PostgreSQL              |
+                     |  (Vercel Postgres /      |
+                     |   Neon / self-hosted)    |
+                     +--------------------------+
 ```
 
-**分层原则**
-- `lib/db/*`：仅数据访问，不含业务。
-- `lib/services/*`：业务查询/变更函数（服务端 only），被页面与 API 共用，避免重复逻辑。
-- `app/api/**`：REST 边界，负责入参校验（zod）、鉴权、调用 service。
-- `components/**`：展示与交互，客户端组件通过 `fetch('/api/...')` 调用。
+**Layering principles**
+- `lib/db/*`: data access only, no business logic.
+- `lib/services/*`: business query/mutation functions (server-only), shared by pages and APIs to avoid duplication.
+- `app/api/**`: REST boundary, responsible for input validation (zod), auth, and calling services.
+- `components/**`: presentation and interaction; client components call via `fetch('/api/...')`.
 
 ---
 
-## 技术栈版本
+## Tech Stack Versions
 
-> 当前主版本（2026-08 升级后）。详见仓库根目录 `UPGRADE.md`。
+> Current major versions (after the 2026-08 upgrade). See `UPGRADE.md` at the repo root for details.
 
-| 领域 | 技术 | 版本 |
+| Area | Technology | Version |
 | --- | --- | --- |
-| 框架 | Next.js（App Router） | 16.3 |
-| UI 运行时 | React | 19 |
-| 样式 | Tailwind CSS（CSS-first + `@tailwindcss/postcss`） | 4.3 |
-| 语言 | TypeScript | 5.9 |
-| 数据层 | Drizzle ORM（postgres-js） | 0.45 |
-| 图表 | ECharts | 6.1 |
-| 校验 | Zod | 4.4 |
-| 认证 | jose（JWT）+ bcryptjs | 6 / 3 |
-| 图标 | lucide-react | 1.x |
-| 状态 | Zustand | 5 |
-| Lint / 测试 | ESLint 9（flat config）+ Vitest 3 | — |
-| PDF 解析 | pdf-parse（class-based API） | 2.4 |
+| Framework | Next.js (App Router) | 16.3 |
+| UI runtime | React | 19 |
+| Styling | Tailwind CSS (CSS-first + `@tailwindcss/postcss`) | 4.3 |
+| Language | TypeScript | 5.9 |
+| Data layer | Drizzle ORM (postgres-js) | 0.45 |
+| Charts | ECharts | 6.1 |
+| Validation | Zod | 4.4 |
+| Auth | jose (JWT) + bcryptjs | 6 / 3 |
+| Icons | lucide-react | 1.x |
+| State | Zustand | 5 |
+| Lint / Test | ESLint 9 (flat config) + Vitest 4 | — |
+| PDF parsing | pdf-parse (class-based API) | 2.4 |
 
-> TypeScript 暂定 `5.9`：`typescript-eslint` 8.x 对 TS 7 的支持仍在跟进，待其发布后迁移至 TS 7。
+> TypeScript is pinned at `5.9` for now: `typescript-eslint` 8.x is still catching up to TS 7, and will be migrated once it ships support.
 
 ---
 
-## 目录结构
+## Directory Structure
 
 ```
 papex/
-├── drizzle/                 # drizzle-kit 生成的迁移 SQL
+├── drizzle/                 # migration SQL generated by drizzle-kit
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx          # 根布局：主题/字体/Header/Footer
-│   │   ├── globals.css         # Tailwind + 设计 Token (CSS 变量)
-│   │   ├── page.tsx            # 首页：最新/热门/分类入口
-│   │   ├── (auth)/             # 登录 / 注册
+│   │   ├── layout.tsx          # root layout: theme/font/Header/Footer
+│   │   ├── globals.css         # Tailwind + design tokens (CSS variables)
+│   │   ├── page.tsx            # home: latest/popular/category entries
+│   │   ├── (auth)/             # login / register
 │   │   ├── papers/
-│   │   │   ├── page.tsx        # 列表 + 检索 + 筛选
-│   │   │   ├── [id]/page.tsx   # 论文详情（最新版本）
-│   │   │   ├── [id]/[version]/page.tsx  # 指定版本
-│   │   │   └── [id]/edit/page.tsx      # 提交新版本
-│   │   ├── submit/page.tsx     # 新投稿
-│   │   ├── categories/         # 分类树 / 分类详情
-│   │   ├── authors/[id]/       # 作者主页
-│   │   ├── u/[username]/       # 用户个人主页
-│   │   ├── me/                 # 我的投稿 / 订阅 / 提醒
-│   │   ├── admin/review/       # 审核队列（moderator 可见）
-│   │   └── api/                # REST API（见下）
+│   │   │   ├── page.tsx        # list + search + filter
+│   │   │   ├── [id]/page.tsx   # paper detail (latest version)
+│   │   │   ├── [id]/[version]/page.tsx  # specific version
+│   │   │   └── [id]/edit/page.tsx      # submit a new version
+│   │   ├── submit/page.tsx     # new submission
+│   │   ├── categories/         # category tree / category detail
+│   │   ├── authors/[id]/       # author profile
+│   │   ├── u/[username]/       # user profile
+│   │   ├── me/                 # my submissions / subscriptions / alerts
+│   │   ├── admin/review/       # review queue (moderator only)
+│   │   └── api/                # REST API (see below)
 │   ├── components/
-│   │   ├── ui/                 # shadcn 风格基础组件
+│   │   ├── ui/                 # shadcn-style base components
 │   │   ├── site-header.tsx / site-footer.tsx
 │   │   ├── theme-provider.tsx / theme-toggle.tsx
 │   │   ├── paper-card.tsx / search-bar.tsx / category-tree.tsx
 │   │   ├── comment-thread.tsx / submit-form.tsx / review-queue.tsx
 │   │   └── ...
 │   ├── lib/
-│   │   ├── utils.ts            # cn() 等
+│   │   ├── utils.ts            # cn() etc.
 │   │   ├── db/
-│   │   │   ├── index.ts        # drizzle 单例
-│   │   │   ├── schema.ts       # 全部表 + 关系
-│   │   │   └── seed.ts         # 种子数据
+│   │   │   ├── index.ts        # drizzle singleton
+│   │   │   ├── schema.ts       # all tables + relations
+│   │   │   └── seed.ts         # seed data
 │   │   ├── auth/
-│   │   │   ├── session.ts      # JWT 签发/校验 + cookie
+│   │   │   ├── session.ts      # JWT sign/verify + cookie
 │   │   │   └── password.ts     # bcrypt
 │   │   ├── services/           # papers/authors/categories/comments/subscriptions/review
-│   │   ├── validations.ts      # zod 校验
-│   │   ├── paper-id.ts         # 文献编号生成
-│   │   └── search.ts           # 全文检索拼接
-│   ├── hooks/                  # 客户端 hooks
+│   │   ├── validations.ts      # zod validation
+│   │   ├── paper-id.ts         # paper id generation
+│   │   └── search.ts           # full-text search composition
+│   ├── hooks/                  # client hooks
 │   ├── store/                  # Zustand stores
-│   └── types/                  # 共享类型
-├── Dockerfile / docker-compose.yml   # 自托管
-├── vercel.json                        # Vercel 配置（可选）
-├── .github/workflows/ci.yml           # CI：lint + typecheck + build + migrate
+│   └── types/                  # shared types
+├── Dockerfile / docker-compose.yml   # self-hosting
+├── vercel.json                        # Vercel config (optional)
+├── .github/workflows/ci.yml           # CI: lint + typecheck + build + migrate
 ├── drizzle.config.ts / tailwind.config.ts / next.config.mjs
 └── LICENSE (Apache-2.0)
 ```
 
 ---
 
-## 数据模型设计
+## Data Model
 
-采用 Drizzle + PostgreSQL。核心实体与关系：
+Built with Drizzle + PostgreSQL. Core entities and relationships:
 
-| 表 | 用途 | 关键字段 |
+| Table | Purpose | Key fields |
 | --- | --- | --- |
-| `users` | 账户 | id, username, email, passwordHash, role(author/admin/moderator), displayName |
-| `authors` | 作者档案（可关联 user） | id, userId?, name, orcid?, affiliationId? |
-| `affiliations` | 机构 | id, name, country? |
-| `papers` | 论文主记录 | id(文献编号风格), title, primaryCategoryId, status(submitted/approved/withdrawn), createdBy |
-| `paper_versions` | 版本快照 | id, paperId, version, title, abstract, authors(json), pdfUrl, doi?, license, createdAt |
-| `paper_authors` | 论文-作者关联 | paperId, authorId, order |
-| `categories` | 学科分类 | id(slug), parentId?, name, description |
-| `paper_categories` | 论文-分类（含交叉列表） | paperId, categoryId, isPrimary |
-| `comments` | 评论/讨论 | id, paperId, userId, parentId?, body, createdAt |
-| `subscriptions` | 订阅 | id, userId, type(category/author/paper), refId |
-| `endorsements` | 背书 | id, endorserId, endorseeId, categoryId |
-| `announcements` | 提醒/公告 | id, userId, kind, payload(json), read, createdAt, emailedAt |
-| `citations` | 引用关系 | id, paperId, targetPaperId?, targetDoi?, targetArxivId?, targetTitle?, createdById?, createdAt |
+| `users` | accounts | id, username, email, passwordHash, role(author/admin/moderator), displayName |
+| `authors` | author profile (may link to user) | id, userId?, name, orcid?, affiliationId? |
+| `affiliations` | institutions | id, name, country? |
+| `papers` | paper master record | id (paper-id style), title, primaryCategoryId, status(submitted/approved/withdrawn), createdBy |
+| `paper_versions` | version snapshot | id, paperId, version, title, abstract, authors(json), pdfUrl, doi?, license, createdAt |
+| `paper_authors` | paper-author association | paperId, authorId, order |
+| `categories` | subject categories | id(slug), parentId?, name, description |
+| `paper_categories` | paper-category (incl. cross-listing) | paperId, categoryId, isPrimary |
+| `comments` | comments / discussion | id, paperId, userId, parentId?, body, createdAt |
+| `subscriptions` | subscriptions | id, userId, type(category/author/paper), refId |
+| `endorsements` | endorsements | id, endorserId, endorseeId, categoryId |
+| `announcements` | alerts / announcements | id, userId, kind, payload(json), read, createdAt, emailedAt |
+| `citations` | citation relations | id, paperId, targetPaperId?, targetDoi?, targetArxivId?, targetTitle?, createdById?, createdAt |
 
-**索引与检索**
-- `paper_versions` 上 `to_tsvector('english', title || ' ' || abstract)` 生成 `search_vector`（GIN 索引），支撑拉丁文全文检索。
-- `paper_versions` 上加 `pg_trgm` 三元组 GIN 索引 `(coalesce(title,'') || ' ' || coalesce(abstract,'')) gin_trgm_ops`，支撑中文等 CJK 子串/短语检索（无需 zhparser 分词插件）。
-- `papers(status, primaryCategoryId, createdAt)` 复合索引支撑列表筛选与排序。
-- `comments(paperId, parentId)` 支撑楼中楼。
+**Indexes & search**
+- `paper_versions` has `to_tsvector('english', title || ' ' || abstract)` generating `search_vector` (GIN index) for Latin full-text search.
+- `paper_versions` has a `pg_trgm` trigram GIN index `(coalesce(title,'') || ' ' || coalesce(abstract,'')) gin_trgm_ops` for CJK substring/phrase search (no zhparser required).
+- `papers(status, primaryCategoryId, createdAt)` composite index supports list filtering and sorting.
+- `comments(paperId, parentId)` supports threaded replies.
 
-完整定义见 `src/lib/db/schema.ts`。
-
----
-
-## 功能模块划分
-
-1. **提交与版本管理**（`services/papers.ts` + `submit`/`edit` 页）
-   - 新投稿写入 `papers` + 首个 `paper_versions`（v1），状态 `submitted`。
-   - 提交新版本：新增 `paper_versions`（version+1），旧版本永久保留；支持 withdraw（写 withdrawal 原因，内容不可下载）。
-2. **检索与筛选**（`services/search.ts` + `/api/search` + `lib/search.ts`）
-   - 高级布尔语法：字段限定（`ti:`/`title:`、`abs:`/`abstract:`、`au:`/`author:`、`cat:`/`category:`、`id:`）+ `AND`/`OR`/`NOT` + 括号分组；相邻词隐式 AND。
-   - 多语言：拉丁文库 `tsvector`（english/simple）词干匹配，CJK 库 `pg_trgm` 三元组 ILIKE 子串匹配，二者 OR 组合。
-   - 分类 + 作者 + 日期区间 + 排序（最新/热门）。返回分页结果。
-3. **分类体系**（`services/categories.ts`）— 树形展示，分类详情页列出论文。
-4. **作者与机构**（`services/authors.ts`）— 作者主页列出其论文、机构。
-5. **评论讨论**（`services/comments.ts` + `/api/papers/[id]/comments`）— 楼中楼，注册用户可评。
-6. **订阅与提醒**（`services/subscriptions.ts`）— 订阅分类/作者；新论文进入订阅范围生成 `announcements`。
-7. **用户系统**（`lib/auth/*` + `services/users.ts`）— 注册/登录/登出、个人主页、我的投稿。
-8. **审核流程**（`services/review.ts` + `/admin/review`）— moderator 可 approve/reject/withdraw；首次投稿需对应分类 endorsement。
-9. **API**（`app/api/**`）— 统一 REST，zod 校验，JWT 鉴权写操作。
-10. **主题与响应式** — `next-themes` + Tailwind 容器断点。
+See `src/lib/db/schema.ts` for the full definition.
 
 ---
 
-## 核心流程
+## Feature Modules
 
-**投稿 → 审核 → 发布**
+1. **Submission & versioning** (`services/papers.ts` + `submit`/`edit` pages)
+   - New submission writes `papers` + first `paper_versions` (v1), status `submitted`.
+   - Submitting a new version adds `paper_versions` (version+1); old versions are kept permanently; supports withdraw (records a reason, content becomes non-downloadable).
+2. **Search & filter** (`services/search.ts` + `/api/search` + `lib/search.ts`)
+   - Advanced boolean syntax: field scoping (`ti:`/`title:`, `abs:`/`abstract:`, `au:`/`author:`, `cat:`/`category:`, `id:`) + `AND`/`OR`/`NOT` + parentheses; adjacent terms imply AND.
+   - Multilingual: Latin via `tsvector` (english/simple) stemming, CJK via `pg_trgm` trigram ILIKE substring, combined with OR.
+   - Category + author + date range + sorting (latest/popular). Returns paginated results.
+3. **Category system** (`services/categories.ts`) — tree display; category detail page lists papers.
+4. **Authors & affiliations** (`services/authors.ts`) — author profile lists their papers and affiliation.
+5. **Comments** (`services/comments.ts` + `/api/papers/[id]/comments`) — threaded replies; registered users may comment.
+6. **Subscriptions & alerts** (`services/subscriptions.ts`) — subscribe to categories/authors; new papers in scope generate `announcements`.
+7. **User system** (`lib/auth/*` + `services/users.ts`) — register/login/logout, profile, my submissions.
+8. **Moderation flow** (`services/review.ts` + `/admin/review`) — moderator can approve/reject/withdraw; first submission in a category requires that category's endorsement.
+9. **API** (`app/api/**`) — unified REST, zod validation, JWT auth for write ops.
+10. **Theme & responsive** — `next-themes` + Tailwind container breakpoints.
+
+---
+
+## Core Flows
+
+**Submit → Review → Publish**
 ```
-作者 /submit → 创建 papers(submitted) + paper_versions v1
-   ↓ （如需 endorsement：检查 endorsements 或跳过 MVP）
-moderator /admin/review → approve → papers.status = approved
-   ↓
-进入列表/检索/首页；命中订阅者生成 announcements
+author /submit -> create papers(submitted) + paper_versions v1
+   | (if endorsement needed: check endorsements, or skip for MVP)
+   v
+moderator /admin/review -> approve -> papers.status = approved
+   |
+   v
+enter list/search/home; subscribers get announcements
 ```
 
-**版本更新**
+**Version update**
 ```
-作者 /papers/[id]/edit → 新增 paper_versions v(N+1)，保留 vN
-读者详情页默认看最新版，可切到任意历史版本
+author /papers/[id]/edit -> add paper_versions v(N+1), keep vN
+reader sees latest version by default on detail page, can switch to any historical version
 ```
 
 ---
 
-## 本地开发
+## Local Development
 
 ```bash
-# 1. 安装依赖（bun 或 npm）
-bun install            # 或 npm install
+# 1. Install dependencies (bun or npm)
+bun install            # or npm install
 
-# 2. 准备数据库（PostgreSQL）
-docker compose up -d db     # 启动本地 Postgres
+# 2. Prepare the database (PostgreSQL)
+docker compose up -d db     # start local Postgres
 
-# 3. 环境变量
-cp .env.example .env        # 填入 AUTH_SECRET（openssl rand -base64 48）
+# 3. Environment variables
+cp .env.example .env        # fill in AUTH_SECRET (openssl rand -base64 48)
 
-# 4. 迁移 + 种子
-bun db:migrate              # 或 npm run db:migrate
-bun db:seed                 # 可选：灌入示例数据
+# 4. Migrate + seed
+bun db:migrate              # or npm run db:migrate
+bun db:seed                 # optional: load sample data
 
-# 5. 启动
+# 5. Start
 bun dev                     # http://localhost:3000
 ```
 
 ---
 
-## 数据库迁移与种子
+## Database Migration & Seed
 
-- 迁移由 `drizzle-kit` 生成至 `drizzle/`。
-- 生产部署建议在 CI 中执行 `db:migrate`（用直连串 `DATABASE_URL_UNPOOLED`）。
-- 种子脚本 `src/lib/db/seed.ts` 写入分类体系与示例论文，便于本地预览。
+- Migrations are generated by `drizzle-kit` into `drizzle/`.
+- For production deploys, run `db:migrate` in CI (using the direct `DATABASE_URL_UNPOOLED` connection string).
+- The seed script `src/lib/db/seed.ts` writes the category system and sample papers for local preview.
 
 ---
 
-## 部署
+## Deployment
 
-### Vercel（首选）
-1. 导入仓库 → Framework: Next.js（自动识别）。
-2. 环境变量：`DATABASE_URL`（Neon 池化串）、`DATABASE_URL_UNPOOLED`（直连串）、`AUTH_SECRET`。
-3. Build Command：`npm run build`；需在构建/部署前跑迁移——可在 `vercel.json` 的 `build` 钩子或 CI 中执行 `npm run db:migrate`。
-4. 点击 Deploy。
+### Vercel (recommended)
+1. Import the repo → Framework: Next.js (auto-detected).
+2. Environment variables: `DATABASE_URL` (Neon pooled string), `DATABASE_URL_UNPOOLED` (direct string), `AUTH_SECRET`.
+3. Build Command: `npm run build`; migrations must run before build/deploy — use a `vercel.json` build hook or run `npm run db:migrate` in CI.
+4. Click Deploy.
 
-### Docker（自托管）
+### Docker (self-hosted)
 ```bash
-docker compose up -d        # 含 Postgres + Next 服务
+docker compose up -d        # includes Postgres + Next service
 ```
 
 ### CI
-`.github/workflows/ci.yml`：install → lint → typecheck → build → db:migrate（preview/prod）。
+`.github/workflows/ci.yml`: install → lint → typecheck → build → db:migrate (preview/prod).
 
 ---
 
-## API 速览
+## API Overview
 
-| Method | Path | 说明 | 鉴权 |
+| Method | Path | Description | Auth |
 | --- | --- | --- | --- |
-| POST | `/api/auth/register` | 注册 | 公开 |
-| POST | `/api/auth/login` | 登录 | 公开 |
-| POST | `/api/auth/logout` | 登出 | 登录 |
-| GET | `/api/auth/me` | 当前用户 | 登录 |
-| GET | `/api/papers` | 论文列表（分页/筛选） | 公开 |
-| POST | `/api/papers` | 新投稿 | 登录 |
-| GET | `/api/papers/[id]` | 论文详情 | 公开 |
-| GET | `/api/papers/[id]/versions` | 版本列表 | 公开 |
-| POST | `/api/papers/[id]/versions` | 提交新版本 | 作者 |
-| GET/POST | `/api/papers/[id]/comments` | 评论列表 / 发表 | 公开 / 登录 |
-| GET | `/api/search` | 全文检索 | 公开 |
-| GET | `/api/categories` | 分类树 | 公开 |
-| GET | `/api/authors` | 作者检索 | 公开 |
-| GET/POST/DELETE | `/api/subscriptions` | 订阅管理 | 登录 |
-| POST | `/api/papers/[id]/moderate` | 审核动作 | moderator |
-| GET/POST | `/api/papers/[id]/citations` | 引用列表 / 新增引用 | 公开 / 作者·moderator |
-| POST | `/api/papers/[id]/pdf` | 上传并解析 PDF（抽取元数据+参考文献） | 作者 |
-| GET | `/api/papers/[id]/pdf/[version]` | 流式下载 PDF | 公开 |
-| POST | `/api/admin/ingest` | 批量导入（multipart 多 PDF 或 JSON 元数据） | moderator |
-| GET | `/api/admin/stats` | 管理后台统计聚合 | moderator |
-| GET | `/api/feed` | 当前用户提醒/RSS | 登录 |
+| POST | `/api/auth/register` | Register | Public |
+| POST | `/api/auth/login` | Login | Public |
+| POST | `/api/auth/logout` | Logout | Logged in |
+| GET | `/api/auth/me` | Current user | Logged in |
+| GET | `/api/papers` | Paper list (paginated/filtered) | Public |
+| POST | `/api/papers` | New submission | Logged in |
+| GET | `/api/papers/[id]` | Paper detail | Public |
+| GET | `/api/papers/[id]/versions` | Version list | Public |
+| POST | `/api/papers/[id]/versions` | Submit new version | Author |
+| GET/POST | `/api/papers/[id]/comments` | Comment list / post | Public / Logged in |
+| GET | `/api/search` | Full-text search | Public |
+| GET | `/api/categories` | Category tree | Public |
+| GET | `/api/authors` | Author search | Public |
+| GET/POST/DELETE | `/api/subscriptions` | Subscription management | Logged in |
+| POST | `/api/papers/[id]/moderate` | Moderation action | Moderator |
+| GET/POST | `/api/papers/[id]/citations` | Citation list / add citation | Public / Author·Moderator |
+| POST | `/api/papers/[id]/pdf` | Upload & parse PDF (metadata + references) | Author |
+| GET | `/api/papers/[id]/pdf/[version]` | Stream PDF download | Public |
+| POST | `/api/admin/ingest` | Batch import (multipart multi-PDF or JSON metadata) | Moderator |
+| GET | `/api/admin/stats` | Admin analytics aggregation | Moderator |
+| GET | `/api/feed` | Current user alerts / RSS | Logged in |
 
 ---
 
-## 路线图（已完成）
+## Roadmap (completed)
 
-- [x] **邮件提醒对接 Resend / SMTP** — `lib/email/*`：`EMAIL_PROVIDER` 切换；Resend 走 fetch REST（无需 SDK），SMTP 走 nodemailer。新论文提醒经 `services/feed.ts` 扇出，投递失败不阻塞发布。
-- [x] **批量 PDF 解析与元数据抽取（pdf-parse）** — `lib/pdf.ts` + `/api/papers/[id]/pdf` 上传即解析文本/页数，正则抽取参考文献（文献编号 / DOI）并尝试自动关联站内论文；`/api/admin/ingest` 支持批量导入（多 PDF 或 JSON 元数据）。
-- [x] **引用图（基于 DOI / 文献编号）** — `citations` 表记录引用关系；`/api/papers/[id]/citations` 提供出/入链；详情页渲染手绘 SVG 关系图（无图表库，符合 P0 规范）。
-- [x] **高级布尔检索语法（AND/OR/NOT + 字段限定）** — `lib/search.ts` 递归下降解析器，支持 `ti/abs/au/cat/id` 字段限定与括号分组。
-- [x] **多语言全文检索（中文分词）** — 拉丁文走 `tsvector`，中文等 CJK 走 `pg_trgm` 三元组 ILIKE（无需 zhparser 分词插件）；二者 OR 组合保证中英混合查询可用。
-- [x] **管理后台统计面板** — `/admin/stats` + `/api/admin/stats`：总量/按状态/按分类 Top10/近 14 天投稿趋势/Top 作者等聚合，手绘 SVG 柱状图。
+- [x] **Email alerts via Resend / SMTP** — `lib/email/*`: switch with `EMAIL_PROVIDER`; Resend uses fetch REST (no SDK), SMTP uses nodemailer. New-paper alerts fan out via `services/feed.ts`; delivery failure does not block publishing.
+- [x] **Batch PDF parsing & metadata extraction (pdf-parse)** — `lib/pdf.ts` + `/api/papers/[id]/pdf` parses text/page count on upload, regex-extracts references (paper id / DOI) and attempts to auto-link on-site papers; `/api/admin/ingest` supports batch import (multi-PDF or JSON metadata).
+- [x] **Citation graph (by DOI / paper id)** — `citations` table records relations; `/api/papers/[id]/citations` exposes in/out links; the detail page renders a hand-drawn SVG graph (no chart library, per P0 spec).
+- [x] **Advanced boolean search syntax (AND/OR/NOT + field scoping)** — `lib/search.ts` recursive-descent parser supporting `ti/abs/au/cat/id` field scoping and parentheses.
+- [x] **Multilingual full-text search (CJK tokenization)** — Latin via `tsvector`, CJK via `pg_trgm` trigram ILIKE (no zhparser plugin needed); combined with OR for mixed Chinese/English queries.
+- [x] **Admin analytics panel** — `/admin/stats` + `/api/admin/stats`: totals / by status / Top10 by category / last-14-day submission trend / Top authors aggregates, hand-drawn SVG bar charts.
 
 ---
 

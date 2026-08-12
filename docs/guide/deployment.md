@@ -1,33 +1,33 @@
-# 部署
+# Deployment
 
-Papex 可部署到 Vercel、任意 Docker 环境或自托管服务器。
+Papex can be deployed to Vercel, any Docker environment, or a self-hosted server.
 
 ## Vercel
 
-1. 导入仓库到 Vercel。
-2. 设置环境变量：`DATABASE_URL`、`AUTH_SECRET`。
-3. 构建命令：`npm run build`；输出目录由 Next.js 自动处理。
-4. 在 Vercel 的「Storage」中绑定 Postgres，或在环境变量中填写外部数据库地址。
-5. 部署后执行一次迁移：`npm run db:migrate`。
+1. Import the repo into Vercel.
+2. Set env vars: `DATABASE_URL`, `AUTH_SECRET`.
+3. Build command: `npm run build` (output handled by Next.js).
+4. Bind Postgres via Vercel Storage, or fill an external `DATABASE_URL`.
+5. Run migrations once after deploy: `npm run db:migrate`.
 
-## Docker / 自托管
+## Docker / self-hosted
 
-使用仓库根目录的 `docker-compose.yml` 可一并启动应用与数据库：
+Use the root `docker-compose.yml` to run app + database together:
 
 ```bash
 docker compose up -d
 ```
 
-也可仅用 Docker 运行 Postgres，再自行构建镜像运行 Next.js：
+Or run only Postgres in Docker and build the Next.js image yourself:
 
 ```bash
 docker build -t papex .
 docker run -e DATABASE_URL=... -e AUTH_SECRET=... -p 3000:3000 papex
 ```
 
-## 文档站
+## Docs site
 
-文档基于 VitePress，构建产物输出到 `public/docs`，由主站以 `/docs` 路径提供：
+Docs are built with VitePress into `public/docs` and served by the main app at `/docs`:
 
 ```bash
 npm run docs:build
