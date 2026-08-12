@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getUserProfile } from "@/lib/services/users";
+import { getReceivedEndorsements } from "@/lib/services/endorsements";
+import { EndorseUserButton } from "@/components/endorse-user-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
   const { username } = await params;
   const profile = await getUserProfile(username);
   if (!profile) notFound();
+  const receivedEndorsements = await getReceivedEndorsements(profile.user.id);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -104,6 +107,23 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
             ))}
           </ul>
         )}
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">收到的背书</h2>
+        {receivedEndorsements.length === 0 ? (
+          <p className="text-sm text-muted-foreground">暂无背书。</p>
+        ) : (
+          <ul className="space-y-2">
+            {receivedEndorsements.map((e) => (
+              <li key={e.id} className="rounded-md border p-3 text-sm">
+                <span className="font-medium">{e.categoryName ?? e.categoryId}</span>
+                <span className="text-muted-foreground"> · 由 {e.endorserName ?? "匿名"} 背书</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <EndorseUserButton endorseeId={profile.user.id} />
       </div>
     </div>
   );

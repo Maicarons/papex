@@ -9,6 +9,7 @@ import {
   affiliations,
   comments,
   moderationLogs,
+  endorsements,
 } from "@/lib/db/schema";
 import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import { generatePaperId } from "@/lib/paper-id";
@@ -100,6 +101,34 @@ export async function createSubmission(input: CreatePaperInput, owner: OwnerLike
     }
 
     // ----- Brand new paper -----
+    // Gate: a first submission in a category requires an endorsement for that
+    // category (or a previously created paper in it). New versions of an existing
+    // paper are exempt because they are not "first submissions".
+    {
+      const [prior] = await tx
+        .select({ id: papers.id })
+        .from(papers)
+        .where(
+          and(
+            eq(papers.createdById, owner.id),
+            eq(papers.primaryCategoryId, input.primaryCategoryId),
+          ),
+        )
+        .limit(1);
+      if (!prior) {
+        const [endo] = await tx
+          .select({ id: endorsements.id })
+          .from(endorsements)
+          .where(
+            and(
+              eq(endorsements.endorseeId, owner.id),
+              eq(endorsements.categoryId, input.primaryCategoryId),
+            ),
+          )
+          .limit(1);
+        if (!endo) throw new Error("ENDORSEMENT_REQUIRED");
+      }
+    }
     let paperId = generatePaperId();
     let created = false;
     for (let attempt = 0; attempt < 5 && !created; attempt++) {

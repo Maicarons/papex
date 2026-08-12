@@ -13,6 +13,7 @@ export const PERMISSION_GROUPS: { key: string; name: string }[] = [
   { key: "comment", name: "评论" },
   { key: "ticket", name: "工单" },
   { key: "co_review", name: "协审" },
+  { key: "endorse", name: "背书" },
   { key: "message", name: "站内信" },
   { key: "admin", name: "管理" },
 ];
@@ -29,6 +30,8 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: "co_review:assign", name: "指派协审", group: "co_review", description: "向用户发起协审请求" },
   { key: "co_review:respond", name: "参与协审", group: "co_review", description: "接收并回应协审请求" },
   { key: "co_review:manage", name: "管理协审", group: "co_review", description: "查看全部协审进度" },
+  { key: "endorse:create", name: "给予背书", group: "endorse", description: "为某用户在某分类下背书" },
+  { key: "endorse:view", name: "查看背书", group: "endorse", description: "查看用户收到的背书" },
   { key: "message:broadcast", name: "群发通知", group: "message", description: "向用户广播站内信" },
   { key: "user:manage", name: "用户管理", group: "admin", description: "查看 / 编辑用户" },
   { key: "role:manage", name: "角色权限管理", group: "admin", description: "配置角色与权限" },
@@ -51,6 +54,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     "co_review:assign",
     "co_review:respond",
     "co_review:manage",
+    "endorse:create",
+    "endorse:view",
     "message:broadcast",
     "user:manage",
   ],
@@ -61,8 +66,10 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     "comment:create",
     "comment:view",
     "ticket:create",
+    "endorse:create",
+    "endorse:view",
   ],
-  reader: ["paper:view", "paper:download", "comment:view"],
+  reader: ["paper:view", "paper:download", "comment:view", "endorse:view"],
 };
 
 export const SYSTEM_ROLE_KEYS = Object.keys(DEFAULT_ROLE_PERMISSIONS);
