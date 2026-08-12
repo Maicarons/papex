@@ -1,7 +1,11 @@
 import { defineConfig } from "vitepress";
 
+// base 默认 /docs/ 用于 Next.js 在 /docs 路由提供文档（Vercel/自托管）。
+// 部署到 GitHub Pages 项目站点（根路径 /papex/）时，由工作流传入 VITEPRESS_BASE 覆盖。
+const base = process.env.VITEPRESS_BASE ?? "/docs/";
+
 export default defineConfig({
-  base: "/docs/",
+  base,
   outDir: "../.docs-dist",
   title: "Papex",
   ignoreDeadLinks: true,

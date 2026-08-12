@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, PenLine } from "lucide-react";
 import { listPapers } from "@/lib/services/papers";
 import { getCategoryTree } from "@/lib/services/categories";
 import { SearchBar } from "@/components/search-bar";
@@ -46,11 +46,17 @@ export default async function HomePage() {
         <div className="mx-auto mt-8 max-w-xl">
           <SearchBar />
         </div>
-        <div className="mt-6">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Button asChild size="lg" className="bg-cta text-cta-foreground hover:bg-cta/90">
             <Link href="/submit">
               {t("home.submitCta")}
               <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/writespace">
+              <PenLine className="h-4 w-4" />
+              {t("nav.writespace")}
             </Link>
           </Button>
         </div>

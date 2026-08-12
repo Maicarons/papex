@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck } from "lucide-react";
+import { FileText, Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck, PenLine, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -54,12 +54,21 @@ export function SiteHeader() {
             </Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/categories">{t("nav.categories")}</Link>
+            <Link href="/categories">
+              <LayoutGrid className="h-4 w-4" />
+              {t("nav.categories")}
+            </Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link href="/submit">
               <Upload className="h-4 w-4" />
               {t("nav.submit")}
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/writespace">
+              <PenLine className="h-4 w-4" />
+              {t("nav.writespace")}
             </Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>

@@ -7,7 +7,6 @@ import { getCoReviewDetail } from "@/lib/services/co-reviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AdminNav } from "@/components/admin-nav";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +42,6 @@ export default async function AdminCoReviewDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <AdminNav />
       <Button asChild variant="ghost" size="sm" className="gap-1">
         <Link href="/admin/co-reviews">
           <ArrowLeft className="h-4 w-4" />
