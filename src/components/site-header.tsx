@@ -119,6 +119,12 @@ export function SiteHeader() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link href="/settings/api-keys">
+                      <KeyRound className="h-4 w-4" />
+                      {t("apiKeys.title")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/tickets">
                       <Ticket className="h-4 w-4" />
                       {t("nav.tickets")}

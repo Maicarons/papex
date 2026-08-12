@@ -1,8 +1,9 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { resolveApiKey, type ApiKeyScope } from "./api-key";
 
 const COOKIE_NAME = "papex_session";
 const ISSUER = "papex";
@@ -19,6 +20,10 @@ export interface SessionPayload {
   sub: string; // user id
   username: string;
   role: "author" | "moderator" | "admin";
+  /** How the session was authenticated. */
+  source?: "cookie" | "apikey";
+  /** Present only when source === "apikey". Inherited/owner scopes. */
+  apiKeyScopes?: ApiKeyScope[];
 }
 
 export async function signSession(payload: SessionPayload): Promise<string> {
@@ -68,8 +73,34 @@ export async function clearSessionCookie() {
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-  return verifySession(token);
+  if (token) return verifySession(token);
+
+  // Fallback: programmatic access via `Authorization: Bearer pk_...`.
+  // Resolves to the owning user's identity so the existing RBAC checks
+  // (`userCan`, `requirePermission`) apply unchanged.
+  const headerStore = await headers();
+  const auth = headerStore.get("authorization");
+  if (auth?.startsWith("Bearer ")) {
+    const raw = auth.slice(7).trim();
+    const resolved = await resolveApiKey(raw);
+    if (resolved) {
+      const [user] = await db
+        .select({ id: users.id, username: users.username, role: users.role })
+        .from(users)
+        .where(eq(users.id, resolved.userId))
+        .limit(1);
+      if (user) {
+        return {
+          sub: user.id,
+          username: user.username,
+          role: user.role,
+          source: "apikey",
+          apiKeyScopes: resolved.scopes,
+        };
+      }
+    }
+  }
+  return null;
 }
 
 /** Load the full user record for the current session, or null. */

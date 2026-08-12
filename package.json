@@ -6,8 +6,11 @@
   "description": "Papex — an open-source, independent platform for managing and discovering academic literature, built with Next.js.",
   "type": "module",
   "scripts": {
+    "predev": "npm run openapi:generate",
     "dev": "next dev",
-    "build": "npm run docs:build && next build",
+    "openapi:generate": "tsx src/lib/openapi/generate.ts",
+    "prebuild": "npm run openapi:generate && npm run docs:build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
