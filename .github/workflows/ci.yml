@@ -42,6 +42,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Generate OpenAPI spec
+        # spec.generated.ts is a build artifact (gitignored); generate it before
+        # typecheck so the `/api/openapi.json` route import resolves.
+        run: npm run openapi:generate
+
       - name: Typecheck
         run: npm run typecheck
 
