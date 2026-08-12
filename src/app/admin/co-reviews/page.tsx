@@ -4,7 +4,6 @@ import { userCan } from "@/lib/auth/permissions";
 import { listCoReviews, listAssignablePapers } from "@/lib/services/co-reviews";
 import { listUsers } from "@/lib/services/rbac";
 import { CoReviewAdmin } from "@/components/co-review-admin";
-import { AdminNav } from "@/components/admin-nav";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +24,6 @@ export default async function AdminCoReviewsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <AdminNav />
       <div>
         <h1 className="text-2xl font-bold">协审管理</h1>
         <p className="text-sm text-muted-foreground">

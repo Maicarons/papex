@@ -32,6 +32,7 @@ export const zh = {
     papers: "论文",
     categories: "分类",
     submit: "投稿",
+    writespace: "在线创作",
     docs: "文档",
     about: "关于",
     feedback: "反馈",

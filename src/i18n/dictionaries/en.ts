@@ -34,6 +34,7 @@ export const en: Dictionary = {
     papers: "Papers",
     categories: "Categories",
     submit: "Submit",
+    writespace: "WriteSpace",
     docs: "Docs",
     about: "About",
     feedback: "Feedback",
