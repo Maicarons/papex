@@ -34,9 +34,10 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     // 跨平台清空 NODE_OPTIONS（避免沙箱 safe-delete shim 导致 Next 清理命令 ENAMETOOLONG）
-    env: { NODE_OPTIONS: "" },
+    // RATE_LIMIT_DISABLED=1：e2e 下跳过生产限流，避免被 429 干扰（对业务无影响）。
+    env: { NODE_OPTIONS: "", RATE_LIMIT_DISABLED: "1" },
     url: "http://localhost:3000",
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 180_000,
     stdout: "pipe",
     stderr: "pipe",
