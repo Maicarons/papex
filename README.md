@@ -49,7 +49,8 @@ Papex is an open-source (Apache-2.0) platform for managing and showcasing academ
 | Subscriptions & alerts | `subscriptions` (category/author/paper) + alert list | Yes |
 | Personal profile & user system | `/u/[username]` + auth | Yes |
 | Submission moderation flow | `admin/review` queue + moderation state machine | Yes |
-| Open API | `/api/*` REST | Yes |
+| Open API | `/api/*` REST + OpenAPI 3.1 spec + interactive docs | Yes |
+| API key management | `/settings/api-keys` — programmatic access, inherits RBAC | Yes |
 | Dark mode | next-themes + CSS variables | Yes |
 | Responsive layout | Tailwind containers + mobile-first | Yes |
 | Endorsement | `endorsements` table + first-submission endorsement gate | Basic |
@@ -297,12 +298,24 @@ docker compose up -d        # includes Postgres + Next service
 
 ## API Overview
 
+A complete OpenAPI 3.1 document is served at `/api/openapi.json`, and an
+interactive explorer (Scalar) is available at **[/api-docs](/api-docs)**.
+The spec is **code-first**: each route's docs live in a sibling
+`route.openapi.ts` and are merged by `npm run openapi:generate` (wired into
+`predev`/`prebuild`) into `src/lib/openapi/spec.generated.ts`.
+
+**Authentication:** endpoints accept either the session cookie (`papex_session`)
+or an API key (`Authorization: Bearer pk_…`). API keys are created from
+**Settings → API Keys** and inherit the owner's RBAC permissions. Public
+endpoints work anonymously, with a cookie, or with an API key.
+
 | Method | Path | Description | Auth |
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` | Register | Public |
 | POST | `/api/auth/login` | Login | Public |
 | POST | `/api/auth/logout` | Logout | Logged in |
 | GET | `/api/auth/me` | Current user | Logged in |
+| GET/POST/DELETE | `/api/settings/api-keys` | List / create / revoke API keys | Logged in |
 | GET | `/api/papers` | Paper list (paginated/filtered) | Public |
 | POST | `/api/papers` | New submission | Logged in |
 | GET | `/api/papers/[id]` | Paper detail | Public |

@@ -2,12 +2,93 @@
 
 Papex exposes a set of JSON HTTP APIs under `/api`.
 
+## Interactive reference
+
+A complete, machine-readable **OpenAPI 3.1** specification is served at
+[`/api/openapi.json`](/api/openapi.json), and an interactive, Try-it-capable
+explorer (powered by [Scalar](https://scalar.com)) is available at
+**[/api-docs](/api-docs)**. Open it to browse every endpoint, inspect request
+and response schemas, and send live requests from your browser.
+
+## Keeping the docs in sync (code-first)
+
+The OpenAPI document is **generated from the code**, not written by hand. Each
+route owns a sibling fragment `route.openapi.ts` that is the single source of
+truth for that endpoint's docs. The static part (info, `components/schemas`,
+`components/responses`, security) lives in `src/lib/openapi/base.ts`.
+
+The generator (`src/lib/openapi/generate.ts`) scans every fragment, merges them
+into the base, and writes `src/lib/openapi/spec.generated.ts` — the file served
+by `/api/openapi.json`.
+
+```bash
+# regenerate after editing a fragment (/api/openapi.json + /api-docs update)
+npm run openapi:generate
+```
+
+This is wired into `predev` and `prebuild`, so the spec is always rebuilt before
+`next dev` / `next build`. **Never edit `spec.generated.ts` by hand** — it is
+overwritten on every run.
+
+### Documenting a new endpoint
+
+When you add a route handler `src/app/api/foo/bar/route.ts`, create a sibling
+`route.openapi.ts`:
+
+```ts
+export default {
+  "/api/foo/bar": {
+    get: {
+      tags: ["Discovery"],
+      summary: "Describe what it does",
+      // security: []            // omit for public endpoints
+      responses: {
+        200: { description: "OK", content: { "application/json": { schema: { type: "object" } } } },
+      },
+    },
+  },
+} as const;
+```
+
+Run `npm run openapi:generate` (or just start/build) and the endpoint appears in
+`/api/openapi.json` and `/api-docs` automatically. Shared schemas live in
+`src/lib/openapi/base.ts` (e.g. `#/components/schemas/PaperListItem`).
+
+## Authentication
+
+There are two ways to authenticate:
+
+1. **Session cookie** (`papex_session`) — issued on login and used by the
+   browser. Sent automatically for same-origin requests.
+2. **API key** (`Authorization: Bearer pk_…`) — for scripts and third-party
+   integrations. Create keys from **Settings → API Keys**
+   (`/settings/api-keys`). A key is bound to your account and inherits your
+   role's RBAC permissions, so every endpoint that works with a session cookie
+   also works with an API key. The raw secret is shown **only once** at
+   creation; only its SHA-256 hash is stored.
+
+Example request with an API key:
+
+```bash
+curl -H "Authorization: Bearer pk_live_xxxx" https://your-host/api/papers?pageSize=1
+```
+
+Public (unauthenticated) endpoints — such as listing papers, search,
+categories, authors and health — work for anonymous callers, session cookies,
+and API keys alike.
+
 ## Auth
 
 - `POST /api/auth/register` — register `{username, email, displayName, password}`
 - `POST /api/auth/login` — login `{identifier, password}`
 - `POST /api/auth/logout` — logout
 - `GET /api/auth/me` — current user
+
+## API keys
+
+- `GET /api/settings/api-keys` — list your keys
+- `POST /api/settings/api-keys` — create a key `{name, scopes?:["read"|"write"], environment?:"live"|"test", expiresAt?:ISODate|null}`
+- `DELETE /api/settings/api-keys?id=<keyId>` — revoke a key
 
 ## Papers
 
