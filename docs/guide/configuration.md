@@ -1,25 +1,25 @@
-# 配置
+# Configuration
 
-Papex 通过环境变量配置，关键变量如下。
+Papex is configured via environment variables.
 
-## 数据库连接
+## Database
 
 ```bash
 DATABASE_URL=postgres://papex:papex@localhost:5432/papex
 ```
 
-## 认证
+## Auth
 
 ```bash
-# 用于签发 JWT 的密钥，生产环境必须替换为随机长字符串（≥16 字符）
+# Secret used to sign JWTs. MUST be a long random string in production (>= 16 chars).
 AUTH_SECRET=change-me-to-a-long-random-string
-# 会话有效期（秒），默认 7 天
+# Session TTL in seconds (default 7 days)
 AUTH_SESSION_TTL=604800
 ```
 
-## 邮件（可选）
+## Email (optional)
 
-站内信与工单系统默认不依赖邮件。如需发送通知邮件，可配置 SMTP：
+The messages and tickets systems do not require email. To send notification emails, configure SMTP:
 
 ```bash
 SMTP_HOST=
@@ -29,6 +29,6 @@ SMTP_PASS=
 SMTP_FROM=
 ```
 
-## 存储（可选）
+## Storage (optional)
 
-论文全文（PDF / 源码）通过 URL 引用，可对接对象存储或静态托管服务，无需额外配置。
+Full-text (PDF / source) is referenced by URL and can target object storage or static hosting; no extra config is needed.

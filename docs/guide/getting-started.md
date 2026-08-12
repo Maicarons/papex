@@ -1,56 +1,56 @@
-# 快速开始
+# Getting Started
 
-本指南帮助你在本地把 Papex 跑起来。
+This guide helps you run Papex locally.
 
-## 环境要求
+## Requirements
 
 - Node.js ≥ 18.18
-- PostgreSQL ≥ 16（推荐使用 Docker 启动）
-- npm 或 pnpm
+- PostgreSQL ≥ 16 (Docker recommended)
+- npm or pnpm
 
-## 1. 安装依赖
+## 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-## 2. 准备数据库
+## 2. Prepare the database
 
-使用项目内置的 `docker-compose.yml` 启动 Postgres：
+Start Postgres with the bundled `docker-compose.yml`:
 
 ```bash
 docker compose up -d db
 ```
 
-复制环境变量模板并填写：
+Copy and fill in the environment file:
 
 ```bash
 cp .env.example .env
-# 至少设置 DATABASE_URL 与 AUTH_SECRET
+# Set at least DATABASE_URL and AUTH_SECRET
 ```
 
-## 3. 执行迁移与种子
+## 3. Run migrations and seed
 
 ```bash
 npm run db:migrate
 npm run db:seed
 ```
 
-`db:seed` 会写入全量学科分类、示例论文与管理员账号。
+`db:seed` writes the full category taxonomy, sample papers and an admin account.
 
-## 4. 启动开发服务器
+## 4. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-打开 http://localhost:3000 即可访问。
+Visit http://localhost:3000.
 
-## 默认账号
+## Default accounts
 
-| 角色 | 用户名 | 密码 |
+| Role | Username | Password |
 | --- | --- | --- |
-| 管理员 | `admin` | `admin123456` |
-| 作者（示例） | `demo` | `password123` |
+| Admin | `admin` | `admin123456` |
+| Author (sample) | `demo` | `password123` |
 
-> 生产环境请务必修改默认密码，并使用随机长字符串作为 `AUTH_SECRET`。
+> Change default passwords in production and use a long random `AUTH_SECRET`.

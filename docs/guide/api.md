@@ -1,63 +1,63 @@
 # API
 
-Papex 提供一组基于 HTTP 的 JSON API（前缀 `/api`）。以下为常用端点。
+Papex exposes a set of JSON HTTP APIs under `/api`.
 
-## 认证
+## Auth
 
-- `POST /api/auth/register` — 注册 `{username, email, displayName, password}`
-- `POST /api/auth/login` — 登录 `{identifier, password}`
-- `POST /api/auth/logout` — 退出
-- `GET /api/auth/me` — 当前用户
+- `POST /api/auth/register` — register `{username, email, displayName, password}`
+- `POST /api/auth/login` — login `{identifier, password}`
+- `POST /api/auth/logout` — logout
+- `GET /api/auth/me` — current user
 
-## 论文
+## Papers
 
-- `GET /api/papers` — 论文列表（支持 `q`、`category` 参数）
-- `GET /api/papers/:id` — 论文详情
-- `GET /api/papers/:id/comments` — 评论
-- `POST /api/papers` — 提交论文（需登录，需 `paper:publish`）
-- `POST /api/papers/:id/moderate` — 审核 `{action:"approve"|"reject"|"withdraw", reason?}`（需 `paper:moderate`）
-- `POST /api/submit/archive` — 上传论文源码包 `tar.gz` 并自动建稿、连引用、构建 PDF（需登录，详见[投稿指南](/guide/submission)）
+- `GET /api/papers` — list (supports `q`, `category`)
+- `GET /api/papers/:id` — detail
+- `GET /api/papers/:id/comments` — comments
+- `POST /api/papers` — submit (auth required, needs `paper:publish`)
+- `POST /api/papers/:id/moderate` — moderate `{action:"approve"|"reject"|"withdraw", reason?}` (needs `paper:moderate`)
+- `POST /api/submit/archive` — upload a source-package `tar.gz` to auto-ingest, link citations and build PDF (auth required; see [Submission guide](/en/guide/submission))
 
-## 分类
+## Categories
 
-- `GET /api/categories` — 分类树
+- `GET /api/categories` — category tree
 
-## 站内信
+## Messages
 
-站内信按 `kind` 分为 8 类：系统通知 `system`、工单回执 `ticket_reply`、公告 `announcement`、审核结果 `review_result`、协审请求 `co_review_request`、协审回执 `co_review_result`、管理员私信 `admin_message`、社区回复 `community_reply`。
+Messages are classified by `kind` into 8 categories: `system`, `ticket_reply`, `announcement`, `review_result`, `co_review_request`, `co_review_result`, `admin_message`, `community_reply`.
 
-- `GET /api/messages` — 当前用户消息列表与未读数（支持 `?kind=` 按分类筛选）
-- `GET /api/messages/stats` — 未读统计
-- `POST /api/messages/:id/read` — 标记已读
-- `POST /api/messages` — `{action:"read-all"}` 全部已读
+- `GET /api/messages` — current user's messages + unread count (supports `?kind=` filter)
+- `GET /api/messages/stats` — unread stats
+- `POST /api/messages/:id/read` — mark read
+- `POST /api/messages` — `{action:"read-all"}` mark all read
 
-## 工单
+## Tickets
 
-- `GET /api/tickets` — 我的工单（`?scope=all` 仅管理员）
-- `POST /api/tickets` — 创建工单 `{subject, type, priority, message}`
-- `GET /api/tickets/:id` — 工单详情
-- `POST /api/tickets/:id` — 回复
-- `PATCH /api/tickets/:id` — 管理员更新状态/优先级
+- `GET /api/tickets` — my tickets (`?scope=all` admin only)
+- `POST /api/tickets` — create `{subject, type, priority, message}`
+- `GET /api/tickets/:id` — detail
+- `POST /api/tickets/:id` — reply
+- `PATCH /api/tickets/:id` — admin update status/priority
 
-## 反馈
+## Feedback
 
-- `POST /api/feedback` — 提交反馈（需登录，自动创建工单）
+- `POST /api/feedback` — submit feedback (auth required, auto-creates a ticket)
 
-## 协审
+## Co-review
 
-- `GET /api/co-reviews?scope=mine|all` — 协审列表（我的 / 全部，需相应权限）
-- `POST /api/co-reviews` — 指派协审 `{paperId, reviewerId, note?}`（需 `co_review:assign`）
-- `GET /api/co-reviews/:id` — 协审详情
-- `POST /api/co-reviews/:id/respond` — 评审人回应 `{accepted:boolean}`
-- `POST /api/co-reviews/:id/submit` — 提交意见 `{decision:"approve"|"reject"|"revise", comment}`
+- `GET /api/co-reviews?scope=mine|all` — list (mine / all, respective permission required)
+- `POST /api/co-reviews` — assign `{paperId, reviewerId, note?}` (needs `co_review:assign`)
+- `GET /api/co-reviews/:id` — detail
+- `POST /api/co-reviews/:id/respond` — reviewer responds `{accepted:boolean}`
+- `POST /api/co-reviews/:id/submit` — submit opinion `{decision:"approve"|"reject"|"revise", comment}`
 
-## 管理（Admin）
+## Admin
 
-后台接口均需 `moderator` / `admin` 基础角色，并按细粒度权限鉴权。
+Admin endpoints require a `moderator` / `admin` base role and are authorized per fine-grained permission.
 
-- `GET /api/admin/users` — 用户列表（分页 / 搜索，需 `user:manage`）
-- `PATCH /api/admin/users/:id` — 设置角色 `{roleKeys:string[]}`，或设置权限覆盖 `{permission:{key:string, grant:boolean|null}}`（分别需 `user:manage` / `permission:manage`）
-- `GET /api/admin/roles` — 角色列表（需 `role:manage`）
-- `PUT /api/admin/roles/:id` — 设置角色权限 `{permissionKeys:string[]}`
-- `POST /api/admin/messages` — 广播 `{scope:"all"|"role"|"userIds", role?, userIds?, kind:"announcement"|"system"|"admin_message", title, body, link?}`（需 `message:broadcast`）
-- `GET /api/admin/stats` — 平台统计
+- `GET /api/admin/users` — user list (pagination / search, needs `user:manage`)
+- `PATCH /api/admin/users/:id` — set roles `{roleKeys:string[]}` or override `{permission:{key:string, grant:boolean|null}}` (needs `user:manage` / `permission:manage`)
+- `GET /api/admin/roles` — role list (needs `role:manage`)
+- `PUT /api/admin/roles/:id` — set role permissions `{permissionKeys:string[]}`
+- `POST /api/admin/messages` — broadcast `{scope:"all"|"role"|"userIds", role?, userIds?, kind:"announcement"|"system"|"admin_message", title, body, link?}` (needs `message:broadcast`)
+- `GET /api/admin/stats` — platform stats
