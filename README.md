@@ -4,6 +4,12 @@
 
 Papex is an open-source (Apache-2.0) platform for managing and showcasing academic literature. It covers the core capabilities of academic paper submission, discovery and presentation: paper submission and versioning, preview and download, subject categorization, full-text search and filtering, authors and affiliations, comments and discussion, subscription alerts, personal profiles and user accounts, a moderation/review workflow, an open API, dark mode and a responsive layout.
 
+<p align="center">
+  <img src="docs/public/papex-explainer.gif" alt="Papex 60-second product demo" width="720" />
+</p>
+
+> A 60-second tour of Papex — submission, versioning, full-text search, community and open-source deployment.
+
 - **Front end and back end are both Next.js (App Router)**: Server Components read the database directly, Route Handlers expose the REST API.
 - **Data layer**: Drizzle ORM + PostgreSQL, full-text search backed by PostgreSQL `tsvector`.
 - **UI**: shadcn/ui style (Radix primitives + Tailwind CSS 4, CSS-first config + `@tailwindcss/postcss`), Lucide icons, next-themes dark mode; charts use ECharts 6.

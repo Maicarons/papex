@@ -32,3 +32,10 @@ features:
 ---
 
 Papex is an open-source, independent platform for managing and discovering academic literature. Self-host it or build on top of it.
+
+<br />
+
+<div style="text-align:center">
+  <img src="/papex-explainer.gif" alt="Papex 60-second product demo" style="max-width:100%;border-radius:12px" />
+  <p><em>A 60-second tour of Papex — submission, versioning, full-text search, community and open-source deployment.</em></p>
+</div>
