@@ -4,6 +4,7 @@ import { desc, eq, and, sql } from "drizzle-orm";
 
 export type TicketRow = typeof tickets.$inferSelect;
 export type TicketReplyRow = typeof ticketReplies.$inferSelect;
+export type TicketStatus = "open" | "awaiting_user" | "in_progress" | "resolved" | "closed";
 
 export interface TicketWithReplies extends TicketRow {
   replies: TicketReplyRow[];
@@ -33,9 +34,12 @@ export async function createTicket(input: {
 
 export async function listTickets(
   userId: string,
-  opts: { scope: "mine" | "all" },
+  opts: { scope: "mine" | "all"; status?: TicketStatus },
 ): Promise<TicketRow[]> {
-  const where = opts.scope === "mine" ? eq(tickets.userId, userId) : undefined;
+  const conds = [];
+  if (opts.scope === "mine") conds.push(eq(tickets.userId, userId));
+  if (opts.status) conds.push(eq(tickets.status, opts.status));
+  const where = conds.length ? and(...conds) : undefined;
   return db.select().from(tickets).where(where).orderBy(desc(tickets.updatedAt));
 }
 
@@ -60,7 +64,7 @@ export async function addReply(input: {
   userId: string;
   body: string;
   isAdmin: boolean;
-}): Promise<TicketReplyRow> {
+}): Promise<{ reply: TicketReplyRow; status: TicketStatus }> {
   const [reply] = await db
     .insert(ticketReplies)
     .values({
@@ -70,21 +74,23 @@ export async function addReply(input: {
       isAdmin: input.isAdmin,
     })
     .returning();
-  // Auto-advance status when an admin replies to an open ticket.
-  if (input.isAdmin) {
-    await db
-      .update(tickets)
-      .set({ status: "in_progress", updatedAt: new Date() })
-      .where(and(eq(tickets.id, input.ticketId), eq(tickets.status, "open")));
-  } else {
-    await db.update(tickets).set({ updatedAt: new Date() }).where(eq(tickets.id, input.ticketId));
-  }
-  return reply;
+  // Auto-advance status based on who replied last:
+  // - staff reply -> awaiting_user (ball is in the reporter's court)
+  // - reporter reply on awaiting_user -> open (back to staff)
+  const [t] = await db
+    .update(tickets)
+    .set({
+      status: input.isAdmin ? "awaiting_user" : "open",
+      updatedAt: new Date(),
+    })
+    .where(eq(tickets.id, input.ticketId))
+    .returning();
+  return { reply, status: (t?.status ?? "open") as TicketStatus };
 }
 
 export async function updateTicket(
   id: number,
-  patch: { status?: "open" | "in_progress" | "resolved" | "closed"; priority?: "low" | "normal" | "high" | "urgent" },
+  patch: { status?: TicketStatus; priority?: "low" | "normal" | "high" | "urgent" },
 ): Promise<TicketRow | null> {
   const [row] = await db
     .update(tickets)

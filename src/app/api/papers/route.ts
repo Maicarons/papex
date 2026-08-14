@@ -23,6 +23,7 @@ export async function GET(req: Request) {
     status,
     category: searchParams.get("category") ?? undefined,
     authorId: authorIdRaw ? Number(authorIdRaw) : undefined,
+    tag: searchParams.get("tag") ?? undefined,
     q: searchParams.get("q") ?? undefined,
     sort: (searchParams.get("sort") as "new" | "updated") ?? "new",
     page: Number(searchParams.get("page") ?? 1),

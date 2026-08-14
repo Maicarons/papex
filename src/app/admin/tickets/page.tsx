@@ -22,18 +22,46 @@ export default function AdminTicketsPage() {
   const { t } = useI18n();
   const [tickets, setTickets] = React.useState<Ticket[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [filter, setFilter] = React.useState<string>("all");
 
   React.useEffect(() => {
-    fetch("/api/tickets?scope=all", { cache: "no-store" })
+    const qs = filter === "all" ? "" : `&status=${filter}`;
+    fetch(`/api/tickets?scope=all${qs}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setTickets(d?.tickets ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [filter]);
+
+  const statusFilters: { value: string; label: string }[] = [
+    { value: "all", label: t("tickets.filterAll") },
+    { value: "open", label: t("tickets.statusOpen") },
+    { value: "awaiting_user", label: t("tickets.statusAwaitingUser") },
+    { value: "in_progress", label: t("tickets.statusInProgress") },
+    { value: "resolved", label: t("tickets.statusResolved") },
+    { value: "closed", label: t("tickets.statusClosed") },
+  ];
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">{t("tickets.title")}</h1>
+
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("tickets.filterStatus")}>
+        {statusFilters.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setFilter(f.value)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              filter === f.value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="space-y-3">
