@@ -32,7 +32,7 @@ export default function RegisterPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error ?? "注册失败");
+      setError(data.error ?? t("auth.registerFailed"));
       setLoading(false);
       return;
     }

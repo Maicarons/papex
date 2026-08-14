@@ -294,6 +294,7 @@ bun dev                     # http://localhost:3000
 2. Environment variables: `DATABASE_URL` (Neon pooled string), `DATABASE_URL_UNPOOLED` (direct string), `AUTH_SECRET`.
 3. Build Command: `npm run build`; migrations must run before build/deploy — use a `vercel.json` build hook or run `npm run db:migrate` in CI.
 4. Click Deploy.
+5. **PDF storage**: Vercel's runtime FS is read-only — set `STORAGE_DRIVER=s3` plus `PAPEX_S3_*` (see `docs/guide/configuration.md`). The PDF route then redirects to a presigned object URL.
 
 ### Docker (self-hosted)
 ```bash

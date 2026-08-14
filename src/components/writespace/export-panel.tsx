@@ -42,6 +42,7 @@ export function ExportPanel({
   exporting,
   publishing,
   result,
+  publishEnabled = true,
   onExport,
   onPublish,
   onReset,
@@ -51,11 +52,12 @@ export function ExportPanel({
   exporting: boolean;
   publishing: boolean;
   result: ExportResult | null;
+  publishEnabled?: boolean;
   onExport: () => void;
   onPublish: () => void;
   onReset: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const router = useRouter();
   const names = previewNames(draft.manifest);
   const busy = exporting || publishing;
@@ -132,7 +134,8 @@ export function ExportPanel({
             )}
             <span className="text-xs text-muted-foreground">
               {validation.errors.length} {t("writespace.validationTitle")}
-              {validation.warnings.length > 0 && ` · ${validation.warnings.length} 提示`}
+              {validation.warnings.length > 0 &&
+                ` · ${format(t("writespace.warningsCount"), { n: validation.warnings.length })}`}
             </span>
           </div>
 
@@ -178,12 +181,18 @@ export function ExportPanel({
               <Download className="mr-2 h-4 w-4" />
               {exporting ? t("writespace.expExporting") : t("writespace.expExportBtn")}
             </Button>
-            <Button onClick={onPublish} disabled={busy || !validation.valid} className="flex-1">
+            <Button onClick={onPublish} disabled={busy || !validation.valid || !publishEnabled} className="flex-1">
               {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <UploadCloud className="mr-2 h-4 w-4" />
               {publishing ? t("writespace.expPublishing") : t("writespace.expPublishBtn")}
             </Button>
           </div>
+          {!publishEnabled && (
+            <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+              <AlertCircle className="h-3.5 w-3.5" />
+              {t("writespace.publishUnavailable")}
+            </p>
+          )}
           {!validation.valid && (
             <p className="text-xs text-destructive">{t("writespace.expInvalid")}</p>
           )}

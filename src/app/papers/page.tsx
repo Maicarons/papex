@@ -5,6 +5,8 @@ import { listCategories } from "@/lib/services/categories";
 import { PaperCard } from "@/components/paper-card";
 import { PapersFilter } from "@/components/papers-filter";
 import { Button } from "@/components/ui/button";
+import { getServerLocale } from "@/i18n/server";
+import { getDictionary, t as translate, format } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,9 @@ type SP = { [k: string]: string | string[] | undefined };
 
 export default async function PapersPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  const t = (path: string) => translate(dict, path);
   const q = typeof sp.q === "string" ? sp.q : undefined;
   const category = typeof sp.category === "string" ? sp.category : undefined;
   const sort = typeof sp.sort === "string" && sp.sort === "updated" ? "updated" : "new";
@@ -37,8 +42,8 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">论文</h1>
-        <span className="text-sm text-muted-foreground">共 {total} 篇</span>
+        <h1 className="text-2xl font-bold">{t("papers.title")}</h1>
+        <span className="text-sm text-muted-foreground">{format(t("papers.results"), { n: total })}</span>
       </div>
 
       <PapersFilter
@@ -49,7 +54,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
       />
 
       {rows.length === 0 ? (
-        <p className="py-16 text-center text-muted-foreground">没有匹配的论文。</p>
+        <p className="py-16 text-center text-muted-foreground">{t("papers.empty")}</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {rows.map((item) => (
@@ -63,12 +68,12 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
           {page > 1 ? (
             <Link href={pageHref(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
-              上一页
+              {t("papers.prevPage")}
             </Link>
           ) : (
             <span>
               <ChevronLeft className="h-4 w-4" />
-              上一页
+              {t("papers.prevPage")}
             </span>
           )}
         </Button>
@@ -78,12 +83,12 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
         <Button variant="outline" size="sm" disabled={page >= totalPages} asChild={page < totalPages}>
           {page < totalPages ? (
             <Link href={pageHref(page + 1)}>
-              下一页
+              {t("papers.nextPage")}
               <ChevronRight className="h-4 w-4" />
             </Link>
           ) : (
             <span>
-              下一页
+              {t("papers.nextPage")}
               <ChevronRight className="h-4 w-4" />
             </span>
           )}

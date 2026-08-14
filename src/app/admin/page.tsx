@@ -13,57 +13,59 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAdminStats } from "@/lib/services/stats";
 import { redirect } from "next/navigation";
+import { getServerLocale } from "@/i18n/server";
+import { getDictionary, t as translate, format } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
-  submitted: "审核中",
-  approved: "已发布",
-  withdrawn: "已撤稿",
-  rejected: "已拒绝",
+  submitted: "paper.statusSubmitted",
+  approved: "paper.statusApproved",
+  withdrawn: "paper.statusWithdrawn",
+  rejected: "paper.statusRejected",
 };
 
 const MODULES = [
   {
     href: "/admin/review",
-    label: "审核队列",
-    desc: "论文通过 / 拒绝 / 撤稿处理",
+    label: "nav.adminReview",
+    desc: "admin.reviewQueueDesc",
     icon: ShieldCheck,
   },
   {
     href: "/admin/stats",
-    label: "统计面板",
-    desc: "全站数据可视化",
+    label: "nav.adminStats",
+    desc: "admin.statsDesc",
     icon: BarChart3,
   },
   {
     href: "/admin/tickets",
-    label: "工单管理",
-    desc: "用户反馈与工单处置",
+    label: "nav.adminTickets",
+    desc: "admin.ticketsDesc",
     icon: ListChecks,
   },
   {
     href: "/admin/co-reviews",
-    label: "协审管理",
-    desc: "发起并跟踪同行审查",
+    label: "nav.adminCoReviews",
+    desc: "admin.coReviewsDesc",
     icon: ClipboardCheck,
   },
   {
     href: "/admin/users",
-    label: "用户管理",
-    desc: "角色分配与权限覆盖",
+    label: "nav.adminUsers",
+    desc: "admin.usersDesc",
     icon: Users,
   },
   {
     href: "/admin/roles",
-    label: "角色权限",
-    desc: "配置角色与权限矩阵",
+    label: "nav.adminRoles",
+    desc: "admin.rolesDesc",
     icon: KeyRound,
   },
   {
     href: "/admin/messages",
-    label: "站内信广播",
-    desc: "向用户群发通知",
+    label: "nav.adminMessages",
+    desc: "admin.messagesDesc",
     icon: Megaphone,
   },
 ];
@@ -73,23 +75,26 @@ export default async function AdminOverviewPage() {
   if (!user || (user.role !== "moderator" && user.role !== "admin")) {
     redirect("/");
   }
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  const t = (path: string) => translate(dict, path);
   const stats = await getAdminStats();
 
   const cards = [
-    { label: "论文总数", value: stats.totalPapers },
-    { label: "待审核", value: stats.pendingReviews },
-    { label: "用户", value: stats.totalUsers },
-    { label: "作者", value: stats.totalAuthors },
-    { label: "评论", value: stats.totalComments },
-    { label: "引用关系", value: stats.totalCitations },
+    { label: "admin.totalPapers", value: stats.totalPapers },
+    { label: "admin.pendingReview", value: stats.pendingReviews },
+    { label: "admin.totalUsers", value: stats.totalUsers },
+    { label: "admin.totalAuthors", value: stats.totalAuthors },
+    { label: "admin.totalComments", value: stats.totalComments },
+    { label: "admin.totalCitations", value: stats.totalCitations },
   ];
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">管理后台概览</h1>
+        <h1 className="text-2xl font-bold">{t("admin.overviewTitle")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          欢迎，{user.displayName}。这里汇总全站关键指标，并集中入口到各管理模块。
+          {format(t("admin.welcome"), { name: user.displayName })}
         </p>
       </div>
 
@@ -106,7 +111,7 @@ export default async function AdminOverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">论文状态分布</CardTitle>
+          <CardTitle className="text-base">{t("admin.paperStatusDist")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {stats.byStatus.map((s) => (
@@ -114,7 +119,7 @@ export default async function AdminOverviewPage() {
               key={s.status}
               className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1 text-sm"
             >
-              {STATUS_LABEL[s.status] ?? s.status}
+              {t(STATUS_LABEL[s.status] ?? s.status)}
               <span className="font-semibold">{s.count}</span>
             </span>
           ))}
@@ -122,7 +127,7 @@ export default async function AdminOverviewPage() {
       </Card>
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold">管理模块</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("admin.modules")}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {MODULES.map((m) => {
             const Icon = m.icon;
@@ -134,8 +139,8 @@ export default async function AdminOverviewPage() {
                       <Icon className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
-                      <div className="font-medium">{m.label}</div>
-                      <div className="text-xs text-muted-foreground">{m.desc}</div>
+                      <div className="font-medium">{t(m.label)}</div>
+                      <div className="text-xs text-muted-foreground">{t(m.desc)}</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -147,7 +152,7 @@ export default async function AdminOverviewPage() {
 
       <p className="text-xs text-muted-foreground">
         <FileText className="mr-1 inline h-3 w-3" />
-        所有审核、工单、协审与社区操作均会通过统一通知中心联动站内信。
+        {t("admin.noticeHint")}
       </p>
     </div>
   );

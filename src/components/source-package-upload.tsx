@@ -24,7 +24,7 @@ interface ArchiveResult {
   pdfUrl?: string;
 }
 
-export function SourcePackageUpload() {
+export function SourcePackageUpload({ latexEnabled = true }: { latexEnabled?: boolean }) {
   const { t, format } = useI18n();
   const router = useRouter();
   const [file, setFile] = React.useState<File | null>(null);
@@ -121,6 +121,22 @@ export function SourcePackageUpload() {
               {t("submit.packageAnother")}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!latexEnabled) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-muted-foreground" />
+            {t("submit.packageUnavailable")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{t("submit.packageUnavailable")}</p>
         </CardContent>
       </Card>
     );

@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, Globe, Link2 } from "lucide-react";
 import { initials } from "@/lib/utils";
+import { getServerLocale } from "@/i18n/server";
+import { getDictionary, t as translate, format } from "@/i18n";
 
 export const revalidate = 3600;
 
@@ -28,6 +30,9 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
 
 export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  const t = (path: string) => translate(dict, path);
   const profile = await getUserProfile(username);
   if (!profile) notFound();
   const receivedEndorsements = await getReceivedEndorsements(profile.user.id);
@@ -82,18 +87,18 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
               )}
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <Badge variant="outline">{profile.papers.length} 篇投稿</Badge>
-              <Badge variant="outline">{profile.subscriptionCount} 个订阅</Badge>
-              <Badge variant="outline">{profile.bookmarkCount} 个收藏</Badge>
+              <Badge variant="outline">{format(t("profile.papersCount"), { n: profile.papers.length })}</Badge>
+              <Badge variant="outline">{format(t("profile.subscriptionCount"), { n: profile.subscriptionCount })}</Badge>
+              <Badge variant="outline">{format(t("profile.bookmarkCount"), { n: profile.bookmarkCount })}</Badge>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold">投稿</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("profile.submissions")}</h2>
         {profile.papers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无投稿。</p>
+          <p className="text-sm text-muted-foreground">{t("profile.noSubmissions")}</p>
         ) : (
           <ul className="space-y-2">
             {profile.papers.map((p) => (
@@ -111,15 +116,17 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       </div>
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold">收到的背书</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("profile.endorsementsReceived")}</h2>
         {receivedEndorsements.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无背书。</p>
+          <p className="text-sm text-muted-foreground">{t("profile.noEndorsements")}</p>
         ) : (
           <ul className="space-y-2">
             {receivedEndorsements.map((e) => (
               <li key={e.id} className="rounded-md border p-3 text-sm">
                 <span className="font-medium">{e.categoryName ?? e.categoryId}</span>
-                <span className="text-muted-foreground"> · 由 {e.endorserName ?? "匿名"} 背书</span>
+                <span className="text-muted-foreground">
+                  {" "}· {format(t("profile.endorsedBy"), { name: e.endorserName ?? t("paper.anonymous") })}
+                </span>
               </li>
             ))}
           </ul>

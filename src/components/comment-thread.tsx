@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/i18n/i18n-provider";
 
 interface CommentNode {
   id: number;
@@ -18,6 +19,7 @@ interface CommentNode {
 }
 
 export function CommentThread({ paperId }: { paperId: string }) {
+  const { t } = useI18n();
   const [tree, setTree] = React.useState<CommentNode[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [body, setBody] = React.useState("");
@@ -67,7 +69,7 @@ export function CommentThread({ paperId }: { paperId: string }) {
     }
   }
 
-  if (loading) return <p className="text-sm text-muted-foreground">加载评论…</p>;
+  if (loading) return <p className="text-sm text-muted-foreground">{t("comments.loading")}</p>;
 
   return (
     <div className="space-y-4">
@@ -76,16 +78,16 @@ export function CommentThread({ paperId }: { paperId: string }) {
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="发表您的看法（需登录）…"
+            placeholder={t("comments.loginPlaceholder")}
           />
           <Button onClick={() => post(undefined, body)} disabled={posting || !body.trim()}>
-            发表评论
+            {t("comments.post")}
           </Button>
         </CardContent>
       </Card>
 
       {tree.length === 0 ? (
-        <p className="text-sm text-muted-foreground">暂无评论，成为第一个讨论者。</p>
+        <p className="text-sm text-muted-foreground">{t("comments.empty")}</p>
       ) : (
         <div className="space-y-3">
           {tree.map((c) => (
@@ -104,6 +106,7 @@ function CommentItem({
   node: CommentNode;
   onReply: (parentId: number, text: string) => void;
 }) {
+  const { t } = useI18n();
   const [replying, setReplying] = React.useState(false);
   const [text, setText] = React.useState("");
 
@@ -124,11 +127,11 @@ function CommentItem({
         className="mt-1 text-xs text-muted-foreground hover:underline"
         onClick={() => setReplying((v) => !v)}
       >
-        回复
+        {t("comments.reply")}
       </button>
       {replying && (
         <div className="mt-2 space-y-2">
-          <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="回复内容…" />
+          <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={t("comments.replyPlaceholder")} />
           <Button
             size="sm"
             onClick={() => {
@@ -138,7 +141,7 @@ function CommentItem({
             }}
             disabled={!text.trim()}
           >
-            发送回复
+            {t("comments.sendReply")}
           </Button>
         </div>
       )}

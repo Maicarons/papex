@@ -44,6 +44,39 @@ SMTP_PASS=
 SMTP_FROM=
 ```
 
-## Storage (optional)
+## Storage (PDF backend)
 
-Full-text (PDF / source) is referenced by URL and can target object storage or static hosting; no extra config is needed.
+Uploaded PDFs are stored by a pluggable backend, selected with `STORAGE_DRIVER`.
+
+### `local` (default)
+
+The server manages the PDF files on its own filesystem under `PAPEX_STORAGE_DIR`
+(default `./storage`). Bytes are streamed back by the route
+`/api/papers/{id}/pdf/{version}`. Use this for Docker / self-hosted / dev.
+
+```bash
+STORAGE_DRIVER=local
+PAPEX_STORAGE_DIR=./storage
+```
+
+### `s3` (S3-compatible object storage)
+
+Uploads go to an S3-compatible bucket (AWS S3, MinIO, Cloudflare R2, DigitalOcean
+Spaces). The streaming route then returns a `302` redirect to a **presigned** (or
+public) object URL, so the PDF is served by the object store and never passes
+through the server — required on read-only/serverless platforms like Vercel.
+
+```bash
+STORAGE_DRIVER=s3
+PAPEX_S3_BUCKET=papex-pdfs
+PAPEX_S3_REGION=auto            # us-east-1 for AWS; "auto" for Cloudflare R2
+PAPEX_S3_ENDPOINT=https://s3.amazonaws.com   # required for R2 / MinIO / Spaces
+PAPEX_S3_ACCESS_KEY_ID=...
+PAPEX_S3_SECRET_ACCESS_KEY=...
+PAPEX_S3_FORCE_PATH_STYLE=true  # true for MinIO/R2/Spaces; false for AWS virtual-hosted
+# Optional: if the bucket/CDN is public, set this base URL to skip signing:
+# PAPEX_S3_PUBLIC_BASE=https://cdn.example.com
+```
+
+Regardless of backend, the `pdfUrl` stored on each paper version always points at
+the streaming route, so the UI and API stay backend-agnostic.

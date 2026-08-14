@@ -11,7 +11,7 @@ Papex 提供两种投稿入口，面向不同使用场景：
 
 | 方式 | 入口 | 适合人群 | 特点 |
 | --- | --- | --- | --- |
-| **表单提交** | 网站「投稿 → 表单提交」页 / `POST /api/papers` | 偶尔投稿、希望快速录入 | 在网页直接填写标题、摘要、作者等元数据；PDF 由作者自行提供链接 |
+| **表单提交** | 网站「投稿 → 表单提交」页 / `POST /api/papers` | 偶尔投稿、希望快速录入 | 在网页直接填写标题、摘要、作者等元数据，并**直接上传 PDF 全文**（≤50MB） |
 | **源码包上传** | 网站「投稿 → 源码包上传」页 / `POST /api/submit/archive` | 习惯用 LaTeX 写作的作者 | 把论文源文件与一份 `papex.json` 清单打包为 `tar.gz` 上传，平台**自动建稿、连接引用图并构建 PDF** |
 
 > 两种方式的入库逻辑完全一致（共用 `createSubmission` 与 `addCitation`），区别仅在于元数据的来源与正文/PDF 的产生方式。
@@ -27,27 +27,27 @@ Papex 提供两种投稿入口，面向不同使用场景：
 - **标题**、**摘要**
 - **主分类**（必选，代码见分类树，如 `cs.LG`）、**交叉分类**（逗号分隔，可选）
 - **作者**（可添加多位，顺序即作者次序）
-- **PDF 链接**（可选）、**DOI**（可选）、**许可协议**（默认 `CC-BY-4.0`）、**版本说明**（可选）
+- **上传 PDF**（可选）：拖拽或点击选择 PDF 文件（≤50MB），平台自动存储并抽取引用关系；**DOI**（可选）、**许可协议**（默认 `CC-BY-4.0`）、**版本说明**（可选）
 
-提交后该论文进入审核队列。表单提交等价于向后端发送：
+提交后该论文进入审核队列。表单提交以 `multipart/form-data` 发送：`meta` 为元数据 JSON 字符串，`pdf` 为可选的 PDF 文件：
 
 ```http
 POST /api/papers
-Content-Type: application/json
+Content-Type: multipart/form-data; boundary=...
 
-{
-  "title": "…",
-  "abstract": "…",
-  "primaryCategoryId": "cs.LG",
-  "secondaryCategoryIds": ["stat.ML"],
-  "authors": [{ "name": "张明", "order": 0 }],
-  "pdfUrl": "https://…",
-  "doi": "",
-  "license": "CC-BY-4.0",
-  "comments": "",
-  "basePaperId": null
-}
+--boundary
+Content-Disposition: form-data; name="meta"
+
+{"title":"…","abstract":"…","primaryCategoryId":"cs.LG","secondaryCategoryIds":["stat.ML"],"authors":[{"name":"张明","order":0}],"doi":"","license":"CC-BY-4.0","comments":"","basePaperId":null}
+--boundary
+Content-Disposition: form-data; name="pdf"; filename="paper.pdf"
+Content-Type: application/pdf
+
+<二进制 PDF 数据>
+--boundary--
 ```
+
+> PDF 为可选项；若上传，接口会把它存入论文版本并自动解析正文、连接平台内引用，返回 `{ pdfUrl, pages, referencesExtracted, referencesLinked }`。
 
 ---
 
@@ -236,8 +236,9 @@ tar -czf my-paper.tar.gz papex.json papex-template.tex references.bib sections/
 
 ### `POST /api/papers`
 
-表单提交接口。请求体为 JSON（见[第 2 节](#2-方式一表单提交)），需登录。成功返回
-`{ paperId }`。
+表单提交接口。请求为 `multipart/form-data`（见[第 2 节](#2-方式一表单提交)）：字段
+`meta` 为元数据 JSON 字符串，字段 `pdf` 为可选的 PDF 文件（≤50MB）。需登录。成功返回
+`{ paperId, version }`，若上传了 PDF 则附带 `pdf: { pdfUrl, pages, referencesExtracted, referencesLinked }`。
 
 ### `POST /api/submit/archive`
 

@@ -6,15 +6,14 @@ import { SearchBar } from "@/components/search-bar";
 import { PaperCard } from "@/components/paper-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDictionary, t as translate } from "@/i18n";
+import { LocaleText } from "@/components/locale-text";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  // Static rendering: render the default locale on the server; the client
-  // I18nProvider corrects to the user's locale cookie after hydration.
-  const dict = getDictionary("zh");
-  const t = (path: string) => translate(dict, path);
+  // Static rendering: UI copy is rendered with the default locale on the
+  // server and corrected to the user's locale cookie after hydration via the
+  // client <LocaleText /> nodes (SSG cannot read cookies).
   // 无 DB（如构建环境缺 DATABASE_URL）时回退空数据，保证预渲染不硬失败；
   // 运行时带 DB 时由 revalidate=300 自动刷新出真实内容。
   let rows: Awaited<ReturnType<typeof listPapers>>["rows"] = [];
@@ -35,13 +34,11 @@ export default async function HomePage() {
     <div className="space-y-12">
       <section className="rounded-2xl border bg-gradient-to-b from-muted to-background px-6 py-12 text-center md:px-12 md:py-20">
         <span className="inline-block rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-          {t("common.tagline")}
+          <LocaleText path="common.tagline" />
         </span>
-        <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">
-          {t("home.heroTitle")}
-        </h1>
+        <LocaleText path="home.heroTitle" as="h1" className="mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight md:text-5xl" />
         <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
-          {t("home.heroSubtitle")}
+          <LocaleText path="home.heroSubtitle" />
         </p>
         <div className="mx-auto mt-8 max-w-xl">
           <SearchBar />
@@ -49,14 +46,14 @@ export default async function HomePage() {
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Button asChild size="lg" className="bg-cta text-cta-foreground hover:bg-cta/90">
             <Link href="/submit">
-              {t("home.submitCta")}
+              <LocaleText path="home.submitCta" />
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/writespace">
               <PenLine className="h-4 w-4" />
-              {t("nav.writespace")}
+              <LocaleText path="nav.writespace" />
             </Link>
           </Button>
         </div>
@@ -64,9 +61,9 @@ export default async function HomePage() {
 
       <section>
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold tracking-tight">{t("home.latestTitle")}</h2>
+          <LocaleText path="home.latestTitle" as="h2" className="text-2xl font-semibold tracking-tight" />
           <Link href="/papers" className="text-sm text-primary hover:underline">
-            {t("common.viewAll")}
+            <LocaleText path="common.viewAll" />
           </Link>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -77,7 +74,7 @@ export default async function HomePage() {
       </section>
 
       <section>
-        <h2 className="mb-5 text-2xl font-semibold tracking-tight">{t("home.categoriesTitle")}</h2>
+        <LocaleText path="home.categoriesTitle" as="h2" className="mb-5 text-2xl font-semibold tracking-tight" />
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
           {topCats.map((c) => (
             <Link key={c.id} href={`/categories/${c.id}`}>

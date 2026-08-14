@@ -5,14 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAdminStats } from "@/lib/services/stats";
+import { getServerLocale } from "@/i18n/server";
+import { getDictionary, t as translate } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
-  submitted: "审核中",
-  approved: "已发布",
-  withdrawn: "已撤稿",
-  rejected: "已拒绝",
+  submitted: "paper.statusSubmitted",
+  approved: "paper.statusApproved",
+  withdrawn: "paper.statusWithdrawn",
+  rejected: "paper.statusRejected",
 };
 
 export default async function AdminStatsPage() {
@@ -20,24 +22,27 @@ export default async function AdminStatsPage() {
   if (!user || (user.role !== "moderator" && user.role !== "admin")) {
     redirect("/");
   }
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  const t = (path: string) => translate(dict, path);
   const stats = await getAdminStats();
 
   const cards = [
-    { label: "论文总数", value: stats.totalPapers },
-    { label: "待审核", value: stats.pendingReviews },
-    { label: "作者", value: stats.totalAuthors },
-    { label: "用户", value: stats.totalUsers },
-    { label: "评论", value: stats.totalComments },
-    { label: "订阅", value: stats.totalSubscriptions },
-    { label: "引用关系", value: stats.totalCitations },
+    { label: "admin.totalPapers", value: stats.totalPapers },
+    { label: "admin.pendingReview", value: stats.pendingReviews },
+    { label: "admin.totalAuthors", value: stats.totalAuthors },
+    { label: "admin.totalUsers", value: stats.totalUsers },
+    { label: "admin.totalComments", value: stats.totalComments },
+    { label: "admin.totalSubscriptions", value: stats.totalSubscriptions },
+    { label: "admin.totalCitations", value: stats.totalCitations },
   ];
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">管理统计面板</h1>
+        <h1 className="text-2xl font-bold">{t("admin.statsTitle")}</h1>
         <Button asChild variant="outline" size="sm">
-          <Link href="/admin/review">审核队列</Link>
+          <Link href="/admin/review">{t("nav.adminReview")}</Link>
         </Button>
       </div>
 
@@ -54,7 +59,7 @@ export default async function AdminStatsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">近 14 天提交量</CardTitle>
+          <CardTitle className="text-base">{t("admin.recentSubmissions")}</CardTitle>
         </CardHeader>
         <CardContent>
           <BarChart
@@ -66,12 +71,12 @@ export default async function AdminStatsPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">按状态分布</CardTitle>
+            <CardTitle className="text-base">{t("admin.byStatus")}</CardTitle>
           </CardHeader>
           <CardContent>
             <BarChart
               data={stats.byStatus.map((s) => ({
-                label: STATUS_LABEL[s.status] ?? s.status,
+                label: t(STATUS_LABEL[s.status] ?? s.status),
                 value: s.count,
               }))}
             />
@@ -80,7 +85,7 @@ export default async function AdminStatsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">按分类分布（Top 10）</CardTitle>
+            <CardTitle className="text-base">{t("admin.byCategory")}</CardTitle>
           </CardHeader>
           <CardContent>
             <BarChart
@@ -92,11 +97,11 @@ export default async function AdminStatsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">高产作者（Top 8）</CardTitle>
+          <CardTitle className="text-base">{t("admin.topAuthors")}</CardTitle>
         </CardHeader>
         <CardContent>
           {stats.topAuthors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无数据</p>
+            <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
           ) : (
             <BarChart data={stats.topAuthors.map((a) => ({ label: a.name, value: a.count }))} />
           )}

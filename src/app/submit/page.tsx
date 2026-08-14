@@ -6,6 +6,7 @@ import { SourcePackageUpload } from "@/components/source-package-upload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getServerLocale } from "@/i18n/server";
 import { getDictionary, t as translate } from "@/i18n";
+import { detectCapabilities } from "@/lib/capabilities";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function SubmitPage() {
   const t = (path: string) => translate(dict, path);
   const cats = await listCategories();
   const options = cats.map((c) => ({ id: c.id, name: c.name }));
+  const caps = detectCapabilities();
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -27,14 +29,16 @@ export default async function SubmitPage() {
       <Tabs defaultValue="form" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="form">{t("submit.methodForm")}</TabsTrigger>
-          <TabsTrigger value="package">{t("submit.methodPackage")}</TabsTrigger>
+          {caps.latex && <TabsTrigger value="package">{t("submit.methodPackage")}</TabsTrigger>}
         </TabsList>
         <TabsContent value="form">
-          <SubmitForm categories={options} />
+          <SubmitForm categories={options} pdfUploadEnabled={caps.pdfUpload} />
         </TabsContent>
-        <TabsContent value="package">
-          <SourcePackageUpload />
-        </TabsContent>
+        {caps.latex && (
+          <TabsContent value="package">
+            <SourcePackageUpload latexEnabled={caps.latex} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

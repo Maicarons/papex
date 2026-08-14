@@ -17,6 +17,9 @@ import { compileSearch } from "@/lib/search";
 import { findOrCreateAuthor } from "@/lib/services/authors";
 import { notifyNewPaper } from "@/lib/services/feed";
 import { notifyReviewResult } from "@/lib/services/notifications";
+import { parsePdf, extractReferences } from "@/lib/pdf";
+import { savePdfBuffer } from "@/lib/storage";
+import { addCitation } from "@/lib/services/citations";
 import type { CreatePaperInput } from "@/lib/validations";
 import type { SessionPayload } from "@/lib/auth/session";
 
@@ -158,6 +161,47 @@ export async function createSubmission(input: CreatePaperInput, owner: OwnerLike
   });
 }
 
+export interface AttachedPdf {
+  pdfUrl: string;
+  pages: number;
+  referencesExtracted: number;
+  referencesLinked: number;
+}
+
+/**
+ * Persist an uploaded PDF for a specific paper version and auto-link any
+ * references it contains. Shared by `POST /api/papers/{id}/pdf` and the
+ * multipart `POST /api/papers` submission flow so both paths stay in sync.
+ */
+export async function attachPdf(
+  paperId: string,
+  version: number,
+  buf: Buffer,
+  userId: string,
+): Promise<AttachedPdf> {
+  const { pdfUrl } = await savePdfBuffer(paperId, version, buf);
+  await db
+    .update(paperVersions)
+    .set({ pdfUrl })
+    .where(and(eq(paperVersions.paperId, paperId), eq(paperVersions.version, version)));
+
+  const parsed = await parsePdf(buf);
+  const refs = extractReferences(parsed.text);
+  let referencesLinked = 0;
+  for (const r of refs) {
+    const added = await addCitation({
+      paperId,
+      targetArxivId: r.targetArxivId,
+      targetDoi: r.targetDoi,
+      targetTitle: r.targetTitle,
+      createdById: userId,
+    });
+    if (added.targetPaperId) referencesLinked++;
+  }
+
+  return { pdfUrl, pages: parsed.numPages, referencesExtracted: refs.length, referencesLinked };
+}
+
 export async function getPaperDetail(id: string) {
   const [paperRow] = await db
     .select({ paper: papers, category: categories })
@@ -201,6 +245,44 @@ export async function getPaperDetail(id: string) {
     categories: catRows.map((r) => ({ ...r.category, isPrimary: r.pc.isPrimary })),
     commentCount: count,
   };
+}
+
+export interface RelatedPaper {
+  id: string;
+  title: string;
+  authors: string[];
+}
+
+export async function listRelatedPapers(paperId: string, primaryCategoryId: string, limit = 5) {
+  const rows = await db
+    .select({ paper: papers, version: paperVersions })
+    .from(papers)
+    .innerJoin(
+      paperVersions,
+      and(eq(paperVersions.paperId, papers.id), eq(paperVersions.version, papers.latestVersion)),
+    )
+    .where(
+      and(
+        eq(papers.primaryCategoryId, primaryCategoryId),
+        eq(papers.status, "approved"),
+        sql`${papers.id} <> ${paperId}`,
+      ),
+    )
+    .orderBy(desc(papers.createdAt))
+    .limit(limit);
+
+  const related: RelatedPaper[] = [];
+  for (const r of rows) {
+    const authorRows = await db
+      .select({ name: authors.name })
+      .from(paperAuthors)
+      .innerJoin(authors, eq(paperAuthors.authorId, authors.id))
+      .where(eq(paperAuthors.paperId, r.paper.id))
+      .orderBy(asc(paperAuthors.order))
+      .limit(3);
+    related.push({ id: r.paper.id, title: r.version.title, authors: authorRows.map((a) => a.name) });
+  }
+  return related;
 }
 
 export async function listVersions(id: string) {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/i18n/i18n-provider";
 
 interface PendingItem {
   paperId: string;
@@ -15,6 +16,7 @@ interface PendingItem {
 }
 
 export function ReviewQueue({ initial }: { initial: PendingItem[] }) {
+  const { t } = useI18n();
   const [items, setItems] = React.useState(initial);
   const [rejecting, setRejecting] = React.useState<string | null>(null);
   const [reason, setReason] = React.useState("");
@@ -36,7 +38,7 @@ export function ReviewQueue({ initial }: { initial: PendingItem[] }) {
   }
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground">队列为空，暂无待审核投稿。</p>;
+    return <p className="text-sm text-muted-foreground">{t("admin.reviewEmpty")}</p>;
   }
 
   return (
@@ -57,7 +59,7 @@ export function ReviewQueue({ initial }: { initial: PendingItem[] }) {
                 <Textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="填写拒绝理由（将通知作者）……"
+                  placeholder={t("admin.rejectPlaceholder")}
                   rows={3}
                 />
                 <div className="flex gap-2">
@@ -67,7 +69,7 @@ export function ReviewQueue({ initial }: { initial: PendingItem[] }) {
                     disabled={busy}
                     onClick={() => act(item.paperId, "reject")}
                   >
-                    确认拒绝
+                    {t("admin.confirmReject")}
                   </Button>
                   <Button
                     size="sm"
@@ -78,7 +80,7 @@ export function ReviewQueue({ initial }: { initial: PendingItem[] }) {
                       setReason("");
                     }}
                   >
-                    取消
+                    {t("common.cancel")}
                   </Button>
                 </div>
               </div>
@@ -86,7 +88,7 @@ export function ReviewQueue({ initial }: { initial: PendingItem[] }) {
               <div className="flex gap-2">
                 <Button size="sm" disabled={busy} onClick={() => act(item.paperId, "approve")}>
                   <Check className="h-4 w-4" />
-                  通过
+                  {t("admin.approve")}
                 </Button>
                 <Button
                   size="sm"
@@ -95,7 +97,7 @@ export function ReviewQueue({ initial }: { initial: PendingItem[] }) {
                   onClick={() => setRejecting(item.paperId)}
                 >
                   <X className="h-4 w-4" />
-                  拒绝
+                  {t("admin.reject")}
                 </Button>
               </div>
             )}

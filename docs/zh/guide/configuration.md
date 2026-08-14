@@ -39,6 +39,33 @@ SMTP_PASS=
 SMTP_FROM=
 ```
 
-## 存储（可选）
+## 存储（PDF 后端）
 
-论文全文（PDF / 源码）通过 URL 引用，可对接对象存储或静态托管服务，无需额外配置。
+上传的 PDF 由可插拔的后端存储，通过 `STORAGE_DRIVER` 选择。
+
+### `local`（默认）
+
+服务器自行管理文件系统上的 PDF 文件，目录为 `PAPEX_STORAGE_DIR`（默认 `./storage`）。字节由路由 `/api/papers/{id}/pdf/{version}` 流式返回。适用于 Docker / 自托管 / 本地开发。
+
+```bash
+STORAGE_DRIVER=local
+PAPEX_STORAGE_DIR=./storage
+```
+
+### `s3`（兼容 S3 的对象存储）
+
+上传到兼容 S3 的存储桶（AWS S3、MinIO、Cloudflare R2、DigitalOcean Spaces）。流式路由随后返回 `302` 重定向到**预签名**（或公开）对象 URL，PDF 由对象存储直接服务、不再经过应用服务器——在 Vercel 等只读 / Serverless 平台上必须使用此项。
+
+```bash
+STORAGE_DRIVER=s3
+PAPEX_S3_BUCKET=papex-pdfs
+PAPEX_S3_REGION=auto            # AWS 用 us-east-1；Cloudflare R2 用 auto
+PAPEX_S3_ENDPOINT=https://s3.amazonaws.com   # R2 / MinIO / Spaces 必填
+PAPEX_S3_ACCESS_KEY_ID=...
+PAPEX_S3_SECRET_ACCESS_KEY=...
+PAPEX_S3_FORCE_PATH_STYLE=true  # MinIO/R2/Spaces 用 true；AWS 虚拟主机风格用 false
+# 可选：若存储桶/CDN 已公开，可设置此基址跳过签名：
+# PAPEX_S3_PUBLIC_BASE=https://cdn.example.com
+```
+
+无论采用哪种后端，每个论文版本上存储的 `pdfUrl` 始终指向流式路由，因此前端与 API 与具体后端解耦。
