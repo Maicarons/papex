@@ -91,7 +91,7 @@ export function MetadataEditor({
             label={t("writespace.fTitle")}
             value={paper.title}
             onChange={(v) => setPaper({ title: v })}
-            placeholder="论文标题"
+            placeholder={t("writespace.paperTitlePlaceholder")}
           />
           <TextField
             label={t("writespace.fSubtitle")}
@@ -102,7 +102,7 @@ export function MetadataEditor({
             label={t("writespace.fAbstract")}
             value={paper.abstract}
             onChange={(v) => setPaper({ abstract: v })}
-            placeholder="摘要正文（纯文本，将自动转义）"
+            placeholder={t("writespace.abstractPlaceholder")}
             rows={5}
           />
           <TextField
@@ -124,7 +124,7 @@ export function MetadataEditor({
               value={paper.primaryCategoryId}
               onChange={(v) => setPaper({ primaryCategoryId: v })}
               options={categoryOptionsLabeled}
-              placeholder="选择主分类"
+              placeholder={t("writespace.selectPrimaryCategory")}
             />
             <SelectField
               label={t("writespace.fLanguage")}

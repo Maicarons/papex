@@ -84,7 +84,7 @@ export default function MessagesPage() {
       {/* Category filter tabs */}
       <div className="flex flex-wrap gap-2">
         <FilterChip
-          label="全部"
+          label={t("messages.all")}
           active={activeKind === null}
           count={unreadOf(null)}
           onClick={() => setActiveKind(null)}

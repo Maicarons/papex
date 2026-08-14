@@ -36,6 +36,13 @@
       "when": 1786535880000,
       "tag": "0004_add_api_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786535885000,
+      "tag": "0005_add_bookmarks",
+      "breakpoints": true
     }
   ]
 }

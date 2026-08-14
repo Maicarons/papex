@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useI18n } from "@/i18n/i18n-provider";
 
 interface CategoryOption {
   id: string;
@@ -30,6 +31,7 @@ export function PapersFilter({
   initialSort?: "new" | "updated";
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [q, setQ] = React.useState(initialQ);
   const [category, setCategory] = React.useState(initialCategory);
   const [sort, setSort] = React.useState(initialSort);
@@ -50,16 +52,16 @@ export function PapersFilter({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && apply()}
-          placeholder="检索：title:GAN AND cat:cs.CV ｜ au:lee NOT abs:survey"
+          placeholder={t("papers.filterPlaceholder")}
           className="pl-9"
         />
       </div>
       <Select value={category} onValueChange={setCategory}>
         <SelectTrigger className="md:w-56">
-          <SelectValue placeholder="全部分类" />
+          <SelectValue placeholder={t("papers.allCategories")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="__all">全部分类</SelectItem>
+          <SelectItem value="__all">{t("papers.allCategories")}</SelectItem>
           {categories.map((c) => (
             <SelectItem key={c.id} value={c.id}>
               {c.id} · {c.name}
@@ -72,11 +74,11 @@ export function PapersFilter({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="new">最新提交</SelectItem>
-          <SelectItem value="updated">最近更新</SelectItem>
+          <SelectItem value="new">{t("papers.latestSubmissions")}</SelectItem>
+          <SelectItem value="updated">{t("papers.recentUpdates")}</SelectItem>
         </SelectContent>
       </Select>
-      <Button onClick={apply}>筛选</Button>
+      <Button onClick={apply}>{t("papers.filter")}</Button>
     </div>
   );
 }

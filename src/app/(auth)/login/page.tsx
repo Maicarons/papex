@@ -29,7 +29,7 @@ export default function LoginPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error ?? "登录失败");
+      setError(data.error ?? t("auth.loginFailed"));
       setLoading(false);
       return;
     }

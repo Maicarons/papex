@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { useI18n } from "@/i18n/i18n-provider";
 
 export function LabeledField({
   label,
@@ -178,6 +179,7 @@ export function ItemCard({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
+  const { t } = useI18n();
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
@@ -190,17 +192,17 @@ export function ItemCard({
         </button>
         <div className="flex items-center gap-1">
           {onMoveUp && (
-            <IconBtn onClick={onMoveUp} title="上移">
+            <IconBtn onClick={onMoveUp} title={t("writespace.moveUp")}>
               <ChevronUp className="h-4 w-4" />
             </IconBtn>
           )}
           {onMoveDown && (
-            <IconBtn onClick={onMoveDown} title="下移">
+            <IconBtn onClick={onMoveDown} title={t("writespace.moveDown")}>
               <ChevronDown className="h-4 w-4" />
             </IconBtn>
           )}
           {onRemove && (
-            <IconBtn onClick={onRemove} title="删除" danger>
+            <IconBtn onClick={onRemove} title={t("writespace.delete")} danger>
               <Trash2 className="h-4 w-4" />
             </IconBtn>
           )}

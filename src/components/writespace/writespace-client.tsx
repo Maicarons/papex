@@ -19,8 +19,10 @@ const STORAGE_KEY = "papex-writespace-draft";
 
 export function WritespaceClient({
   categoryOptions,
+  publishEnabled = true,
 }: {
   categoryOptions: { id: string; name: string }[];
+  publishEnabled?: boolean;
 }) {
   const { t } = useI18n();
   const [draft, setDraft] = React.useState<WritespaceDraft>(() => createDefaultDraft());
@@ -190,6 +192,7 @@ export function WritespaceClient({
             exporting={exporting}
             publishing={publishing}
             result={result}
+            publishEnabled={publishEnabled}
             onExport={handleExport}
             onPublish={handlePublish}
             onReset={() => {

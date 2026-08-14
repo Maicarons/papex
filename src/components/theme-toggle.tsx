@@ -4,9 +4,11 @@ import * as React from "react";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/i18n-provider";
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+  const { t } = useI18n();
   // Hydration-safe "is mounted" flag: server snapshot is false (matches SSR
   // output), client snapshot flips to true after hydration. Replaces the
   // useState+useEffect mounted pattern (no setState-in-effect).
@@ -20,7 +22,7 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon"
-      aria-label="切换主题"
+      aria-label={t("common.toggleTheme")}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
       {mounted && resolvedTheme === "dark" ? (

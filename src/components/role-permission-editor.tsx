@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { PermissionDef } from "@/lib/permission-catalog";
+import { useI18n } from "@/i18n/i18n-provider";
 
 interface RoleSummary {
   id: number;
@@ -33,10 +34,11 @@ export function RolePermissionEditor({
   });
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const { t } = useI18n();
 
   const active = roles.find((r) => r.id === activeId) ?? roles[0];
   if (!active) {
-    return <p className="text-sm text-muted-foreground">暂无角色数据，请先运行数据库播种。</p>;
+    return <p className="text-sm text-muted-foreground">{t("admin.rolesEmpty")}</p>;
   }
   const activeSet = drafts[active.id] ?? new Set<string>();
 
@@ -59,11 +61,11 @@ export function RolePermissionEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ permissionKeys: [...activeSet] }),
       });
-      if (!r.ok) throw new Error((await r.json()).error ?? "保存失败");
+      if (!r.ok) throw new Error((await r.json()).error ?? t("admin.saveFailed"));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "保存失败");
+      alert(e instanceof Error ? e.message : t("admin.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -85,7 +87,7 @@ export function RolePermissionEditor({
             )}
           >
             {r.name}
-            {r.isSystem && <Badge variant="secondary" className="px-1 py-0 text-[10px]">系统</Badge>}
+            {r.isSystem && <Badge variant="secondary" className="px-1 py-0 text-[10px]">{t("admin.systemRole")}</Badge>}
             <span className="opacity-70">{drafts[r.id]?.size ?? 0}</span>
           </button>
         ))}

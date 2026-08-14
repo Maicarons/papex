@@ -9,12 +9,18 @@ import { listAnnouncements, markAnnouncementsRead } from "@/lib/services/feed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getServerLocale } from "@/i18n/server";
+import { getDictionary, t as translate, format } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function MePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  const t = (path: string) => translate(dict, path);
 
   const myPapers = await db
     .select()
@@ -27,22 +33,22 @@ export default async function MePage() {
   await markAnnouncementsRead(user.id);
 
   const typeLabel: Record<string, string> = {
-    category: "分类",
-    author: "作者",
-    paper: "论文",
+    category: t("subscriptions.typeCategory"),
+    author: t("subscriptions.typeAuthor"),
+    paper: t("subscriptions.typePaper"),
   };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">我的中心</h1>
+      <h1 className="text-2xl font-bold">{t("me.centerTitle")}</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">提醒（{announcements.length}）</CardTitle>
+          <CardTitle className="text-base">{format(t("me.alerts"), { n: announcements.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {announcements.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无提醒。</p>
+            <p className="text-sm text-muted-foreground">{t("me.noAlerts")}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {announcements.map((a) => (
@@ -58,11 +64,11 @@ export default async function MePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">我的投稿（{myPapers.length}）</CardTitle>
+          <CardTitle className="text-base">{format(t("me.submissionsTitle"), { n: myPapers.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {myPapers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">还没有投稿。</p>
+            <p className="text-sm text-muted-foreground">{t("me.noSubmissions")}</p>
           ) : (
             <ul className="space-y-2">
               {myPapers.map((p) => (
@@ -78,18 +84,18 @@ export default async function MePage() {
             </ul>
           )}
           <Button asChild className="mt-4" size="sm">
-            <Link href="/submit">提交新论文</Link>
+            <Link href="/submit">{t("home.submitCta")}</Link>
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">我的订阅（{subs.length}）</CardTitle>
+          <CardTitle className="text-base">{format(t("me.subscriptionsTitle"), { n: subs.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {subs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无订阅。</p>
+            <p className="text-sm text-muted-foreground">{t("subscriptions.empty")}</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {subs.map((s) => (

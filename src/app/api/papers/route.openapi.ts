@@ -42,6 +42,24 @@ export default {
         requestBody: {
           required: true,
           content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["meta"],
+                properties: {
+                  meta: {
+                    type: "string",
+                    description:
+                      "JSON string of paper fields: title, abstract, primaryCategoryId, secondaryCategoryIds[], authors[], sourceUrl, doi, license, comments, basePaperId",
+                  },
+                  pdf: {
+                    type: "string",
+                    format: "binary",
+                    description: "Full-text PDF file (≤50MB, optional). Uploaded and stored automatically.",
+                  },
+                },
+              },
+            },
             "application/json": {
               schema: {
                 type: "object",
@@ -65,7 +83,6 @@ export default {
                       },
                     },
                   },
-                  pdfUrl: { type: "string" },
                   sourceUrl: { type: "string" },
                   doi: { type: "string" },
                   license: { type: "string", default: "CC-BY-4.0" },
@@ -77,10 +94,34 @@ export default {
           },
         },
         responses: {
-          201: { description: "Created", content: { "application/json": { schema: { type: "object", properties: { paperId: { type: "string" }, version: { type: "integer" } } } } } },
+          201: {
+            description: "Created",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    paperId: { type: "string" },
+                    version: { type: "integer" },
+                    pdf: {
+                      type: "object",
+                      description: "Present when a PDF was uploaded",
+                      properties: {
+                        pdfUrl: { type: "string" },
+                        pages: { type: "integer" },
+                        referencesExtracted: { type: "integer" },
+                        referencesLinked: { type: "integer" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           401: { $ref: "#/components/responses/Unauthorized" },
           403: { $ref: "#/components/responses/Forbidden" },
           400: { $ref: "#/components/responses/BadRequest" },
+          413: { description: "PDF exceeds the 50MB limit" },
           500: { description: "ENDORSEMENT_REQUIRED or ID generation failed" },
         },
       },

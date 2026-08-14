@@ -43,7 +43,7 @@ export default function FeedbackPage() {
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError(data.error ?? "提交失败");
+      setError(data.error ?? t("feedback.submitFailed"));
       return;
     }
     setDone(true);

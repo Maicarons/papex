@@ -8,21 +8,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
+import { getServerLocale } from "@/i18n/server";
+import { getDictionary, t as translate, format as i18nFormat } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "待确认",
-  accepted: "进行中",
-  declined: "已拒绝",
-  completed: "已完成",
-  expired: "已过期",
+  pending: "coReviews.statusPending",
+  accepted: "coReviews.statusInProgress",
+  declined: "coReviews.statusRejected",
+  completed: "coReviews.statusCompleted",
+  expired: "coReviews.statusExpired",
 };
 
 const DECISION_LABEL: Record<string, string> = {
-  approve: "建议通过",
-  reject: "建议拒绝",
-  revise: "建议修改",
+  approve: "coReviews.recommendApprove",
+  reject: "coReviews.recommendReject",
+  revise: "coReviews.recommendRevision",
 };
 
 export default async function AdminCoReviewDetailPage({
@@ -34,6 +36,9 @@ export default async function AdminCoReviewDetailPage({
   if (!user || !(await userCan(user, "co_review:manage"))) {
     redirect("/");
   }
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  const t = (path: string) => translate(dict, path);
   const { id } = await params;
   const reviewId = Number(id);
   if (!Number.isInteger(reviewId)) notFound();
@@ -45,7 +50,7 @@ export default async function AdminCoReviewDetailPage({
       <Button asChild variant="ghost" size="sm" className="gap-1">
         <Link href="/admin/co-reviews">
           <ArrowLeft className="h-4 w-4" />
-          协审管理
+          {t("nav.adminCoReviews")}
         </Link>
       </Button>
 
@@ -53,31 +58,31 @@ export default async function AdminCoReviewDetailPage({
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-semibold tracking-tight">{review.paperTitle}</h1>
           <Badge variant={review.status === "pending" ? "destructive" : "secondary"}>
-            {STATUS_LABEL[review.status]}
+            {t(STATUS_LABEL[review.status] ?? review.status)}
           </Badge>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          论文编号 {review.paperId}
+          {i18nFormat(t("coReviews.paperIdLabel"), { id: review.paperId })}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">协审信息</CardTitle>
+          <CardTitle className="text-base">{t("coReviews.info")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <Row label="评审人" value={review.reviewerName} />
-          <Row label="指派人" value={review.assignedByName} />
-          <Row label="创建时间" value={formatDate(review.createdAt.toISOString())} />
+          <Row label={t("coReviews.reviewer")} value={review.reviewerName} />
+          <Row label={t("coReviews.assigner")} value={review.assignedByName} />
+          <Row label={t("coReviews.createdAt")} value={formatDate(review.createdAt.toISOString())} />
           {review.respondedAt && (
-            <Row label="回应时间" value={formatDate(review.respondedAt.toISOString())} />
+            <Row label={t("coReviews.respondedAt")} value={formatDate(review.respondedAt.toISOString())} />
           )}
           {review.completedAt && (
-            <Row label="完成时间" value={formatDate(review.completedAt.toISOString())} />
+            <Row label={t("coReviews.completedAt")} value={formatDate(review.completedAt.toISOString())} />
           )}
           {review.note && (
             <div className="rounded-lg bg-muted p-3">
-              <p className="mb-1 text-xs font-medium text-muted-foreground">指派备注</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">{t("coReviews.assignmentNote")}</p>
               <p className="whitespace-pre-wrap">{review.note}</p>
             </div>
           )}
@@ -87,12 +92,13 @@ export default async function AdminCoReviewDetailPage({
       {review.status === "completed" && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">评审结论</CardTitle>
+            <CardTitle className="text-base">{t("coReviews.conclusion")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {review.decision && (
               <p>
-                结论：<span className="font-medium">{DECISION_LABEL[review.decision]}</span>
+                {t("coReviews.decisionLabel")}
+                <span className="font-medium">{t(DECISION_LABEL[review.decision] ?? review.decision)}</span>
               </p>
             )}
             {review.comment && (

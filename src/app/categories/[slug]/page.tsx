@@ -4,6 +4,7 @@ import { getCategory, getAllCategorySlugs } from "@/lib/services/categories";
 import { listPapers } from "@/lib/services/papers";
 import { PaperCard } from "@/components/paper-card";
 import { SubscribeButton } from "@/components/subscribe-button";
+import { LocaleText } from "@/components/locale-text";
 
 export const revalidate = 3600;
 
@@ -42,13 +43,17 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           <div className="font-mono text-sm text-muted-foreground">{cat.id}</div>
           <h1 className="text-2xl font-bold">{cat.name}</h1>
           {cat.description && <p className="mt-1 text-sm text-muted-foreground">{cat.description}</p>}
-          <p className="mt-1 text-xs text-muted-foreground">共 {total} 篇</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            <LocaleText path="papers.results" vars={{ n: total }} />
+          </p>
         </div>
         <SubscribeButton type="category" refId={cat.id} />
       </div>
 
       {rows.length === 0 ? (
-        <p className="py-16 text-center text-muted-foreground">该分类下暂无论文。</p>
+        <p className="py-16 text-center text-muted-foreground">
+          <LocaleText path="categories.emptyPapers" />
+        </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {rows.map((item) => (

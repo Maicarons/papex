@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { papers, paperVersions } from "@/lib/db/schema";
+import { papers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { parsePdf, extractReferences } from "@/lib/pdf";
-import { savePdfBuffer } from "@/lib/storage";
-import { addCitation } from "@/lib/services/citations";
+import { attachPdf } from "@/lib/services/papers";
 
 export const dynamic = "force-dynamic";
+
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 
 /** Upload a PDF for the paper's latest version (owner or moderator/admin). */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -28,37 +28,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "缺少 pdf 文件" }, { status: 400 });
   }
   const buf = Buffer.from(await (file as File).arrayBuffer());
+  if (buf.length === 0) return NextResponse.json({ error: "空文件" }, { status: 400 });
+  if (buf.length > MAX_SIZE)
+    return NextResponse.json({ error: "文件过大（>50MB）" }, { status: 413 });
 
   try {
-    const { storedPath, pdfUrl } = await savePdfBuffer(id, paper.latestVersion, buf);
-    await db
-      .update(paperVersions)
-      .set({ pdfUrl })
-      .where(eq(paperVersions.paperId, id) && eq(paperVersions.version, paper.latestVersion));
-
-    // Extract references from the PDF and auto-link any that resolve locally.
-    const parsed = await parsePdf(buf);
-    const refs = extractReferences(parsed.text);
-    let linked = 0;
-    for (const r of refs) {
-      const added = await addCitation({
-        paperId: id,
-        targetArxivId: r.targetArxivId,
-        targetDoi: r.targetDoi,
-        targetTitle: r.targetTitle,
-        createdById: user.id,
-      });
-      if (added.targetPaperId) linked++;
-    }
-
-    return NextResponse.json({
-      ok: true,
-      storedPath,
-      pdfUrl,
-      pages: parsed.numPages,
-      referencesExtracted: refs.length,
-      referencesLinked: linked,
-    });
+    const pdf = await attachPdf(id, paper.latestVersion, buf, user.id);
+    return NextResponse.json({ ok: true, ...pdf });
   } catch (e) {
     return NextResponse.json({ error: `PDF 处理失败：${(e as Error).message}` }, { status: 500 });
   }

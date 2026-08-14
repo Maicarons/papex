@@ -15,25 +15,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/i18n-provider";
 
 // Base user roles (must match the user_role enum). `reader` is a RBAC-only
 // role and cannot be a user's base role, so it is excluded here.
 const BASE_ROLES = ["admin", "moderator", "author"] as const;
 
 const ROLE_LABEL: Record<string, string> = {
-  admin: "管理员",
-  moderator: "审核员",
-  author: "作者",
-  reader: "读者",
+  admin: "admin.roleAdmin",
+  moderator: "admin.roleModerator",
+  author: "admin.roleAuthor",
+  reader: "admin.roleReader",
 };
 
 const KIND_LABEL: Record<string, string> = {
-  announcement: "公告",
-  system: "系统通知",
-  admin_message: "管理员私信",
+  announcement: "admin.typeAnnouncement",
+  system: "admin.typeSystem",
+  admin_message: "admin.typeAdmin",
 };
 
 export default function AdminMessagesPage() {
+  const { t, format } = useI18n();
   const [scope, setScope] = React.useState<"all" | "role" | "userIds">("all");
   const [role, setRole] = React.useState<string>(BASE_ROLES[2] ?? "author");
   const [userIdsText, setUserIdsText] = React.useState("");
@@ -66,14 +68,14 @@ export default function AdminMessagesPage() {
         }),
       });
       const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? "发送失败");
+      if (!r.ok) throw new Error(d.error ?? t("admin.sendFailed"));
       setResult({ ok: true, sent: d.sent });
       setTitle("");
       setBody("");
       setLink("");
       setUserIdsText("");
     } catch (e) {
-      setResult({ ok: false, error: e instanceof Error ? e.message : "发送失败" });
+      setResult({ ok: false, error: e instanceof Error ? e.message : t("admin.sendFailed") });
     } finally {
       setSubmitting(false);
     }
@@ -82,25 +84,23 @@ export default function AdminMessagesPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">站内信广播</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          向指定范围的用户群发站内信。所有发送均通过统一通知中心投递。
-        </p>
+        <h1 className="text-2xl font-bold">{t("nav.adminMessages")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("admin.broadcastSubtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">新建广播</CardTitle>
+          <CardTitle className="text-base">{t("admin.newBroadcast")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Scope */}
           <div className="space-y-2">
-            <Label>接收范围</Label>
+            <Label>{t("admin.recipientScope")}</Label>
             <div className="flex flex-wrap gap-2">
               {([
-                { v: "all", label: "全部用户" },
-                { v: "role", label: "按角色" },
-                { v: "userIds", label: "指定用户" },
+                { v: "all", label: t("admin.allUsers") },
+                { v: "role", label: t("admin.byRole") },
+                { v: "userIds", label: t("admin.specificUsers") },
               ] as const).map((opt) => (
                 <button
                   key={opt.v}
@@ -125,7 +125,7 @@ export default function AdminMessagesPage() {
                 <SelectContent>
                   {BASE_ROLES.map((k) => (
                     <SelectItem key={k} value={k}>
-                      {ROLE_LABEL[k] ?? k}
+                      {t(ROLE_LABEL[k] ?? k)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -134,7 +134,7 @@ export default function AdminMessagesPage() {
 
             {scope === "userIds" && (
               <Textarea
-                placeholder="粘贴用户 ID，用逗号、空格或换行分隔"
+                placeholder={t("admin.pasteUserIds")}
                 value={userIdsText}
                 onChange={(e) => setUserIdsText(e.target.value)}
                 rows={3}
@@ -144,7 +144,7 @@ export default function AdminMessagesPage() {
 
           {/* Kind */}
           <div className="space-y-2">
-            <Label>消息类型</Label>
+            <Label>{t("admin.messageType")}</Label>
             <Select value={kind} onValueChange={(v) => setKind(v as typeof kind)}>
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -152,7 +152,7 @@ export default function AdminMessagesPage() {
               <SelectContent>
                 {Object.entries(KIND_LABEL).map(([k, label]) => (
                   <SelectItem key={k} value={k}>
-                    {label}
+                    {t(label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -160,47 +160,47 @@ export default function AdminMessagesPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="msg-title">标题</Label>
+            <Label htmlFor="msg-title">{t("admin.subject")}</Label>
             <Input
               id="msg-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="通知标题"
+              placeholder={t("admin.subjectPlaceholder")}
               maxLength={200}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="msg-body">内容</Label>
+            <Label htmlFor="msg-body">{t("admin.content")}</Label>
             <Textarea
               id="msg-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="通知正文"
+              placeholder={t("admin.contentPlaceholder")}
               rows={6}
               maxLength={5000}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="msg-link">跳转链接（可选）</Label>
+            <Label htmlFor="msg-link">{t("admin.link")}</Label>
             <Input
               id="msg-link"
               value={link}
               onChange={(e) => setLink(e.target.value)}
-              placeholder="例如 /papers/2608.00001"
+              placeholder={t("admin.linkPlaceholder")}
               maxLength={500}
             />
           </div>
 
           <Button onClick={submit} disabled={submitting || !title || !body}>
             {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
-            发送广播
+            {t("admin.sendBroadcast")}
           </Button>
 
           {result?.ok && (
             <p className="flex items-center gap-1.5 text-sm text-emerald-600">
-              <CheckCircle2 className="h-4 w-4" /> 已成功发送给 {result.sent} 位用户
+              <CheckCircle2 className="h-4 w-4" /> {format(t("admin.sentCount"), { n: result.sent ?? 0 })}
             </p>
           )}
           {result && !result.ok && (

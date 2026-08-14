@@ -13,10 +13,11 @@ import {
   SECTION_LEVEL_OPTIONS,
 } from "@/lib/writespace/manifest";
 
-const SAMPLE_SECTIONS: { id: string; title: string; level: PapexSection["level"]; content: string }[] = [
+function sampleSections(t: (p: string) => string): { id: string; title: string; level: PapexSection["level"]; content: string }[] {
+  return [
   {
     id: "intro",
-    title: "引言",
+    title: t("writespace.secIntro"),
     level: "section",
     content:
       "研究背景与动机。说明当前领域面临的挑战，以及本文的贡献。\n\n" +
@@ -25,13 +26,13 @@ const SAMPLE_SECTIONS: { id: string; title: string; level: PapexSection["level"]
   },
   {
     id: "related",
-    title: "相关工作",
+    title: t("writespace.secRelatedWork"),
     level: "section",
     content: "综述与本文最相关的工作，并指出其与本文的区别。\n",
   },
   {
     id: "method",
-    title: "方法",
+    title: t("writespace.secMethods"),
     level: "section",
     content:
       "形式化问题描述，并给出核心方法。\n\n" +
@@ -42,7 +43,7 @@ const SAMPLE_SECTIONS: { id: string; title: string; level: PapexSection["level"]
   },
   {
     id: "experiments",
-    title: "实验",
+    title: t("writespace.secExperiments"),
     level: "section",
     content:
       "实验设置、数据集与评价指标。\n\n" +
@@ -51,11 +52,12 @@ const SAMPLE_SECTIONS: { id: string; title: string; level: PapexSection["level"]
   },
   {
     id: "conclusion",
-    title: "结论",
+    title: t("writespace.secConclusion"),
     level: "section",
     content: "总结全文，并指出未来工作方向。\n",
   },
-];
+  ];
+}
 
 function nextId(existing: string[]): string {
   let n = existing.length + 1;
@@ -102,8 +104,8 @@ export function SectionsEditor({
     const id = nextId(ids);
     const file = `sections/${id}.tex`;
     const sec: PapexSection = isAppendix
-      ? { id, title: "附录", file }
-      : { id, title: "新章节", level: "section", file };
+      ? { id, title: t("writespace.appendix"), file }
+      : { id, title: t("writespace.newSection"), level: "section", file };
     const nextList = [...list, sec];
     const nextContents = { ...draft.contents, [file]: "" };
     const nextManifest: PapexManifest = isAppendix
@@ -114,7 +116,7 @@ export function SectionsEditor({
 
   const insertSamples = () => {
     const nextContents = { ...draft.contents };
-    const nextSections = SAMPLE_SECTIONS.map((s) => {
+    const nextSections = sampleSections(t).map((s) => {
       const file = `sections/${s.id}.tex`;
       nextContents[file] = s.content;
       return { id: s.id, title: s.title, level: s.level, file } as PapexSection;

@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import type { CitationOut } from "@/lib/services/citations";
+import { useI18n } from "@/i18n/i18n-provider";
 
 function truncate(s: string | null, n = 30): string {
   if (!s) return "";
@@ -38,6 +39,7 @@ export function CitationGraph({
   outgoing: CitationOut[];
   incoming: CitationOut[];
 }) {
+  const { t } = useI18n();
   const [hovered, setHovered] = React.useState<string | null>(null);
   const centerKey = "center";
 
@@ -47,15 +49,15 @@ export function CitationGraph({
 
   const leftNodes: NodeSpec[] = incoming.map((c, i) => ({
     key: `in-${c.id}`,
-    label: truncate(c.resolvedTitle) || "未知来源",
-    full: c.resolvedTitle || "未知来源",
+    label: truncate(c.resolvedTitle) || t("citations.unknownSource"),
+    full: c.resolvedTitle || t("citations.unknownSource"),
     href: `/papers/${c.paperId}`,
     x: COL_LEFT,
     y: PAD + i * (NODE_H + GAP),
   }));
 
   const rightNodes: NodeSpec[] = outgoing.map((c, i) => {
-    const full = c.targetTitle || c.targetArxivId || c.targetDoi || "外部文献";
+    const full = c.targetTitle || c.targetArxivId || c.targetDoi || t("citations.external");
     return {
       key: `out-${c.id}`,
       label: truncate(full),
@@ -151,9 +153,9 @@ export function CitationGraph({
       onBlur: () => setHovered(null),
     };
     const prefix = n.key.startsWith("in-")
-      ? "引用来源："
+      ? t("citations.incomingShort")
       : n.key.startsWith("out-")
-        ? "引用目标："
+        ? t("citations.outgoingShort")
         : "";
     return n.href ? (
       <Link
@@ -177,7 +179,7 @@ export function CitationGraph({
       viewBox={`0 0 ${W} ${height}`}
       className="w-full"
       role="img"
-      aria-label="引用关系图"
+      aria-label={t("citations.graphTitle")}
       style={{ maxHeight: 460 }}
     >
       <defs>

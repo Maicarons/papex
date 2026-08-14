@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/i18n/i18n-provider";
 
 export interface ReviewItem {
   id: number;
@@ -33,11 +34,11 @@ export interface SelectableUser {
 }
 
 const STATUS_LABEL: Record<ReviewItem["status"], string> = {
-  pending: "待确认",
-  accepted: "进行中",
-  declined: "已拒绝",
-  completed: "已完成",
-  expired: "已过期",
+  pending: "coReviews.statusPending",
+  accepted: "coReviews.statusInProgress",
+  declined: "coReviews.statusRejected",
+  completed: "coReviews.statusCompleted",
+  expired: "coReviews.statusExpired",
 };
 
 export function CoReviewAdmin({
@@ -50,6 +51,7 @@ export function CoReviewAdmin({
   users: SelectableUser[];
 }) {
   const router = useRouter();
+  const { t, format } = useI18n();
   const [paperId, setPaperId] = React.useState(papers[0]?.paperId ?? "");
   const [reviewerId, setReviewerId] = React.useState(users[0]?.id ?? "");
   const [note, setNote] = React.useState("");
@@ -65,11 +67,11 @@ export function CoReviewAdmin({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paperId, reviewerId, note }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "指派失败");
+      if (!res.ok) throw new Error((await res.json()).error ?? t("coReviews.assignFailed"));
       setNote("");
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "指派失败");
+      setError(e instanceof Error ? e.message : t("coReviews.assignFailed"));
     } finally {
       setBusy(false);
     }
@@ -81,28 +83,28 @@ export function CoReviewAdmin({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Send className="h-4 w-4" />
-            指派协审
+            {t("coReviews.assignTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="paper">论文</Label>
+            <Label htmlFor="paper">{t("coReviews.paper")}</Label>
             <select
               id="paper"
               value={paperId}
               onChange={(e) => setPaperId(e.target.value)}
               className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
             >
-              {papers.length === 0 && <option value="">暂无可指派论文</option>}
+              {papers.length === 0 && <option value="">{t("coReviews.emptyAssignable")}</option>}
               {papers.map((p) => (
                 <option key={p.paperId} value={p.paperId}>
-                  {p.title}（{p.paperId}）
+                  {p.title} ({p.paperId})
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="reviewer">评审人</Label>
+            <Label htmlFor="reviewer">{t("coReviews.reviewer")}</Label>
             <select
               id="reviewer"
               value={reviewerId}
@@ -111,24 +113,24 @@ export function CoReviewAdmin({
             >
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.displayName}（{u.username}）
+                  {u.displayName} ({u.username})
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="note">指派备注（可选）</Label>
+            <Label htmlFor="note">{t("coReviews.assignmentNoteOptional")}</Label>
             <Textarea
               id="note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
-              placeholder="向评审人说明评审重点……"
+              placeholder={t("coReviews.assignmentNotePlaceholder")}
             />
           </div>
           <Button onClick={assign} disabled={busy || !paperId || !reviewerId} className="gap-1">
             <ClipboardCheck className="h-4 w-4" />
-            发送协审请求
+            {t("coReviews.sendRequest")}
           </Button>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
@@ -136,11 +138,11 @@ export function CoReviewAdmin({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">协审进度（{reviews.length}）</CardTitle>
+          <CardTitle className="text-base">{format(t("coReviews.progress"), { n: reviews.length })}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {reviews.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无协审任务</p>
+            <p className="text-sm text-muted-foreground">{t("coReviews.empty")}</p>
           ) : (
             reviews.map((r) => (
               <Link
@@ -151,11 +153,11 @@ export function CoReviewAdmin({
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-sm font-medium">{r.paperTitle}</p>
                   <Badge variant={r.status === "pending" ? "destructive" : "secondary"}>
-                    {STATUS_LABEL[r.status]}
+                    {t(STATUS_LABEL[r.status])}
                   </Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  评审人 {r.reviewerName} · 指派人 {r.assignedByName}
+                  {format(t("coReviews.reviewerAssigner"), { reviewer: r.reviewerName, assigner: r.assignedByName })}
                 </p>
               </Link>
             ))

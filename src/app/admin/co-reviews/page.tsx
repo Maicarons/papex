@@ -4,6 +4,8 @@ import { userCan } from "@/lib/auth/permissions";
 import { listCoReviews, listAssignablePapers } from "@/lib/services/co-reviews";
 import { listUsers } from "@/lib/services/rbac";
 import { CoReviewAdmin } from "@/components/co-review-admin";
+import { getServerLocale } from "@/i18n/server";
+import { getDictionary, t as translate } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,9 @@ export default async function AdminCoReviewsPage() {
   if (!user || !(await userCan(user, "co_review:manage"))) {
     redirect("/");
   }
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  const t = (path: string) => translate(dict, path);
   const [reviews, papers, users] = await Promise.all([
     listCoReviews({ scope: "all" }),
     listAssignablePapers(50),
@@ -25,10 +30,8 @@ export default async function AdminCoReviewsPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">协审管理</h1>
-        <p className="text-sm text-muted-foreground">
-          向指定用户发起同行评审，跟踪接收确认与评审意见提交，形成完整闭环。
-        </p>
+        <h1 className="text-2xl font-bold">{t("nav.adminCoReviews")}</h1>
+        <p className="text-sm text-muted-foreground">{t("admin.coReviewsSubtitle")}</p>
       </div>
       <CoReviewAdmin
         reviews={enriched

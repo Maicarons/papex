@@ -19,6 +19,7 @@ import {
   SYSTEM_ROLE_KEYS,
 } from "@/lib/permission-catalog";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/i18n-provider";
 
 interface Override {
   key: string;
@@ -36,13 +37,14 @@ interface UserRow {
 }
 
 const ROLE_LABEL: Record<string, string> = {
-  admin: "管理员",
-  moderator: "审核员",
-  author: "作者",
-  reader: "读者",
+  admin: "admin.roleAdmin",
+  moderator: "admin.roleModerator",
+  author: "admin.roleAuthor",
+  reader: "admin.roleReader",
 };
 
 export default function AdminUsersPage() {
+  const { t, format } = useI18n();
   const [users, setUsers] = React.useState<UserRow[]>([]);
   const [q, setQ] = React.useState("");
   const [loading, setLoading] = React.useState(true);
@@ -67,11 +69,11 @@ export default function AdminUsersPage() {
     <div className="grid gap-4 md:grid-cols-[1fr_380px]">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">用户列表</CardTitle>
+          <CardTitle className="text-base">{t("admin.userList")}</CardTitle>
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="搜索用户名 / 昵称 / 邮箱"
+              placeholder={t("admin.searchUsers")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="pl-8"
@@ -81,10 +83,10 @@ export default function AdminUsersPage() {
         <CardContent>
           {loading ? (
             <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> 加载中…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t("common.loading")}
             </div>
           ) : users.length === 0 ? (
-            <p className="py-8 text-sm text-muted-foreground">无匹配用户</p>
+            <p className="py-8 text-sm text-muted-foreground">{t("admin.noUsers")}</p>
           ) : (
             <ul className="divide-y">
               {users.map((u) => (
@@ -103,7 +105,7 @@ export default function AdminUsersPage() {
                       <span className="flex items-center gap-2">
                         <span className="truncate font-medium">{u.displayName}</span>
                         <Badge variant="outline" className="shrink-0">
-                          {ROLE_LABEL[u.role] ?? u.role}
+                          {t(ROLE_LABEL[u.role] ?? u.role)}
                         </Badge>
                       </span>
                       <span className="block truncate text-xs text-muted-foreground">
@@ -112,7 +114,7 @@ export default function AdminUsersPage() {
                     </span>
                     {u.overrideCount > 0 && (
                       <Badge variant="secondary" className="shrink-0">
-                        {u.overrideCount} 项覆盖
+                        {format(t("admin.overrideCount"), { n: u.overrideCount })}
                       </Badge>
                     )}
                   </button>
@@ -131,7 +133,7 @@ export default function AdminUsersPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center text-sm text-muted-foreground">
             <UsersIcon className="h-8 w-8 opacity-40" />
-            从左侧选择一名用户以管理其角色与权限
+            {t("admin.selectUserHint")}
           </CardContent>
         </Card>
       )}
@@ -146,6 +148,7 @@ function UserEditor({
   user: UserRow;
   onUpdate: (u: UserRow) => void;
 }) {
+  const { t } = useI18n();
   const baseRole = user.role;
   const assignable = SYSTEM_ROLE_KEYS.filter((k) => k !== baseRole);
   const [roleKeys, setRoleKeys] = React.useState<string[]>(
@@ -172,11 +175,11 @@ function UserEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleKeys }),
       });
-      if (!r.ok) throw new Error((await r.json()).error ?? "保存失败");
+      if (!r.ok) throw new Error((await r.json()).error ?? t("admin.saveFailed"));
       setRoleSaved(true);
       setTimeout(() => setRoleSaved(false), 2000);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "保存失败");
+      alert(e instanceof Error ? e.message : t("admin.saveFailed"));
     } finally {
       setSavingRole(false);
     }
@@ -193,7 +196,7 @@ function UserEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ permission: { key, grant } }),
       });
-      if (!r.ok) throw new Error((await r.json()).error ?? "保存失败");
+      if (!r.ok) throw new Error((await r.json()).error ?? t("admin.saveFailed"));
       onUpdate({
         ...user,
         overrides: [
@@ -201,11 +204,11 @@ function UserEditor({
           ...(grant === null ? [] : [{ key, grant: grant as boolean }]),
         ],
       });
-      setPermMsg("已保存");
+      setPermMsg(t("admin.saved"));
       setTimeout(() => setPermMsg(null), 2000);
     } catch (e) {
       setOverrides((o) => ({ ...o, [key]: prev }));
-      setPermMsg(e instanceof Error ? e.message : "保存失败");
+      setPermMsg(e instanceof Error ? e.message : t("admin.saveFailed"));
     }
   }
 
@@ -219,22 +222,22 @@ function UserEditor({
         {/* Base role */}
         <div>
           <div className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-            <ShieldCheck className="h-4 w-4" /> 基础角色
+            <ShieldCheck className="h-4 w-4" /> {t("admin.baseRole")}
           </div>
-          <Badge>{ROLE_LABEL[baseRole] ?? baseRole}</Badge>
+          <Badge>{t(ROLE_LABEL[baseRole] ?? baseRole)}</Badge>
           <p className="mt-1 text-xs text-muted-foreground">
-            基础角色权限始终生效，可被下方分配角色叠加，或被权限覆盖改写。
+            {t("admin.baseRoleHint")}
           </p>
         </div>
 
         {/* Assigned roles */}
         <div>
           <div className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-            <KeyRound className="h-4 w-4" /> 附加角色
+            <KeyRound className="h-4 w-4" /> {t("admin.assignedRoles")}
           </div>
           <div className="flex flex-wrap gap-2">
             {assignable.length === 0 ? (
-              <p className="text-xs text-muted-foreground">无可用附加角色</p>
+              <p className="text-xs text-muted-foreground">{t("admin.noExtraRoles")}</p>
             ) : (
               assignable.map((k) => {
                 const active = roleKeys.includes(k);
@@ -253,7 +256,7 @@ function UserEditor({
                         : "hover:bg-accent",
                     )}
                   >
-                    {ROLE_LABEL[k] ?? k}
+                    {t(ROLE_LABEL[k] ?? k)}
                   </button>
                 );
               })
@@ -261,16 +264,16 @@ function UserEditor({
           </div>
           <Button size="sm" className="mt-3" onClick={saveRoles} disabled={savingRole}>
             {savingRole ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />}
-            保存角色
+            {t("admin.saveRole")}
             {roleSaved && <Check className="ml-1 h-4 w-4" />}
           </Button>
         </div>
 
         {/* Permission overrides */}
         <div>
-          <div className="mb-2 text-sm font-medium">权限覆盖</div>
+          <div className="mb-2 text-sm font-medium">{t("admin.permissionOverrides")}</div>
           <p className="mb-2 text-xs text-muted-foreground">
-            默认继承角色权限；可针对该用户单独「允许」或「禁止」某项权限。
+            {t("admin.overridesHint")}
           </p>
           <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
             {PERMISSION_GROUPS.map((g) => {
@@ -293,9 +296,9 @@ function UserEditor({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="inherit">默认</SelectItem>
-                            <SelectItem value="allow">允许</SelectItem>
-                            <SelectItem value="deny">禁止</SelectItem>
+                            <SelectItem value="inherit">{t("admin.defaultPerm")}</SelectItem>
+                            <SelectItem value="allow">{t("admin.allowPerm")}</SelectItem>
+                            <SelectItem value="deny">{t("admin.denyPerm")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

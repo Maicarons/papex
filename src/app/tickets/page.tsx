@@ -61,7 +61,7 @@ export default function TicketsPage() {
     const data = await res.json().catch(() => ({}));
     setSubmitting(false);
     if (!res.ok) {
-      setError(data.error ?? "提交失败");
+      setError(data.error ?? t("tickets.submitFailed"));
       return;
     }
     setComposing(false);

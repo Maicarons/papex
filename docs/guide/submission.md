@@ -12,7 +12,7 @@ Papex offers two submission entry points for different workflows:
 
 | Method | Entry point | Audience | Characteristics |
 | --- | --- | --- | --- |
-| **Form submission** | Web "Submit → Form" page / `POST /api/papers` | Occasional submitters | Fill in title, abstract, authors, etc. in the browser; you supply the PDF link |
+| **Form submission** | Web "Submit → Form" page / `POST /api/papers` | Occasional submitters | Fill in title, abstract, authors, etc. in the browser; **upload the full-text PDF directly** (≤50MB) |
 | **Source-package upload** | Web "Submit → Source package" page / `POST /api/submit/archive` | LaTeX authors | Pack your sources with a `papex.json` manifest into a `tar.gz`; the platform **creates the paper, links citations and builds the PDF** automatically |
 
 > Both methods share the same ingestion logic (`createSubmission` + `addCitation`).
@@ -34,28 +34,33 @@ and click "Submit paper":
 - **Primary category** (required, code from the category tree e.g. `cs.LG`),
   **Cross categories** (comma-separated, optional)
 - **Authors** (add as many as needed; order is the author order)
-- **PDF link** (optional), **DOI** (optional), **License** (default `CC-BY-4.0`),
+- **Upload PDF** (optional): drag & drop or choose a PDF (≤50MB); the platform stores it
+  and auto-links references. **DOI** (optional), **License** (default `CC-BY-4.0`),
   **Version note** (optional)
 
-The paper then enters the review queue. Form submission is equivalent to:
+The paper then enters the review queue. Form submission is sent as `multipart/form-data`:
+`meta` is a JSON string of the metadata, `pdf` is the optional PDF file.
 
 ```http
 POST /api/papers
-Content-Type: application/json
+Content-Type: multipart/form-data; boundary=...
 
-{
-  "title": "…",
-  "abstract": "…",
-  "primaryCategoryId": "cs.LG",
-  "secondaryCategoryIds": ["stat.ML"],
-  "authors": [{ "name": "Ming Zhang", "order": 0 }],
-  "pdfUrl": "https://…",
-  "doi": "",
-  "license": "CC-BY-4.0",
-  "comments": "",
-  "basePaperId": null
-}
+--boundary
+Content-Disposition: form-data; name="meta"
+
+{"title":"…","abstract":"…","primaryCategoryId":"cs.LG","secondaryCategoryIds":["stat.ML"],"authors":[{"name":"Ming Zhang","order":0}],"doi":"","license":"CC-BY-4.0","comments":"","basePaperId":null}
+--boundary
+Content-Disposition: form-data; name="pdf"; filename="paper.pdf"
+Content-Type: application/pdf
+
+<binary PDF data>
+--boundary--
 ```
+
+> The PDF is optional. When supplied, the endpoint stores it against the paper version,
+> parses the body, links in-platform citations, and returns
+> `{ pdfUrl, pages, referencesExtracted, referencesLinked }`. The web form sends this
+> automatically; API clients may still POST plain JSON (without `pdf`).
 
 ---
 
@@ -263,8 +268,11 @@ author ──tar.gz──> POST /api/submit/archive (multipart: file)
 
 ### `POST /api/papers`
 
-Form-submission endpoint. JSON body (see [Section 2](#2-method-1-form-submission)),
-requires auth. Returns `{ paperId }` on success.
+Form-submission endpoint. Request is `multipart/form-data` (see
+[Section 2](#2-method-1-form-submission)): field `meta` is a JSON string of the metadata,
+field `pdf` is the optional PDF file (≤50MB). Requires auth. Returns `{ paperId, version }`,
+and when a PDF was uploaded, an extra `pdf: { pdfUrl, pages, referencesExtracted, referencesLinked }`.
+API clients may also POST plain JSON (without `pdf`).
 
 ### `POST /api/submit/archive`
 

@@ -3,8 +3,10 @@
 import * as React from "react";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/i18n-provider";
 
 export function BookmarkButton({ paperId }: { paperId: string }) {
+  const { t } = useI18n();
   const [bookmarked, setBookmarked] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [ready, setReady] = React.useState(false);
@@ -51,7 +53,7 @@ export function BookmarkButton({ paperId }: { paperId: string }) {
       aria-pressed={bookmarked}
     >
       {bookmarked ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-      {bookmarked ? "已收藏" : "收藏"}
+      {bookmarked ? t("bookmarks.alreadyBookmarked") : t("bookmarks.title")}
     </Button>
   );
 }

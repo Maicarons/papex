@@ -5,6 +5,7 @@ import { listPapers } from "@/lib/services/papers";
 import { PaperCard } from "@/components/paper-card";
 import { SubscribeButton } from "@/components/subscribe-button";
 import { Card, CardContent } from "@/components/ui/card";
+import { LocaleText } from "@/components/locale-text";
 
 export const revalidate = 3600;
 
@@ -50,9 +51,13 @@ export default async function AuthorPage({ params }: { params: Promise<{ id: str
         </CardContent>
       </Card>
 
-      <h2 className="mb-4 text-lg font-semibold">论文</h2>
+      <h2 className="mb-4 text-lg font-semibold">
+        <LocaleText path="papers.title" />
+      </h2>
       {rows.length === 0 ? (
-        <p className="py-12 text-center text-muted-foreground">暂无论文。</p>
+        <p className="py-12 text-center text-muted-foreground">
+          <LocaleText path="authors.emptyPapers" />
+        </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {rows.map((item) => (

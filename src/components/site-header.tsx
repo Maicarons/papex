@@ -101,7 +101,7 @@ export function SiteHeader() {
               <FeedBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full" aria-label="用户菜单">
+                  <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("common.userMenu")}>
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>{initials(user.displayName)}</AvatarFallback>
                     </Avatar>

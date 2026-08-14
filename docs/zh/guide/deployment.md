@@ -9,6 +9,7 @@ Papex 可部署到 Vercel、任意 Docker 环境或自托管服务器。
 3. 构建命令：`npm run build`；输出目录由 Next.js 自动处理。
 4. 在 Vercel 的「Storage」中绑定 Postgres，或在环境变量中填写外部数据库地址。
 5. 部署后执行一次迁移：`npm run db:migrate`。
+6. **PDF 存储**：Vercel 运行时文件系统只读，需设置 `STORAGE_DRIVER=s3` 及 `PAPEX_S3_*` 变量（见[配置 → 存储](./configuration.md)）。流式路由将重定向到预签名对象 URL，而非从磁盘返回字节。
 
 ## Docker / 自托管
 

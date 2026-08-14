@@ -14,20 +14,22 @@ import {
   Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/i18n-provider";
 
 const NAV = [
-  { href: "/admin", label: "概览", icon: LayoutDashboard, exact: true },
-  { href: "/admin/review", label: "审核队列", icon: ShieldCheck },
-  { href: "/admin/stats", label: "统计面板", icon: BarChart3 },
-  { href: "/admin/tickets", label: "工单管理", icon: ListChecks },
-  { href: "/admin/co-reviews", label: "协审管理", icon: ClipboardCheck },
-  { href: "/admin/users", label: "用户管理", icon: Users },
-  { href: "/admin/roles", label: "角色权限", icon: KeyRound },
-  { href: "/admin/messages", label: "站内信广播", icon: Megaphone },
+  { href: "/admin", label: "nav.adminOverview", icon: LayoutDashboard, exact: true },
+  { href: "/admin/review", label: "nav.adminReview", icon: ShieldCheck },
+  { href: "/admin/stats", label: "nav.adminStats", icon: BarChart3 },
+  { href: "/admin/tickets", label: "nav.adminTickets", icon: ListChecks },
+  { href: "/admin/co-reviews", label: "nav.adminCoReviews", icon: ClipboardCheck },
+  { href: "/admin/users", label: "nav.adminUsers", icon: Users },
+  { href: "/admin/roles", label: "nav.adminRoles", icon: KeyRound },
+  { href: "/admin/messages", label: "nav.adminMessages", icon: Megaphone },
 ];
 
 export function AdminNav() {
   const pathname = usePathname();
+  const { t } = useI18n();
   return (
     <nav className="flex flex-wrap gap-1">
       {NAV.map((item) => {
@@ -47,7 +49,7 @@ export function AdminNav() {
             )}
           >
             <Icon className="h-4 w-4" />
-            {item.label}
+            {t(item.label)}
           </Link>
         );
       })}

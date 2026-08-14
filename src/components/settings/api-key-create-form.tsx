@@ -49,7 +49,7 @@ export function ApiKeyCreateForm({ onCreated }: { onCreated: () => void }) {
       });
       const d = await res.json();
       if (!res.ok) {
-        setError(d.error ?? "创建失败");
+        setError(d.error ?? t("apiKeys.createFailed"));
         return;
       }
       setNewToken(d.apiKey.token);

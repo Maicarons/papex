@@ -9,6 +9,10 @@ Papex can be deployed to Vercel, any Docker environment, or a self-hosted server
 3. Build command: `npm run build` (output handled by Next.js).
 4. Bind Postgres via Vercel Storage, or fill an external `DATABASE_URL`.
 5. Run migrations once after deploy: `npm run db:migrate`.
+6. **PDF storage**: Vercel's filesystem is read-only at runtime, so set
+   `STORAGE_DRIVER=s3` and the `PAPEX_S3_*` variables (see
+   [Configuration → Storage](./configuration.md)). The streaming route then
+   redirects to a presigned object URL instead of serving bytes from disk.
 
 ## Docker / self-hosted
 

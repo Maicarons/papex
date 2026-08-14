@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Bell, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/i18n-provider";
 
 export function SubscribeButton({
   type,
@@ -13,6 +14,7 @@ export function SubscribeButton({
   refId: string;
   initial?: boolean;
 }) {
+  const { t } = useI18n();
   const [subscribed, setSubscribed] = React.useState(initial);
   const [loading, setLoading] = React.useState(false);
 
@@ -40,7 +42,7 @@ export function SubscribeButton({
   return (
     <Button variant={subscribed ? "secondary" : "outline"} size="sm" onClick={toggle} disabled={loading}>
       {subscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-      {subscribed ? "已订阅" : "订阅"}
+      {subscribed ? t("subscriptions.alreadySubscribed") : t("subscriptions.subscribe")}
     </Button>
   );
 }
