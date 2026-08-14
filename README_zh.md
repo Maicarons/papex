@@ -58,6 +58,8 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 | 批量 PDF 解析 | pdf-parse 抽取文本/元数据 + 正则抽取参考文献（文献编号 / DOI） | ✅ |
 | 引用图 | `citations` 表记录 DOI/文献编号 引用关系，手绘 SVG 关系图 | ✅ |
 | 管理后台统计 | 投稿/分类/作者/审核聚合面板（ECharts 6 图表） | ✅ |
+| 通知中心 | `/feed` 提醒中心 + Rss 铃铛（未读角标实时同步，Zustand） | ✅ |
+| 收藏 | `bookmarks` 表 + `/bookmarks` 收藏夹 + 详情页一键收藏 | ✅ |
 
 ---
 
@@ -114,7 +116,7 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 | 认证 | jose（JWT）+ bcryptjs | 6 / 3 |
 | 图标 | lucide-react | 1.x |
 | 状态 | Zustand | 5 |
-| Lint / 测试 | ESLint 9（flat config）+ Vitest 3 | — |
+| Lint / 测试 | ESLint 9（flat config）+ Vitest 4 | — |
 | PDF 解析 | pdf-parse（class-based API） | 2.4 |
 
 > TypeScript 暂定 `5.9`：`typescript-eslint` 8.x 对 TS 7 的支持仍在跟进，待其发布后迁移至 TS 7。
@@ -142,6 +144,9 @@ papex/
 │   │   ├── authors/[id]/       # 作者主页
 │   │   ├── u/[username]/       # 用户个人主页
 │   │   ├── me/                 # 我的投稿 / 订阅 / 提醒
+│   │   ├── feed/               # 提醒中心 / 通知中心
+│   │   ├── subscriptions/      # 管理我的订阅
+│   │   ├── bookmarks/          # 我的收藏论文
 │   │   ├── admin/review/       # 审核队列（moderator 可见）
 │   │   └── api/                # REST API（见下）
 │   ├── components/
@@ -150,6 +155,7 @@ papex/
 │   │   ├── theme-provider.tsx / theme-toggle.tsx
 │   │   ├── paper-card.tsx / search-bar.tsx / category-tree.tsx
 │   │   ├── comment-thread.tsx / submit-form.tsx / review-queue.tsx
+│   │   ├── feed-bell.tsx / bookmark-button.tsx   # 通知铃铛 + 收藏按钮
 │   │   └── ...
 │   ├── lib/
 │   │   ├── utils.ts            # cn() 等
@@ -160,12 +166,12 @@ papex/
 │   │   ├── auth/
 │   │   │   ├── session.ts      # JWT 签发/校验 + cookie
 │   │   │   └── password.ts     # bcrypt
-│   │   ├── services/           # papers/authors/categories/comments/subscriptions/review
+│   │   ├── services/           # papers/authors/categories/comments/subscriptions/bookmarks/feed/review
 │   │   ├── validations.ts      # zod 校验
 │   │   ├── paper-id.ts         # 文献编号生成
 │   │   └── search.ts           # 全文检索拼接
 │   ├── hooks/                  # 客户端 hooks
-│   ├── store/                  # Zustand stores
+│   ├── store/                  # Zustand stores（筛选态、通知角标）
 │   └── types/                  # 共享类型
 ├── Dockerfile / docker-compose.yml   # 自托管
 ├── vercel.json                        # Vercel 配置（可选）
@@ -195,6 +201,7 @@ papex/
 | `endorsements` | 背书 | id, endorserId, endorseeId, categoryId |
 | `announcements` | 提醒/公告 | id, userId, kind, payload(json), read, createdAt, emailedAt |
 | `citations` | 引用关系 | id, paperId, targetPaperId?, targetDoi?, targetArxivId?, targetTitle?, createdById?, createdAt |
+| `bookmarks` | 收藏（稍后读） | id, userId→users.id, paperId→papers.id, createdAt, unique(userId, paperId) |
 
 **索引与检索**
 - `paper_versions` 上 `to_tsvector('english', title || ' ' || abstract)` 生成 `search_vector`（GIN 索引），支撑拉丁文全文检索。
@@ -218,11 +225,13 @@ papex/
 3. **分类体系**（`services/categories.ts`）— 树形展示，分类详情页列出论文。
 4. **作者与机构**（`services/authors.ts`）— 作者主页列出其论文、机构。
 5. **评论讨论**（`services/comments.ts` + `/api/papers/[id]/comments`）— 楼中楼，注册用户可评。
-6. **订阅与提醒**（`services/subscriptions.ts`）— 订阅分类/作者；新论文进入订阅范围生成 `announcements`。
+6. **订阅与提醒**（`services/subscriptions.ts`）— 订阅分类/作者/论文；新论文进入订阅范围生成 `announcements`。`/subscriptions` 页面列出「富化」后的订阅（解析出标题与跳转链接），并可逐行取消订阅。
 7. **用户系统**（`lib/auth/*` + `services/users.ts`）— 注册/登录/登出、个人主页、我的投稿。
 8. **审核流程**（`services/review.ts` + `/admin/review`）— moderator 可 approve/reject/withdraw；首次投稿需对应分类 endorsement。
 9. **API**（`app/api/**`）— 统一 REST，zod 校验，JWT 鉴权写操作。
-10. **主题与响应式** — `next-themes` + Tailwind 容器断点。
+10. **提醒中心与通知**（`services/feed.ts` + `/feed`）— 当前用户的统一提醒中心（新入分类、新来自作者、评论回复、管理员公告）；通过 `POST /api/feed` 单条已读、`GET /api/feed?markRead=1` 全部已读。顶部 `FeedBell` 通过 Zustand 通知 store 同步未读角标，任何一处已读都会立即更新角标。
+11. **收藏**（`services/bookmarks.ts` + `/bookmarks`）— 论文详情页一键 `BookmarkButton` 收藏；`/bookmarks` 列出收藏论文（标题取自 `papers`）；个人主页显示「N 个收藏」角标。
+12. **主题与响应式** — `next-themes` + Tailwind 容器断点。
 
 ---
 
@@ -322,7 +331,9 @@ docker compose up -d        # 含 Postgres + Next 服务
 | GET | `/api/papers/[id]/pdf/[version]` | 流式下载 PDF | 公开 |
 | POST | `/api/admin/ingest` | 批量导入（multipart 多 PDF 或 JSON 元数据） | moderator |
 | GET | `/api/admin/stats` | 管理后台统计聚合 | moderator |
-| GET | `/api/feed` | 当前用户提醒/RSS | 登录 |
+| GET | `/api/feed` | 当前用户提醒/RSS（`?markRead=1` 全部已读） | 登录 |
+| POST | `/api/feed` | 标记单条提醒已读 `{id}` | 登录 |
+| GET/POST/DELETE | `/api/bookmarks` | 收藏列表 / 切换 / 移除 | 登录 |
 
 ---
 
@@ -334,6 +345,8 @@ docker compose up -d        # 含 Postgres + Next 服务
 - [x] **高级布尔检索语法（AND/OR/NOT + 字段限定）** — `lib/search.ts` 递归下降解析器，支持 `ti/abs/au/cat/id` 字段限定与括号分组。
 - [x] **多语言全文检索（中文分词）** — 拉丁文走 `tsvector`，中文等 CJK 走 `pg_trgm` 三元组 ILIKE（无需 zhparser 分词插件）；二者 OR 组合保证中英混合查询可用。
 - [x] **管理后台统计面板** — `/admin/stats` + `/api/admin/stats`：总量/按状态/按分类 Top10/近 14 天投稿趋势/Top 作者等聚合，手绘 SVG 柱状图。
+- [x] **提醒中心（`/feed`）** — 统一提醒中心（新入分类、新来自作者、评论回复、管理员公告），支持单条（`POST /api/feed`）与全部（`?markRead=1`）已读；顶部 `FeedBell` 经 Zustand store 同步未读角标，已读即刻更新。
+- [x] **收藏 / 稍后读** — `bookmarks` 表（迁移 `0005_add_bookmarks.sql`）、论文详情页一键收藏 `BookmarkButton`、`/bookmarks` 收藏夹（标题取自 `papers`）、个人主页「N 个收藏」角标。
 
 ---
 

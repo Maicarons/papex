@@ -85,6 +85,27 @@ curl -H "Authorization: Bearer pk_live_xxxx" https://your-host/api/papers?pageSi
 
 - `GET /api/categories` — 分类树
 
+## 订阅
+
+- `GET /api/subscriptions` — 列出我的订阅（**富化**：分类/作者/论文名称解析为 `title` 并附带跳转 `href`）
+- `POST /api/subscriptions` — 订阅 / 取消订阅（切换）`{type:"category"|"author"|"paper", refId}`
+- `DELETE /api/subscriptions` — 取消订阅 `{type, refId}`
+
+## 提醒与通知
+
+当新论文进入你的订阅范围（新入分类、新来自作者）、有人回复你的评论，或管理员广播时，会生成相应提醒。
+
+- `GET /api/feed` — 当前用户的提醒列表（`?markRead=1` 一并全部标记已读）
+- `POST /api/feed` — 标记单条提醒已读 `{id}`
+
+顶部铃铛（`FeedBell`）通过 Zustand store 同步未读角标，任何一处已读都会立即更新角标。
+
+## 收藏
+
+- `GET /api/bookmarks` — 列出我的收藏（解析出论文标题）；传入 `?paperId=` 则改为返回单篇论文的 `{ bookmarked: boolean }`
+- `POST /api/bookmarks` — 切换收藏 `{paperId}`（返回 `{ bookmarked: true|false }`）
+- `DELETE /api/bookmarks` — 移除收藏 `{paperId}`
+
 ## 站内信
 
 站内信按 `kind` 分为 8 类：系统通知 `system`、工单回执 `ticket_reply`、公告 `announcement`、审核结果 `review_result`、协审请求 `co_review_request`、协审回执 `co_review_result`、管理员私信 `admin_message`、社区回复 `community_reply`。

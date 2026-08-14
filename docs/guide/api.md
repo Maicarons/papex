@@ -103,6 +103,27 @@ and API keys alike.
 
 - `GET /api/categories` — category tree
 
+## Subscriptions
+
+- `GET /api/subscriptions` — list my subscriptions, **enriched** (category/author/paper names resolved into `title` + a `href` deep link)
+- `POST /api/subscriptions` — subscribe / unsubscribe (toggle) `{type:"category"|"author"|"paper", refId}`
+- `DELETE /api/subscriptions` — unsubscribe `{type, refId}`
+
+## Feed & notifications
+
+Announcements are generated when a paper enters one of your subscriptions (new-in-category, new-from-author), when someone replies to your comment, or by an admin broadcast.
+
+- `GET /api/feed` — current user's announcements (`?markRead=1` also marks them all read)
+- `POST /api/feed` — mark a single announcement read `{id}`
+
+The header bell (`FeedBell`) shows a live unread badge kept in sync through a Zustand store, so reading anywhere updates the badge immediately.
+
+## Bookmarks
+
+- `GET /api/bookmarks` — list my bookmarks (each resolved to its paper title); pass `?paperId=` to instead get `{ bookmarked: boolean }` for a single paper
+- `POST /api/bookmarks` — toggle a bookmark `{paperId}` (returns `{ bookmarked: true|false }`)
+- `DELETE /api/bookmarks` — remove a bookmark `{paperId}`
+
 ## Messages
 
 Messages are classified by `kind` into 8 categories: `system`, `ticket_reply`, `announcement`, `review_result`, `co_review_request`, `co_review_result`, `admin_message`, `community_reply`.
