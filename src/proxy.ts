@@ -63,6 +63,14 @@ export async function proxy(req: NextRequest) {
     }
   }
 
+  // 为 API 请求注入 HTTP method，供 getSession() 在 Node 运行时做 API Key
+  // scope 校验。edge 运行时无法查库解析 key，这里只透传 method；下游按
+  // 读/写区分：写方法(POST/PUT/PATCH/DELETE)要求 key 含 "write" scope。
+  if (pathname.startsWith("/api/")) {
+    req.headers.set("x-papex-method", req.method);
+    return NextResponse.next({ request: req });
+  }
+
   const needsAuth =
     PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
     EDIT_RE.test(pathname);

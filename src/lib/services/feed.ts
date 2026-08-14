@@ -111,3 +111,11 @@ export async function listAnnouncements(userId: string, onlyUnread = false) {
 export async function markAnnouncementsRead(userId: string) {
   await db.update(announcements).set({ read: true }).where(eq(announcements.userId, userId));
 }
+
+/** Mark a single announcement read. Scoped to the owner to prevent cross-user tampering. */
+export async function markAnnouncementRead(userId: string, id: number) {
+  await db
+    .update(announcements)
+    .set({ read: true })
+    .where(and(eq(announcements.id, id), eq(announcements.userId, userId)));
+}

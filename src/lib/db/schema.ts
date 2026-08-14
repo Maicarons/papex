@@ -262,6 +262,23 @@ export const subscriptions = pgTable(
   }),
 );
 
+export const bookmarks = pgTable(
+  "bookmarks",
+  {
+    id: serial("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    paperId: text("paper_id")
+      .notNull()
+      .references(() => papers.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_table) => ({
+    uniq: uniqueIndex("bookmarks_user_paper_unique").on(_table.userId, _table.paperId),
+  }),
+);
+
 export const endorsements = pgTable(
   "endorsements",
   {

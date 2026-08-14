@@ -84,6 +84,15 @@ export async function getSession(): Promise<SessionPayload | null> {
     const raw = auth.slice(7).trim();
     const resolved = await resolveApiKey(raw);
     if (resolved) {
+      // scope 校验：写方法要求 "write"，读方法要求 "read"。不足则视为未认证
+      // （返回 null），路由按 401 处理——从而收紧只读 key 的写权限。默认双
+      // scope key (read+write) 完全不受影响。method 由 proxy 注入的
+      // x-papex-method header 提供（edge 无法查库，仅透传）。
+      const method = headerStore.get("x-papex-method") ?? "GET";
+      const requiresWrite = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+      const requiredScope: ApiKeyScope = requiresWrite ? "write" : "read";
+      if (!resolved.scopes.includes(requiredScope)) return null;
+
       const [user] = await db
         .select({ id: users.id, username: users.username, role: users.role })
         .from(users)

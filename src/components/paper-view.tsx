@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SubscribeButton } from "@/components/subscribe-button";
+import { BookmarkButton } from "@/components/bookmark-button";
 import { CommentThread } from "@/components/comment-thread";
 import { CitationPanel } from "@/components/citation-panel";
 import { formatDate } from "@/lib/utils";
@@ -97,6 +98,7 @@ export function PaperView({
               </Button>
             )}
             <SubscribeButton type="paper" refId={detail.paper.id} />
+            <BookmarkButton paperId={detail.paper.id} />
             {isOwner && (
               <Button asChild size="sm">
                 <Link href={`/papers/${detail.paper.id}/edit`}>
