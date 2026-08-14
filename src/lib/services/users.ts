@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { users, papers, subscriptions } from "@/lib/db/schema";
+import { users, papers, subscriptions, bookmarks } from "@/lib/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import type { RegisterInput, LoginInput, UpdateProfileInput } from "@/lib/validations";
@@ -63,5 +63,14 @@ export async function getUserProfile(username: string) {
     .select({ count: sql<number>`count(*)::int` })
     .from(subscriptions)
     .where(eq(subscriptions.userId, user.id));
-  return { user, papers: userPapers, subscriptionCount: subCount[0]?.count ?? 0 };
+  const bookmarkCount = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(bookmarks)
+    .where(eq(bookmarks.userId, user.id));
+  return {
+    user,
+    papers: userPapers,
+    subscriptionCount: subCount[0]?.count ?? 0,
+    bookmarkCount: bookmarkCount[0]?.count ?? 0,
+  };
 }

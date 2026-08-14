@@ -3,11 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck, PenLine, LayoutGrid } from "lucide-react";
+import { FileText, Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck, PenLine, LayoutGrid, Bell, Rss, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { MessagesBell } from "@/components/messages-bell";
+import { FeedBell } from "@/components/feed-bell";
 import { useI18n } from "@/i18n/i18n-provider";
 import {
   DropdownMenu,
@@ -97,6 +98,7 @@ export function SiteHeader() {
           {user ? (
             <>
               <MessagesBell />
+              <FeedBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full" aria-label="用户菜单">
@@ -134,6 +136,24 @@ export function SiteHeader() {
                     <Link href="/feedback">
                       <MessageSquareText className="h-4 w-4" />
                       {t("nav.feedback")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/feed">
+                      <Rss className="h-4 w-4" />
+                      {t("nav.feed")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/subscriptions">
+                      <Bell className="h-4 w-4" />
+                      {t("nav.subscriptions")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/bookmarks">
+                      <Bookmark className="h-4 w-4" />
+                      {t("nav.bookmarks")}
                     </Link>
                   </DropdownMenuItem>
                   {user.role !== "author" && (

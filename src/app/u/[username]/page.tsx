@@ -84,6 +84,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
             <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
               <Badge variant="outline">{profile.papers.length} 篇投稿</Badge>
               <Badge variant="outline">{profile.subscriptionCount} 个订阅</Badge>
+              <Badge variant="outline">{profile.bookmarkCount} 个收藏</Badge>
             </div>
           </div>
         </CardContent>

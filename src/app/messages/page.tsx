@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/i18n/i18n-provider";
 import { formatDate } from "@/lib/utils";
+import { useNotifications } from "@/lib/stores/notifications";
 import {
   MESSAGE_KINDS,
   MESSAGE_CATEGORY_META,
@@ -43,6 +44,8 @@ export default function MessagesPage() {
 
   async function markRead(id: number) {
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
+    const { messageUnread, setMessageUnread } = useNotifications.getState();
+    setMessageUnread(Math.max(0, messageUnread - 1));
     await fetch(`/api/messages/${id}/read`, { method: "POST" }).catch(() => {});
   }
 
@@ -53,6 +56,7 @@ export default function MessagesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "read-all" }),
     }).catch(() => {});
+    useNotifications.getState().setMessageUnread(0);
   }
 
   const filtered = activeKind ? messages.filter((m) => m.kind === activeKind) : messages;

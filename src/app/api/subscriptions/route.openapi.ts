@@ -9,7 +9,34 @@ export default {
         tags: ["Subscriptions"],
         summary: "List my subscriptions (requires login)",
         responses: {
-          200: { description: "Subscriptions", content: { "application/json": { schema: { type: "object", properties: { subscriptions: { type: "array", items: { type: "object" } } } } } } },
+          200: {
+            description: "Enriched subscriptions (category/author/paper names resolved)",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["subscriptions"],
+                  properties: {
+                    subscriptions: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["id", "type", "refId", "title", "href", "createdAt"],
+                        properties: {
+                          id: { type: "integer", description: "Subscription row id." },
+                          type: { type: "string", enum: ["category", "author", "paper"] },
+                          refId: { type: "string", description: "Category slug / author id / paper id." },
+                          title: { type: "string", description: "Human-readable name resolved from refId." },
+                          href: { type: "string", description: "Client link to the subscribed resource." },
+                          createdAt: { type: "string", format: "date-time" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           401: { $ref: "#/components/responses/Unauthorized" },
         },
       },

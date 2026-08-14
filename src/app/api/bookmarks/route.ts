@@ -1,48 +1,50 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
-import { listSubscriptionsEnriched, toggleSubscription } from "@/lib/services/subscriptions";
-import { subscriptionSchema } from "@/lib/validations";
-import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { subscriptions } from "@/lib/db/schema";
+import {
+  listBookmarks,
+  isBookmarked,
+  toggleBookmark,
+  removeBookmark,
+} from "@/lib/services/bookmarks";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+const paperIdSchema = z.object({ paperId: z.string().min(1) });
+
+export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  const list = await listSubscriptionsEnriched(user.id);
-  return NextResponse.json({ subscriptions: list });
+  const url = new URL(req.url);
+  const paperId = url.searchParams.get("paperId");
+  if (paperId) {
+    const bookmarked = await isBookmarked(user.id, paperId);
+    return NextResponse.json({ bookmarked });
+  }
+  const list = await listBookmarks(user.id);
+  return NextResponse.json({ bookmarks: list });
 }
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
   const json = await req.json().catch(() => null);
-  const parsed = subscriptionSchema.safeParse(json);
+  const parsed = paperIdSchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "参数错误" }, { status: 400 });
   }
-  const subscribed = await toggleSubscription(user.id, parsed.data);
-  return NextResponse.json({ subscribed });
+  const bookmarked = await toggleBookmark(user.id, parsed.data.paperId);
+  return NextResponse.json({ bookmarked });
 }
 
 export async function DELETE(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
   const json = await req.json().catch(() => null);
-  const parsed = subscriptionSchema.safeParse(json);
+  const parsed = paperIdSchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "参数错误" }, { status: 400 });
   }
-  await db
-    .delete(subscriptions)
-    .where(
-      and(
-        eq(subscriptions.userId, user.id),
-        eq(subscriptions.type, parsed.data.type),
-        eq(subscriptions.refId, parsed.data.refId),
-      ),
-    );
+  await removeBookmark(user.id, parsed.data.paperId);
   return NextResponse.json({ ok: true });
 }
