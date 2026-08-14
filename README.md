@@ -60,6 +60,8 @@ Papex is an open-source (Apache-2.0) platform for managing and showcasing academ
 | Batch PDF parsing | pdf-parse extracts text/metadata + regex references (paper id / DOI) | Yes |
 | Citation graph | `citations` table records DOI/paper-id relations, hand-drawn SVG graph | Yes |
 | Admin analytics | submission/category/author/review aggregate panel (ECharts 6) | Yes |
+| Notification center | `/feed` announcements hub + Rss bell with a live unread badge (Zustand-synced) | Yes |
+| Bookmarks | `bookmarks` table + `/bookmarks` collection page + one-click save on paper detail | Yes |
 
 ---
 
@@ -143,6 +145,9 @@ papex/
 │   │   ├── authors/[id]/       # author profile
 │   │   ├── u/[username]/       # user profile
 │   │   ├── me/                 # my submissions / subscriptions / alerts
+│   │   ├── feed/               # announcements / notification center
+│   │   ├── subscriptions/      # manage my subscriptions
+│   │   ├── bookmarks/          # my bookmarked papers
 │   │   ├── admin/review/       # review queue (moderator only)
 │   │   └── api/                # REST API (see below)
 │   ├── components/
@@ -151,6 +156,7 @@ papex/
 │   │   ├── theme-provider.tsx / theme-toggle.tsx
 │   │   ├── paper-card.tsx / search-bar.tsx / category-tree.tsx
 │   │   ├── comment-thread.tsx / submit-form.tsx / review-queue.tsx
+│   │   ├── feed-bell.tsx / bookmark-button.tsx   # notification + bookmark toggles
 │   │   └── ...
 │   ├── lib/
 │   │   ├── utils.ts            # cn() etc.
@@ -161,12 +167,12 @@ papex/
 │   │   ├── auth/
 │   │   │   ├── session.ts      # JWT sign/verify + cookie
 │   │   │   └── password.ts     # bcrypt
-│   │   ├── services/           # papers/authors/categories/comments/subscriptions/review
+│   │   ├── services/           # papers/authors/categories/comments/subscriptions/bookmarks/feed/review
 │   │   ├── validations.ts      # zod validation
 │   │   ├── paper-id.ts         # paper id generation
 │   │   └── search.ts           # full-text search composition
 │   ├── hooks/                  # client hooks
-│   ├── store/                  # Zustand stores
+│   ├── store/                  # Zustand stores (filters, notification badges)
 │   └── types/                  # shared types
 ├── Dockerfile / docker-compose.yml   # self-hosting
 ├── vercel.json                        # Vercel config (optional)
@@ -196,6 +202,7 @@ Built with Drizzle + PostgreSQL. Core entities and relationships:
 | `endorsements` | endorsements | id, endorserId, endorseeId, categoryId |
 | `announcements` | alerts / announcements | id, userId, kind, payload(json), read, createdAt, emailedAt |
 | `citations` | citation relations | id, paperId, targetPaperId?, targetDoi?, targetArxivId?, targetTitle?, createdById?, createdAt |
+| `bookmarks` | read-later collection | id, userId→users.id, paperId→papers.id, createdAt, unique(userId, paperId) |
 
 **Indexes & search**
 - `paper_versions` has `to_tsvector('english', title || ' ' || abstract)` generating `search_vector` (GIN index) for Latin full-text search.
@@ -219,11 +226,13 @@ See `src/lib/db/schema.ts` for the full definition.
 3. **Category system** (`services/categories.ts`) — tree display; category detail page lists papers.
 4. **Authors & affiliations** (`services/authors.ts`) — author profile lists their papers and affiliation.
 5. **Comments** (`services/comments.ts` + `/api/papers/[id]/comments`) — threaded replies; registered users may comment.
-6. **Subscriptions & alerts** (`services/subscriptions.ts`) — subscribe to categories/authors; new papers in scope generate `announcements`.
+6. **Subscriptions & alerts** (`services/subscriptions.ts`) — subscribe to categories/authors/papers; new papers in scope generate `announcements`. The `/subscriptions` page lists enriched subscriptions (resolved titles + deep links to the subscribed resource) and lets you unsubscribe per row.
 7. **User system** (`lib/auth/*` + `services/users.ts`) — register/login/logout, profile, my submissions.
 8. **Moderation flow** (`services/review.ts` + `/admin/review`) — moderator can approve/reject/withdraw; first submission in a category requires that category's endorsement.
 9. **API** (`app/api/**`) — unified REST, zod validation, JWT auth for write ops.
-10. **Theme & responsive** — `next-themes` + Tailwind container breakpoints.
+10. **Feed & notifications** (`services/feed.ts` + `/feed`) — a consolidated announcements hub for the current user (new-in-category, new-from-author, comment replies, admin announcements). Mark single or all as read via `POST /api/feed` / `GET /api/feed?markRead=1`. The header `FeedBell` shows a live unread badge synced through a Zustand notifications store, so marking read anywhere updates the badge immediately.
+11. **Bookmarks** (`services/bookmarks.ts` + `/bookmarks`) — save papers for later with a one-click `BookmarkButton` on the paper detail page; `/bookmarks` lists saved papers with titles resolved from `papers`; the user profile shows a "N bookmarks" badge.
+12. **Theme & responsive** — `next-themes` + Tailwind container breakpoints.
 
 ---
 
@@ -332,7 +341,9 @@ endpoints work anonymously, with a cookie, or with an API key.
 | GET | `/api/papers/[id]/pdf/[version]` | Stream PDF download | Public |
 | POST | `/api/admin/ingest` | Batch import (multipart multi-PDF or JSON metadata) | Moderator |
 | GET | `/api/admin/stats` | Admin analytics aggregation | Moderator |
-| GET | `/api/feed` | Current user alerts / RSS | Logged in |
+| GET | `/api/feed` | Current user alerts / RSS (`?markRead=1` marks all read) | Logged in |
+| POST | `/api/feed` | Mark a single announcement read `{id}` | Logged in |
+| GET/POST/DELETE | `/api/bookmarks` | List / toggle / remove bookmarks | Logged in |
 
 ---
 
@@ -344,6 +355,8 @@ endpoints work anonymously, with a cookie, or with an API key.
 - [x] **Advanced boolean search syntax (AND/OR/NOT + field scoping)** — `lib/search.ts` recursive-descent parser supporting `ti/abs/au/cat/id` field scoping and parentheses.
 - [x] **Multilingual full-text search (CJK tokenization)** — Latin via `tsvector`, CJK via `pg_trgm` trigram ILIKE (no zhparser plugin needed); combined with OR for mixed Chinese/English queries.
 - [x] **Admin analytics panel** — `/admin/stats` + `/api/admin/stats`: totals / by status / Top10 by category / last-14-day submission trend / Top authors aggregates, hand-drawn SVG bar charts.
+- [x] **Notification center (`/feed`)** — a consolidated announcements hub (new-in-category, new-from-author, comment replies, admin announcements) with single (`POST /api/feed`) and bulk (`?markRead=1`) mark-read; the header `FeedBell` shows a live unread badge synced through a Zustand store so it updates the moment anything is read.
+- [x] **Bookmarks / read-later** — `bookmarks` table (migration `0005_add_bookmarks.sql`), one-click save on the paper detail page via `BookmarkButton`, a `/bookmarks` collection page with titles resolved from `papers`, and a "N bookmarks" badge on the user profile.
 
 ---
 

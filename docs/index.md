@@ -29,6 +29,10 @@ features:
     details: A role-based fine-grained permission system with per-role or per-user allow / deny.
   - title: Online authoring
     details: Edit papex.json visually and write LaTeX body in the browser, then export a source package or publish in one click.
+  - title: Subscriptions & alerts
+    details: Follow categories, authors and papers; get a consolidated announcement feed with a live unread badge.
+  - title: Bookmarks
+    details: Save papers for later with one click and manage them from a dedicated collection page.
 ---
 
 Papex is an open-source, independent platform for managing and discovering academic literature. Self-host it or build on top of it.

@@ -11,6 +11,8 @@ Papex lowers the barrier to academic literature infrastructure: from submission 
 - **Submission & versioning**: multi-version papers with maintained abstracts and author metadata.
 - **Full-text search**: fast indexing across titles, abstracts and authors, including mixed Chinese/English.
 - **Open API**: an open HTTP API for integrations and custom tooling.
+- **Subscriptions & alerts**: follow categories, authors and papers; a consolidated announcement feed with a live unread badge.
+- **Bookmarks**: one-click save and a dedicated collection page for papers you want to revisit.
 - **Messages & tickets**: built-in internal messages, tickets and feedback for community support.
 - **Co-review (peer review)**: a complete loop of assign, respond, submit opinion and receipt, with unified notifications.
 - **Permissions & user management**: a role-based fine-grained permission system with per-role or per-user control.
