@@ -58,10 +58,16 @@ Papex is an open-source (Apache-2.0) platform for managing and showcasing academ
 | Advanced boolean search | field scoping (ti/abs/au/cat/id) + AND/OR/NOT + parentheses | Yes |
 | Multilingual full-text search | CJK via `pg_trgm` trigram ILIKE, Latin via `tsvector` (english/simple) | Yes |
 | Batch PDF parsing | pdf-parse extracts text/metadata + regex references (paper id / DOI) | Yes |
-| Citation graph | `citations` table records DOI/paper-id relations, hand-drawn SVG graph | Yes |
+| Citation graph | `citations` table records DOI/paper-id relations, ECharts force-directed graph with zoom/pan/click | Yes |
+| Citation analytics | co-cited / co-citing / second-level references + citation counts & sort | Yes |
+| Citation export | GB/T 7714 · BibTeX · APA one-click copy on the paper page | Yes |
+| Bibliometrics | per-author citation totals, H-index, co-author network (ECharts) | Yes |
+| Hot tags & keyword networks | homepage tag cloud, keyword co-occurrence graph + publication trend on the list page | Yes |
+| Advanced search UI | field selector (full-text/title/author/abstract/category) + time range + sort-by-citations | Yes |
 | Admin analytics | submission/category/author/review aggregate panel (ECharts 6) | Yes |
 | Notification center | `/feed` announcements hub + Rss bell with a live unread badge (Zustand-synced) | Yes |
 | Bookmarks | `bookmarks` table + `/bookmarks` collection page + one-click save on paper detail | Yes |
+| Bookmark groups | organize bookmarks into named groups, move items between groups | Yes |
 
 ---
 
@@ -352,7 +358,14 @@ endpoints work anonymously, with a cookie, or with an API key.
 
 - [x] **Email alerts via Resend / SMTP** — `lib/email/*`: switch with `EMAIL_PROVIDER`; Resend uses fetch REST (no SDK), SMTP uses nodemailer. New-paper alerts fan out via `services/feed.ts`; delivery failure does not block publishing.
 - [x] **Batch PDF parsing & metadata extraction (pdf-parse)** — `lib/pdf.ts` + `/api/papers/[id]/pdf` parses text/page count on upload, regex-extracts references (paper id / DOI) and attempts to auto-link on-site papers; `/api/admin/ingest` supports batch import (multi-PDF or JSON metadata).
-- [x] **Citation graph (by DOI / paper id)** — `citations` table records relations; `/api/papers/[id]/citations` exposes in/out links; the detail page renders a hand-drawn SVG graph (no chart library, per P0 spec).
+- [x] **Citation graph (by DOI / paper id)** — `citations` table records relations; `/api/papers/[id]/citations` exposes in/out links; the detail page renders an ECharts force-directed graph with wheel zoom, drag pan and click-to-navigate.
+- [x] **Citation analytics** — co-cited / co-citing / second-level reference blocks on the paper page (`citationRelated`), citation counts on cards and `sort=by_citations`, GB/T 7714 · BibTeX · APA export via the `CiteButton`.
+- [x] **Bibliometrics** — author pages show citation totals, H-index and an ECharts co-author network (`getAuthorMetrics`).
+- [x] **Tag system** — `tags` / `paper_tags` (migration `0006_add_tags.sql`), user-created tags, keyword auto-tagging on submit, `?tag=` filtering, homepage hot-tag cloud, keyword co-occurrence graph on the list page.
+- [x] **Advanced search UI** — field selector, time-range filter (`?from=`), sort-by-citations on the paper list (`PapersFilter`).
+- [x] **Publication trend** — yearly approved-paper line chart on the list page.
+- [x] **Bookmark groups** — `group_name` column (migration `0008_add_bookmark_groups.sql`), grouped collection page, move between groups via `PATCH /api/bookmarks/:paperId`.
+- [x] **Ticket status machine** — five states incl. `awaiting_user`, reply-driven auto transitions, reporter resolve/reopen, status filter (migration `0007_add_awaiting_user_status.sql`).
 - [x] **Advanced boolean search syntax (AND/OR/NOT + field scoping)** — `lib/search.ts` recursive-descent parser supporting `ti/abs/au/cat/id` field scoping and parentheses.
 - [x] **Multilingual full-text search (CJK tokenization)** — Latin via `tsvector`, CJK via `pg_trgm` trigram ILIKE (no zhparser plugin needed); combined with OR for mixed Chinese/English queries.
 - [x] **Admin analytics panel** — `/admin/stats` + `/api/admin/stats`: totals / by status / Top10 by category / last-14-day submission trend / Top authors aggregates, hand-drawn SVG bar charts.

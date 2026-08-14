@@ -35,6 +35,7 @@ export interface PaperListItem {
   paper: typeof papers.$inferSelect;
   version: typeof paperVersions.$inferSelect;
   category: typeof categories.$inferSelect;
+  citationCount: number;
 }
 
 export interface ListPaperFilters {
@@ -43,7 +44,8 @@ export interface ListPaperFilters {
   authorId?: number;
   tag?: string;
   q?: string;
-  sort?: "new" | "updated";
+  sort?: "new" | "updated" | "by_citations";
+  from?: string; // ISO date: only papers created on/after this date
   page?: number;
   pageSize?: number;
 }
@@ -332,11 +334,16 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     tag,
     q,
     sort = "new",
+    from,
     page = 1,
     pageSize = 20,
   } = filters;
 
   const conditions = [sql`${papers.status} = ${status}`];
+
+  if (from) {
+    conditions.push(sql`${papers.createdAt} >= ${new Date(from).toISOString()}`);
+  }
 
   if (category) {
     conditions.push(
@@ -363,16 +370,31 @@ export async function listPapers(filters: ListPaperFilters = {}) {
 
   const where = and(...conditions);
 
+  // Citation count subquery: how many papers cite this one (1:1 per paper).
+  const ccSub = sql`(select c.target_paper_id, count(*)::int as cnt from citations c where c.target_paper_id is not null group by c.target_paper_id) as cc`;
+
   const rows = await db
-    .select({ paper: papers, version: paperVersions, category: categories })
+    .select({
+      paper: papers,
+      version: paperVersions,
+      category: categories,
+      citationCount: sql<number>`coalesce(cc.cnt, 0)`,
+    })
     .from(papers)
     .innerJoin(
       paperVersions,
       and(eq(paperVersions.paperId, papers.id), eq(paperVersions.version, papers.latestVersion)),
     )
     .innerJoin(categories, eq(papers.primaryCategoryId, categories.id))
+    .leftJoin(ccSub, sql`cc.target_paper_id = ${papers.id}`)
     .where(where)
-    .orderBy(sort === "updated" ? desc(papers.updatedAt) : desc(papers.createdAt))
+    .orderBy(
+      sort === "updated"
+        ? desc(papers.updatedAt)
+        : sort === "by_citations"
+          ? desc(sql`coalesce(cc.cnt, 0)`)
+          : desc(papers.createdAt),
+    )
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
@@ -386,6 +408,18 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     .where(where);
 
   return { rows: rows as PaperListItem[], total: count, page, pageSize };
+}
+
+/** Number of approved papers per year (for the publication trend chart). */
+export async function listPapersByYear(): Promise<{ year: number; count: number }[]> {
+  const rows = (await db.execute(sql`
+    select extract(year from ${papers.createdAt})::int as year, count(*)::int as n
+    from ${papers}
+    where ${papers.status} = 'approved'
+    group by extract(year from ${papers.createdAt})
+    order by year asc
+  `)) as unknown as { year: number; n: number }[];
+  return rows.map((r) => ({ year: r.year, count: r.n }));
 }
 
 export async function moderate(

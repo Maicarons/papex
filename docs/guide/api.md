@@ -92,16 +92,25 @@ and API keys alike.
 
 ## Papers
 
-- `GET /api/papers` — list (supports `q`, `category`)
-- `GET /api/papers/:id` — detail
+- `GET /api/papers` — list. Query params: `q` (full-text or `title:`/`au:`/`abs:`/`cat:`-prefixed), `category`, `tag`, `sort` (`new` | `updated` | `by_citations`), `from` (ISO date, only papers created on/after), `page`, `pageSize`. Rows include a resolved `citationCount`.
+- `GET /api/papers/:id` — detail (includes `submitter`, `tags`, `commentCount`)
 - `GET /api/papers/:id/comments` — comments
-- `POST /api/papers` — submit (auth required, needs `paper:publish`)
+- `GET /api/papers/:id/citations` — citation graph `{ outgoing, incoming }`
+- `GET /api/papers/:id/tags` — tags of a paper
+- `POST /api/papers` — submit (auth required, needs `paper:publish`); accepts JSON or multipart (meta + optional `pdf` file)
 - `POST /api/papers/:id/moderate` — moderate `{action:"approve"|"reject"|"withdraw", reason?}` (needs `paper:moderate`)
+- `POST /api/papers/:id/citations` — add a citation `{targetArxivId?|targetDoi?|targetTitle?}` (owner/moderator/admin)
+- `POST /api/papers/:id/tags` / `DELETE /api/papers/:id/tags` — attach/detach a tag `{tagId|name}` (owner/moderator/admin; creates the tag if the name is new)
 - `POST /api/submit/archive` — upload a source-package `tar.gz` to auto-ingest, link citations and build PDF (auth required; see [Submission guide](/en/guide/submission))
 
 ## Categories
 
 - `GET /api/categories` — category tree
+
+## Tags
+
+- `GET /api/tags` — all tags with usage counts (ordered by popularity)
+- `POST /api/tags` — create a tag `{name}` (auth required; idempotent by name)
 
 ## Subscriptions
 
@@ -120,8 +129,9 @@ The header bell (`FeedBell`) shows a live unread badge kept in sync through a Zu
 
 ## Bookmarks
 
-- `GET /api/bookmarks` — list my bookmarks (each resolved to its paper title); pass `?paperId=` to instead get `{ bookmarked: boolean }` for a single paper
-- `POST /api/bookmarks` — toggle a bookmark `{paperId}` (returns `{ bookmarked: true|false }`)
+- `GET /api/bookmarks` — list my bookmarks (each resolved to its paper title and `groupName`); pass `?paperId=` to instead get `{ bookmarked: boolean }` for a single paper
+- `POST /api/bookmarks` — toggle a bookmark `{paperId, group?}` (returns `{ bookmarked: true|false }`)
+- `PATCH /api/bookmarks/:paperId` — move a bookmark into a group `{group}` (null clears it)
 - `DELETE /api/bookmarks` — remove a bookmark `{paperId}`
 
 ## Messages

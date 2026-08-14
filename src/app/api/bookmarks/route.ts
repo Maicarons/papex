@@ -10,7 +10,10 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const paperIdSchema = z.object({ paperId: z.string().min(1) });
+const paperIdSchema = z.object({
+  paperId: z.string().min(1),
+  group: z.string().max(60).optional().nullable(),
+});
 
 export async function GET(req: Request) {
   const user = await getCurrentUser();
@@ -33,7 +36,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "参数错误" }, { status: 400 });
   }
-  const bookmarked = await toggleBookmark(user.id, parsed.data.paperId);
+  const bookmarked = await toggleBookmark(user.id, parsed.data.paperId, parsed.data.group);
   return NextResponse.json({ bookmarked });
 }
 

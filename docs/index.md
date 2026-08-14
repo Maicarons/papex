@@ -32,7 +32,13 @@ features:
   - title: Subscriptions & alerts
     details: Follow categories, authors and papers; get a consolidated announcement feed with a live unread badge.
   - title: Bookmarks
-    details: Save papers for later with one click and manage them from a dedicated collection page.
+    details: Save papers for later with one click, organize them into named groups, and manage them from a dedicated collection page.
+  - title: Citation analytics
+    details: Force-directed citation graphs, co-cited / co-citing / second-level references, citation counts and GB/T 7714 · BibTeX · APA export.
+  - title: Bibliometrics
+    details: Per-author citation totals, H-index and co-author networks, plus publication trends and keyword co-occurrence analysis.
+  - title: Tags & advanced search
+    details: User-created tags with keyword co-occurrence graphs, hot-tag cloud, and a field/time-range/sort-aware search UI.
 ---
 
 Papex is an open-source, independent platform for managing and discovering academic literature. Self-host it or build on top of it.

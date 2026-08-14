@@ -57,6 +57,13 @@
       "when": 1786685982210,
       "tag": "0007_add_awaiting_user_status",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786692431671,
+      "tag": "0008_add_bookmark_groups",
+      "breakpoints": true
     }
   ]
 }

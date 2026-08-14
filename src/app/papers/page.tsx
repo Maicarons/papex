@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { listPapers } from "@/lib/services/papers";
+import { ChevronLeft, ChevronRight, Network } from "lucide-react";
+import { listPapers, listPapersByYear } from "@/lib/services/papers";
 import { listCategories } from "@/lib/services/categories";
+import { listTagCoOccurrence } from "@/lib/services/tags";
 import { PaperCard } from "@/components/paper-card";
 import { PapersFilter } from "@/components/papers-filter";
+import { TagCooccurrenceGraph } from "@/components/tag-cooccurrence-graph";
+import { PublicationTrend } from "@/components/publication-trend";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getServerLocale } from "@/i18n/server";
 import { getDictionary, t as translate, format } from "@/i18n";
@@ -20,16 +24,36 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
   const q = typeof sp.q === "string" ? sp.q : undefined;
   const category = typeof sp.category === "string" ? sp.category : undefined;
   const tag = typeof sp.tag === "string" ? sp.tag : undefined;
-  const sort = typeof sp.sort === "string" && sp.sort === "updated" ? "updated" : "new";
+  const sort =
+    typeof sp.sort === "string" && ["updated", "by_citations"].includes(sp.sort)
+      ? (sp.sort as "updated" | "by_citations")
+      : "new";
+  const from = typeof sp.from === "string" ? sp.from : undefined;
   const page = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1);
   const pageSize = 12;
 
-  const [{ rows, total }, cats] = await Promise.all([
-    listPapers({ q, category, tag, sort, page, pageSize }),
+  const [{ rows, total }, cats, coOccurrence, byYear] = await Promise.all([
+    listPapers({ q, category, tag, sort, from, page, pageSize }),
     listCategories(),
+    listTagCoOccurrence(30).catch(() => ({ nodes: [], links: [] })),
+    listPapersByYear().catch(() => []),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const catOptions = cats.map((c) => ({ id: c.id, name: c.name }));
+  // Reconstruct the field select state from the query prefix for the filter bar.
+  const fieldFromQuery =
+    q && q.includes(":")
+      ? q.startsWith("au:")
+        ? "fieldAuthor"
+        : q.startsWith("abs:")
+          ? "fieldAbstract"
+          : q.startsWith("title:")
+            ? "fieldTitle"
+            : q.startsWith("cat:")
+              ? "fieldCategory"
+              : "fieldAll"
+      : "fieldAll";
+  const initialTime = "timeAll";
 
   function pageHref(p: number) {
     const params = new URLSearchParams();
@@ -37,6 +61,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
     if (category) params.set("category", category);
     if (tag) params.set("tag", tag);
     if (sort !== "new") params.set("sort", sort);
+    if (from) params.set("from", from);
     params.set("page", String(p));
     return `/papers?${params.toString()}`;
   }
@@ -65,7 +90,40 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
         initialQ={q}
         initialCategory={category}
         initialSort={sort}
+        initialField={fieldFromQuery}
+        initialTime={initialTime}
       />
+
+      {!q && !category && !tag && (coOccurrence.nodes.length > 1 || byYear.length > 0) && (
+        <details className="group mb-6" open>
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Network className="h-4 w-4" />
+            {t("papers.tagNetworkTitle")}
+            <span className="ml-auto text-xs text-muted-foreground group-open:hidden">
+              {t("common.expand")}
+            </span>
+          </summary>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            {coOccurrence.nodes.length > 1 && (
+              <Card>
+                <CardContent className="p-4">
+                  <TagCooccurrenceGraph data={coOccurrence} />
+                </CardContent>
+              </Card>
+            )}
+            {byYear.length > 0 && (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="mb-1 text-center text-xs text-muted-foreground">
+                    {t("papers.publicationTrend")}
+                  </p>
+                  <PublicationTrend data={byYear} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </details>
+      )}
 
       {rows.length === 0 ? (
         <p className="py-16 text-center text-muted-foreground">{t("papers.empty")}</p>
