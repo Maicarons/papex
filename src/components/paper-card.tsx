@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Quote } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { format } from "@/i18n";
 import type { PaperListItem } from "@/lib/services/papers";
 import { useI18n } from "@/i18n/i18n-provider";
 
@@ -20,6 +22,12 @@ export function PaperCard({ item }: { item: PaperListItem }) {
           <Badge variant="secondary">{item.category.id}</Badge>
           <span className="font-mono">{item.paper.id}</span>
           <span>v{item.version.version}</span>
+          {item.citationCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-primary">
+              <Quote className="h-3 w-3" />
+              {format(t("paper.citedCount"), { n: item.citationCount })}
+            </span>
+          )}
         </div>
         <CardTitle className="text-base leading-snug">
           <Link href={`/papers/${item.paper.id}`} className="hover:underline">

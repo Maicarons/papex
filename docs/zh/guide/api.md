@@ -74,16 +74,25 @@ curl -H "Authorization: Bearer pk_live_xxxx" https://your-host/api/papers?pageSi
 
 ## 论文
 
-- `GET /api/papers` — 论文列表（支持 `q`、`category` 参数）
-- `GET /api/papers/:id` — 论文详情
+- `GET /api/papers` — 论文列表。查询参数：`q`（全文或 `title:`/`au:`/`abs:`/`cat:` 前缀）、`category`、`tag`、`sort`（`new` | `updated` | `by_citations`）、`from`（ISO 日期，仅返回该日期之后创建的论文）、`page`、`pageSize`。每行附带解析好的 `citationCount`。
+- `GET /api/papers/:id` — 论文详情（含 `submitter` 上传者、`tags` 标签、`commentCount`）
 - `GET /api/papers/:id/comments` — 评论
-- `POST /api/papers` — 提交论文（需登录，需 `paper:publish`）
+- `GET /api/papers/:id/citations` — 引用网络 `{ outgoing, incoming }`
+- `GET /api/papers/:id/tags` — 论文的标签
+- `POST /api/papers` — 提交论文（需登录，需 `paper:publish`）；支持 JSON 或 multipart（meta + 可选 `pdf` 文件）
 - `POST /api/papers/:id/moderate` — 审核 `{action:"approve"|"reject"|"withdraw", reason?}`（需 `paper:moderate`）
+- `POST /api/papers/:id/citations` — 新增引用 `{targetArxivId?|targetDoi?|targetTitle?}`（作者 / 审核员 / 管理员）
+- `POST /api/papers/:id/tags` / `DELETE /api/papers/:id/tags` — 添加 / 移除标签 `{tagId|name}`（作者 / 审核员 / 管理员；名称不存在时自动创建）
 - `POST /api/submit/archive` — 上传论文源码包 `tar.gz` 并自动建稿、连引用、构建 PDF（需登录，详见[投稿指南](/guide/submission)）
 
 ## 分类
 
 - `GET /api/categories` — 分类树
+
+## 标签
+
+- `GET /api/tags` — 全部标签及使用计数（按热度排序）
+- `POST /api/tags` — 创建标签 `{name}`（需登录；按名称幂等）
 
 ## 订阅
 
@@ -102,8 +111,9 @@ curl -H "Authorization: Bearer pk_live_xxxx" https://your-host/api/papers?pageSi
 
 ## 收藏
 
-- `GET /api/bookmarks` — 列出我的收藏（解析出论文标题）；传入 `?paperId=` 则改为返回单篇论文的 `{ bookmarked: boolean }`
-- `POST /api/bookmarks` — 切换收藏 `{paperId}`（返回 `{ bookmarked: true|false }`）
+- `GET /api/bookmarks` — 列出我的收藏（解析出论文标题与 `groupName` 分组）；传入 `?paperId=` 则改为返回单篇论文的 `{ bookmarked: boolean }`
+- `POST /api/bookmarks` — 切换收藏 `{paperId, group?}`（返回 `{ bookmarked: true|false }`）
+- `PATCH /api/bookmarks/:paperId` — 将收藏移动到分组 `{group}`（传 null 清除分组）
 - `DELETE /api/bookmarks` — 移除收藏 `{paperId}`
 
 ## 站内信

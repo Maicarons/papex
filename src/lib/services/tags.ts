@@ -10,7 +10,7 @@ export interface TagWithCount {
 }
 
 /** All tags with how many papers carry them, ordered by usage. */
-export async function listTags(): Promise<TagWithCount[]> {
+export async function listTags(limit = 50): Promise<TagWithCount[]> {
   const rows = await db
     .select({
       id: tags.id,
@@ -21,7 +21,8 @@ export async function listTags(): Promise<TagWithCount[]> {
     .from(tags)
     .leftJoin(paperTags, eq(paperTags.tagId, tags.id))
     .groupBy(tags.id, tags.name, tags.createdAt)
-    .orderBy(sql`count(${paperTags.paperId}) desc`, tags.name);
+    .orderBy(sql`count(${paperTags.paperId}) desc`, tags.name)
+    .limit(limit);
   return rows;
 }
 
@@ -92,4 +93,60 @@ export async function attachTagsByName(
     attached += 1;
   }
   return attached;
+}
+
+export interface TagCoOccurrenceNode {
+  id: number;
+  name: string;
+  count: number;
+}
+
+export interface TagCoOccurrenceEdge {
+  source: string; // tag id as string
+  target: string;
+  weight: number;
+}
+
+export interface TagCoOccurrence {
+  nodes: TagCoOccurrenceNode[];
+  links: TagCoOccurrenceEdge[];
+}
+
+/**
+ * Keyword co-occurrence network: tags that frequently appear on the same
+ * paper. Mirrors CNKI's keyword co-occurrence analysis.
+ */
+export async function listTagCoOccurrence(limit = 30): Promise<TagCoOccurrence> {
+  const pairRows = (await db.execute(sql`
+    select a.tag_id as tid1, b.tag_id as tid2, count(*)::int as n
+    from paper_tags a
+    join paper_tags b on a.paper_id = b.paper_id and a.tag_id < b.tag_id
+    group by a.tag_id, b.tag_id
+    order by n desc
+    limit ${limit}
+  `)) as { tid1: number; tid2: number; n: number }[];
+
+  if (pairRows.length === 0) return { nodes: [], links: [] };
+
+  const ids = [...new Set(pairRows.flatMap((p) => [p.tid1, p.tid2]))];
+  const tagRows = await db
+    .select({ id: tags.id, name: tags.name })
+    .from(tags)
+    .where(sql`${tags.id} in ${ids}`);
+  const byId = new Map(tagRows.map((t) => [t.id, t.name]));
+
+  const used = new Set<number>();
+  const links = pairRows.map((p) => {
+    used.add(p.tid1);
+    used.add(p.tid2);
+    return { source: String(p.tid1), target: String(p.tid2), weight: p.n };
+  });
+
+  const nodes = [...used].map((id) => ({
+    id,
+    name: byId.get(id) ?? `#${id}`,
+    count: 1,
+  }));
+
+  return { nodes, links };
 }

@@ -140,3 +140,91 @@ export async function citationCounts(paperIds: string[]): Promise<Map<string, nu
     .groupBy(citations.paperId);
   return new Map(rows.map((r) => [r.paperId, r.count]));
 }
+
+export interface RelatedByCitation {
+  paperId: string;
+  title: string | null;
+  count: number;
+}
+
+export interface CitationRelated {
+  coCited: RelatedByCitation[]; // cited together with this paper
+  coCiting: RelatedByCitation[]; // share references with this paper
+  secondLevel: RelatedByCitation[]; // references of this paper's references
+}
+
+async function resolveTitles(
+  paperIds: string[],
+  counts: { pid: string; n: number }[],
+): Promise<RelatedByCitation[]> {
+  if (paperIds.length === 0) return [];
+  const rows = await db
+    .select({ id: papers.id, title: papers.title })
+    .from(papers)
+    .where(sql`${papers.id} in ${paperIds}`);
+  const byId = new Map(rows.map((r) => [r.id, r.title]));
+  return counts
+    .map((c) => ({ paperId: c.pid, title: byId.get(c.pid) ?? null, count: c.n }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/**
+ * Three classic citation-graph relations from the CNKI "knowledge node":
+ * - coCited: papers that are cited together with this one (same citing set)
+ * - coCiting: papers that cite at least one of the same references (shared sources)
+ * - secondLevel: references of this paper's references (citation chain depth 2)
+ */
+export async function citationRelated(
+  paperId: string,
+  limit = 6,
+): Promise<CitationRelated> {
+  const [coCitedRows, coCitingRows, secondRows] = await Promise.all([
+    db.execute(sql`
+      select c2.target_paper_id as pid, count(*)::int as n
+      from citations c1
+      join citations c2 on c1.paper_id = c2.paper_id
+      where c1.target_paper_id = ${paperId}
+        and c2.target_paper_id is not null
+        and c2.target_paper_id <> ${paperId}
+      group by c2.target_paper_id
+      order by n desc
+      limit ${limit}
+    `),
+    db.execute(sql`
+      select c2.paper_id as pid, count(*)::int as n
+      from citations c1
+      join citations c2 on c1.target_paper_id = c2.target_paper_id
+      where c1.paper_id = ${paperId}
+        and c2.target_paper_id is not null
+        and c2.paper_id <> ${paperId}
+      group by c2.paper_id
+      order by n desc
+      limit ${limit}
+    `),
+    db.execute(sql`
+      select c2.target_paper_id as pid, count(*)::int as n
+      from citations c1
+      join citations c2 on c1.target_paper_id = c2.paper_id
+      where c1.paper_id = ${paperId}
+        and c2.target_paper_id is not null
+      group by c2.target_paper_id
+      order by n desc
+      limit ${limit}
+    `),
+  ]);
+
+  const rowsOf = (r: unknown): { pid: string; n: number }[] =>
+    (r as { pid: string; n: number }[]) ?? [];
+
+  const coCitedIds = rowsOf(coCitedRows).map((x) => x.pid);
+  const coCitingIds = rowsOf(coCitingRows).map((x) => x.pid);
+  const secondIds = rowsOf(secondRows).map((x) => x.pid);
+
+  const [coCited, coCiting, secondLevel] = await Promise.all([
+    resolveTitles(coCitedIds, rowsOf(coCitedRows)),
+    resolveTitles(coCitingIds, rowsOf(coCitingRows)),
+    resolveTitles(secondIds, rowsOf(secondRows)),
+  ]);
+
+  return { coCited, coCiting, secondLevel };
+}

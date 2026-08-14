@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, PenLine } from "lucide-react";
+import { ArrowRight, PenLine, TrendingUp } from "lucide-react";
 import { listPapers } from "@/lib/services/papers";
 import { getCategoryTree } from "@/lib/services/categories";
+import { listTags } from "@/lib/services/tags";
 import { SearchBar } from "@/components/search-bar";
 import { PaperCard } from "@/components/paper-card";
 import { Button } from "@/components/ui/button";
@@ -18,17 +19,21 @@ export default async function HomePage() {
   // 运行时带 DB 时由 revalidate=300 自动刷新出真实内容。
   let rows: Awaited<ReturnType<typeof listPapers>>["rows"] = [];
   let tree: Awaited<ReturnType<typeof getCategoryTree>> = [];
+  let hotTags: Awaited<ReturnType<typeof listTags>> = [];
   try {
-    const [papers, catTree] = await Promise.all([
+    const [papers, catTree, tags] = await Promise.all([
       listPapers({ pageSize: 8, page: 1 }),
       getCategoryTree(),
+      listTags(24),
     ]);
     rows = papers.rows;
     tree = catTree;
+    hotTags = tags;
   } catch {
     // 忽略：DB 不可达，使用上方空默认值
   }
   const topCats = tree.slice(0, 8);
+  const maxTagCount = Math.max(1, ...hotTags.map((t) => t.count));
 
   return (
     <div className="space-y-12">
@@ -89,6 +94,37 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {hotTags.length > 0 && (
+        <section>
+          <h2 className="mb-5 flex items-center gap-2 text-2xl font-semibold tracking-tight">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <LocaleText path="home.hotTags" />
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {hotTags.map((tag) => {
+              const size =
+                tag.count >= maxTagCount
+                  ? "text-lg"
+                  : tag.count >= maxTagCount * 0.6
+                    ? "text-base"
+                    : tag.count >= maxTagCount * 0.3
+                      ? "text-sm"
+                      : "text-xs";
+              return (
+                <Link
+                  key={tag.id}
+                  href={`/papers?tag=${encodeURIComponent(tag.name)}`}
+                  className={`${size} rounded-full border bg-muted/40 px-3 py-1 font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary`}
+                >
+                  {tag.name}
+                  <span className="ml-1 text-xs opacity-60">{tag.count}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

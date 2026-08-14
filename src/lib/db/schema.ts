@@ -299,6 +299,7 @@ export const bookmarks = pgTable(
     paperId: text("paper_id")
       .notNull()
       .references(() => papers.id, { onDelete: "cascade" }),
+    groupName: text("group_name"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (_table) => ({

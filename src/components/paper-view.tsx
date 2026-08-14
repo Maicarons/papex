@@ -26,11 +26,12 @@ import { BookmarkButton } from "@/components/bookmark-button";
 import { CommentThread } from "@/components/comment-thread";
 import { CitationPanel } from "@/components/citation-panel";
 import { PaperTags } from "@/components/paper-tags";
+import { CiteButton } from "@/components/cite-button";
 import { formatDate } from "@/lib/utils";
 import { useSession } from "@/lib/use-session";
 import { useI18n } from "@/i18n/i18n-provider";
 import type { getPaperDetail, RelatedPaper } from "@/lib/services/papers";
-import type { CitationGraph } from "@/lib/services/citations";
+import type { CitationGraph, CitationRelated } from "@/lib/services/citations";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof getPaperDetail>>>;
 
@@ -39,12 +40,14 @@ export function PaperView({
   version,
   citations,
   related = [],
+  citationRel,
   pdfUploadEnabled = true,
 }: {
   detail: Detail;
   version: Detail["latest"];
   citations?: CitationGraph;
   related?: RelatedPaper[];
+  citationRel?: CitationRelated;
   pdfUploadEnabled?: boolean;
 }) {
   // Owner/editor permissions are computed on the client after the session
@@ -66,6 +69,8 @@ export function PaperView({
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  const incomingCount = citations?.incoming.length ?? 0;
 
   const statusMap: Record<string, string> = {
     submitted: t("paper.statusSubmitted"),
@@ -141,6 +146,12 @@ export function PaperView({
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
+          {incomingCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+              <Link2 className="h-4 w-4 text-primary" />
+              <span className="font-medium text-foreground">{incomingCount}</span>
+            </span>
+          )}
           {version.pdfUrl && !withdrawn && (
             <Button asChild size="sm" variant="default">
               <a href={version.pdfUrl} target="_blank" rel="noreferrer">
@@ -152,6 +163,13 @@ export function PaperView({
           )}
           <SubscribeButton type="paper" refId={detail.paper.id} />
           <BookmarkButton paperId={detail.paper.id} />
+          <CiteButton
+            paperId={detail.paper.id}
+            title={version.title}
+            authors={detail.authors}
+            year={new Date(detail.paper.createdAt).getFullYear()}
+            url={`${typeof window !== "undefined" ? window.location.origin : ""}/papers/${detail.paper.id}`}
+          />
           {canUploadPdf && (
             <>
               <Button
@@ -298,6 +316,14 @@ export function PaperView({
                   />
                 </CardContent>
               </Card>
+
+              {citationRel && (
+                <RelatedByCitations
+                  coCited={citationRel.coCited}
+                  coCiting={citationRel.coCiting}
+                  secondLevel={citationRel.secondLevel}
+                />
+              )}
             </TabsContent>
           </Tabs>
 
@@ -458,6 +484,54 @@ export function PaperView({
           </Card>
         </aside>
       </div>
+    </div>
+  );
+}
+
+
+function RelatedByCitations({
+  coCited,
+  coCiting,
+  secondLevel,
+}: {
+  coCited: { paperId: string; title: string | null; count: number }[];
+  coCiting: { paperId: string; title: string | null; count: number }[];
+  secondLevel: { paperId: string; title: string | null; count: number }[];
+}) {
+  const { t } = useI18n();
+  const blocks = [
+    { key: "coCited", title: t("paper.coCited"), items: coCited },
+    { key: "coCiting", title: t("paper.coCiting"), items: coCiting },
+    { key: "second", title: t("paper.secondLevel"), items: secondLevel },
+  ] as const;
+
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {blocks.map((b) => (
+        <Card key={b.key}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">{b.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {b.items.length === 0 ? (
+              <p className="text-xs text-muted-foreground">{t("paper.relEmpty")}</p>
+            ) : (
+              b.items.map((it) => (
+                <Link
+                  key={it.paperId}
+                  href={`/papers/${it.paperId}`}
+                  className="block text-sm hover:underline"
+                >
+                  <span className="line-clamp-1">{it.title ?? it.paperId}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {it.paperId} · {it.count}
+                  </span>
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

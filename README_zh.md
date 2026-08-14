@@ -56,7 +56,12 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 | 高级布尔检索 | 字段限定（ti/abs/au/cat/id）+ AND/OR/NOT + 括号分组 | ✅ |
 | 多语言全文检索 | CJK 走 `pg_trgm` 三元组 ILIKE，拉丁文走 `tsvector`（english/simple） | ✅ |
 | 批量 PDF 解析 | pdf-parse 抽取文本/元数据 + 正则抽取参考文献（文献编号 / DOI） | ✅ |
-| 引用图 | `citations` 表记录 DOI/文献编号 引用关系，手绘 SVG 关系图 | ✅ |
+| 引用图 | `citations` 表记录 DOI/文献编号 引用关系，ECharts 力导向图（缩放/拖拽/点击跳转） | ✅ |
+| 引用分析 | 同被引 / 共引 / 二级参考文献 + 被引计数与排序 | ✅ |
+| 引文导出 | 论文页一键复制 GB/T 7714 · BibTeX · APA | ✅ |
+| 计量指标 | 作者被引总数、H 指数、合作网络图（ECharts） | ✅ |
+| 热词与关键词网络 | 首页热门标签云、列表页关键词共现图 + 发文趋势 | ✅ |
+| 高级检索 | 字段选择（全文/标题/作者/摘要/分类）+ 时间范围 + 按被引排序 | ✅ |
 | 管理后台统计 | 投稿/分类/作者/审核聚合面板（ECharts 6 图表） | ✅ |
 | 通知中心 | `/feed` 提醒中心 + Rss 铃铛（未读角标实时同步，Zustand） | ✅ |
 | 收藏 | `bookmarks` 表 + `/bookmarks` 收藏夹 + 详情页一键收藏 | ✅ |
@@ -341,7 +346,14 @@ docker compose up -d        # 含 Postgres + Next 服务
 
 - [x] **邮件提醒对接 Resend / SMTP** — `lib/email/*`：`EMAIL_PROVIDER` 切换；Resend 走 fetch REST（无需 SDK），SMTP 走 nodemailer。新论文提醒经 `services/feed.ts` 扇出，投递失败不阻塞发布。
 - [x] **批量 PDF 解析与元数据抽取（pdf-parse）** — `lib/pdf.ts` + `/api/papers/[id]/pdf` 上传即解析文本/页数，正则抽取参考文献（文献编号 / DOI）并尝试自动关联站内论文；`/api/admin/ingest` 支持批量导入（多 PDF 或 JSON 元数据）。
-- [x] **引用图（基于 DOI / 文献编号）** — `citations` 表记录引用关系；`/api/papers/[id]/citations` 提供出/入链；详情页渲染手绘 SVG 关系图（无图表库，符合 P0 规范）。
+- [x] **引用图（基于 DOI / 文献编号）** — `citations` 表记录引用关系；`/api/papers/[id]/citations` 提供出/入链；详情页渲染 ECharts 力导向图（滚轮缩放、拖拽平移、点击跳转）。
+- [x] **引用分析** — 论文页同被引 / 共引 / 二级参考文献区块（`citationRelated`）；卡片被引计数与 `sort=by_citations`；论文页「引用」按钮导出 GB/T 7714 · BibTeX · APA。
+- [x] **计量指标** — 作者页显示被引总数、H 指数与 ECharts 合作网络图（`getAuthorMetrics`）。
+- [x] **Tag 系统** — `tags`/`paper_tags`（迁移 `0006_add_tags.sql`）；用户自建标签、投稿关键词自动打标、`?tag=` 过滤、首页热门标签云、列表页关键词共现图。
+- [x] **高级检索** — 列表页字段选择、时间范围（`?from=`）、按被引排序（`PapersFilter`）。
+- [x] **发文趋势** — 列表页按年发文量折线图。
+- [x] **收藏分组** — `group_name` 列（迁移 `0008_add_bookmark_groups.sql`）；收藏页按分组展示，`PATCH /api/bookmarks/:paperId` 移动分组。
+- [x] **工单状态机** — 五态（含 `awaiting_user` 待回复）、回复驱动自动流转、用户可标记已解决/重新打开、状态筛选（迁移 `0007_add_awaiting_user_status.sql`）。
 - [x] **高级布尔检索语法（AND/OR/NOT + 字段限定）** — `lib/search.ts` 递归下降解析器，支持 `ti/abs/au/cat/id` 字段限定与括号分组。
 - [x] **多语言全文检索（中文分词）** — 拉丁文走 `tsvector`，中文等 CJK 走 `pg_trgm` 三元组 ILIKE（无需 zhparser 分词插件）；二者 OR 组合保证中英混合查询可用。
 - [x] **管理后台统计面板** — `/admin/stats` + `/api/admin/stats`：总量/按状态/按分类 Top10/近 14 天投稿趋势/Top 作者等聚合，手绘 SVG 柱状图。

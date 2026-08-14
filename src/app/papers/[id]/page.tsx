@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getPaperDetail, listRelatedPapers } from "@/lib/services/papers";
-import { listCitations } from "@/lib/services/citations";
+import { listCitations, citationRelated } from "@/lib/services/citations";
 import { PaperView } from "@/components/paper-view";
 import { detectCapabilities } from "@/lib/capabilities";
 
@@ -30,9 +30,10 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const detail = await getPaperDetail(id);
   if (!detail) notFound();
-  const [graph, related] = await Promise.all([
+  const [graph, related, citationRel] = await Promise.all([
     listCitations(id),
     listRelatedPapers(id, detail.paper.primaryCategoryId, 5),
+    citationRelated(id, 6),
   ]);
 
   return (
@@ -41,6 +42,7 @@ export default async function PaperPage({ params }: { params: Promise<{ id: stri
       version={detail.latest}
       citations={graph}
       related={related}
+      citationRel={citationRel}
       pdfUploadEnabled={detectCapabilities().pdfUpload}
     />
   );
