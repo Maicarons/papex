@@ -15,7 +15,13 @@ export async function GET(request: Request) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const url = new URL(request.url);
   const scope = url.searchParams.get("scope") === "all" && user.role !== "author" ? "all" : "mine";
-  const rows = await listTickets(user.id, { scope });
+  const statusRaw = url.searchParams.get("status");
+  const status = (["open", "awaiting_user", "in_progress", "resolved", "closed"] as const).includes(
+    statusRaw as "open",
+  )
+    ? (statusRaw as "open" | "awaiting_user" | "in_progress" | "resolved" | "closed")
+    : undefined;
+  const rows = await listTickets(user.id, { scope, status });
   return NextResponse.json({ tickets: rows });
 }
 

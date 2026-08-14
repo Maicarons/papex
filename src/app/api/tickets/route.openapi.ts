@@ -8,7 +8,10 @@ export default {
       get: {
         tags: ["Tickets"],
         summary: "List tickets (mine, or all for staff)",
-        parameters: [{ name: "scope", in: "query", required: false, schema: { type: "string", enum: ["mine", "all"] } }],
+        parameters: [
+          { name: "scope", in: "query", required: false, schema: { type: "string", enum: ["mine", "all"] } },
+          { name: "status", in: "query", required: false, schema: { type: "string", enum: ["open", "awaiting_user", "in_progress", "resolved", "closed"] } },
+        ],
         responses: {
           200: { description: "Tickets", content: { "application/json": { schema: { type: "object", properties: { tickets: { type: "array", items: { type: "object" } } } } } } },
           401: { $ref: "#/components/responses/Unauthorized" },

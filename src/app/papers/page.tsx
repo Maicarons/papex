@@ -19,12 +19,13 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
   const t = (path: string) => translate(dict, path);
   const q = typeof sp.q === "string" ? sp.q : undefined;
   const category = typeof sp.category === "string" ? sp.category : undefined;
+  const tag = typeof sp.tag === "string" ? sp.tag : undefined;
   const sort = typeof sp.sort === "string" && sp.sort === "updated" ? "updated" : "new";
   const page = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1);
   const pageSize = 12;
 
   const [{ rows, total }, cats] = await Promise.all([
-    listPapers({ q, category, sort, page, pageSize }),
+    listPapers({ q, category, tag, sort, page, pageSize }),
     listCategories(),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -34,6 +35,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (category) params.set("category", category);
+    if (tag) params.set("tag", tag);
     if (sort !== "new") params.set("sort", sort);
     params.set("page", String(p));
     return `/papers?${params.toString()}`;
@@ -45,6 +47,18 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
         <h1 className="text-2xl font-bold">{t("papers.title")}</h1>
         <span className="text-sm text-muted-foreground">{format(t("papers.results"), { n: total })}</span>
       </div>
+
+      {tag && (
+        <div className="mb-4 flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{t("tags.title")}:</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-2.5 py-0.5">
+            {tag}
+            <Link href="/papers" className="text-muted-foreground hover:text-foreground" aria-label="clear tag">
+              ×
+            </Link>
+          </span>
+        </div>
+      )}
 
       <PapersFilter
         categories={catOptions}

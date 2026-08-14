@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useParams } from "next/navigation";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, RotateCcw, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,7 +83,15 @@ export default function TicketDetailPage() {
     if (res.ok) {
       setReply("");
       const d = await res.json();
-      setTicket((prev) => (prev ? { ...prev, replies: [...prev.replies, d.reply] } : prev));
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              replies: [...prev.replies, d.reply],
+              status: (d.status as string) ?? prev.status,
+            }
+          : prev,
+      );
     }
   }
 
@@ -137,6 +145,7 @@ export default function TicketDetailPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="open">{t("tickets.statusOpen")}</SelectItem>
+                    <SelectItem value="awaiting_user">{t("tickets.statusAwaitingUser")}</SelectItem>
                     <SelectItem value="in_progress">{t("tickets.statusInProgress")}</SelectItem>
                     <SelectItem value="resolved">{t("tickets.statusResolved")}</SelectItem>
                     <SelectItem value="closed">{t("tickets.statusClosed")}</SelectItem>
@@ -157,6 +166,22 @@ export default function TicketDetailPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          )}
+
+          {!isAdmin && ticket.status !== "closed" && (
+            <div className="flex items-center gap-3 border-t pt-3">
+              {ticket.status === "resolved" ? (
+                <Button variant="outline" size="sm" onClick={() => patch("status", "open")}>
+                  <RotateCcw className="h-4 w-4" />
+                  {t("tickets.reopen")}
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => patch("status", "resolved")}>
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t("tickets.markResolved")}
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

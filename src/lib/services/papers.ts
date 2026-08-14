@@ -10,6 +10,9 @@ import {
   comments,
   moderationLogs,
   endorsements,
+  users,
+  tags,
+  paperTags,
 } from "@/lib/db/schema";
 import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import { generatePaperId } from "@/lib/paper-id";
@@ -38,6 +41,7 @@ export interface ListPaperFilters {
   status?: string;
   category?: string;
   authorId?: number;
+  tag?: string;
   q?: string;
   sort?: "new" | "updated";
   page?: number;
@@ -232,10 +236,27 @@ export async function getPaperDetail(id: string) {
     .innerJoin(categories, eq(paperCategories.categoryId, categories.id))
     .where(eq(paperCategories.paperId, id));
 
+  // Submitter (the user who uploaded this paper) — distinct from the paper's
+  // author list: an uploader may submit on behalf of other authors.
+  const createdById = paperRow.paper.createdById;
+  const [submitter] = createdById
+    ? await db
+        .select({ id: users.id, username: users.username, displayName: users.displayName })
+        .from(users)
+        .where(eq(users.id, createdById))
+    : [undefined];
+
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(comments)
     .where(eq(comments.paperId, id));
+
+  const paperTagsRows = await db
+    .select({ id: tags.id, name: tags.name })
+    .from(paperTags)
+    .innerJoin(tags, eq(paperTags.tagId, tags.id))
+    .where(eq(paperTags.paperId, id))
+    .orderBy(tags.name);
 
   return {
     paper: paperRow.paper,
@@ -243,6 +264,8 @@ export async function getPaperDetail(id: string) {
     latest,
     authors: authorRows.map((r) => ({ ...r.author, order: r.pa.order, affiliation: r.affiliation })),
     categories: catRows.map((r) => ({ ...r.category, isPrimary: r.pc.isPrimary })),
+    submitter: submitter ?? null,
+    tags: paperTagsRows,
     commentCount: count,
   };
 }
@@ -306,6 +329,7 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     status = "approved",
     category,
     authorId,
+    tag,
     q,
     sort = "new",
     page = 1,
@@ -325,6 +349,11 @@ export async function listPapers(filters: ListPaperFilters = {}) {
   if (authorId) {
     conditions.push(
       sql`exists (select 1 from paper_authors pa where pa.paper_id = ${papers.id} and pa.author_id = ${authorId})`,
+    );
+  }
+  if (tag) {
+    conditions.push(
+      sql`exists (select 1 from paper_tags pt join tags t on t.id = pt.tag_id where pt.paper_id = ${papers.id} and lower(t.name) = lower(${tag}))`,
     );
   }
   const searchSql = q ? compileSearch(q) : null;

@@ -51,6 +51,7 @@ export const messageKindEnum = pgEnum("message_kind", [
 
 export const ticketStatusEnum = pgEnum("ticket_status", [
   "open",
+  "awaiting_user",
   "in_progress",
   "resolved",
   "closed",
@@ -223,6 +224,32 @@ export const paperCategories = pgTable(
   },
   (_table) => ({
     pk: primaryKey({ columns: [_table.paperId, _table.categoryId] }),
+  }),
+);
+
+// ----------------------------- Tags -----------------------------
+
+/** User-created tags; any signed-in user may create one, anyone can attach. */
+export const tags = pgTable("tags", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdById: uuid("created_by_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const paperTags = pgTable(
+  "paper_tags",
+  {
+    paperId: text("paper_id")
+      .notNull()
+      .references(() => papers.id, { onDelete: "cascade" }),
+    tagId: integer("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (_table) => ({
+    pk: primaryKey({ columns: [_table.paperId, _table.tagId] }),
+    tagIdx: index("paper_tags_tag_idx").on(_table.tagId),
   }),
 );
 

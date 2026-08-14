@@ -33,6 +33,7 @@ export default function TicketsPage() {
   const { t } = useI18n();
   const [tickets, setTickets] = React.useState<Ticket[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [filter, setFilter] = React.useState<string>("all");
   const [composing, setComposing] = React.useState(false);
   const [subject, setSubject] = React.useState("");
   const [type, setType] = React.useState("other");
@@ -42,12 +43,22 @@ export default function TicketsPage() {
   const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
-    fetch("/api/tickets", { cache: "no-store" })
+    const qs = filter === "all" ? "" : `?status=${filter}`;
+    fetch(`/api/tickets${qs}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setTickets(d.tickets ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [filter]);
+
+  const statusFilters: { value: string; label: string }[] = [
+    { value: "all", label: t("tickets.filterAll") },
+    { value: "open", label: t("tickets.statusOpen") },
+    { value: "awaiting_user", label: t("tickets.statusAwaitingUser") },
+    { value: "in_progress", label: t("tickets.statusInProgress") },
+    { value: "resolved", label: t("tickets.statusResolved") },
+    { value: "closed", label: t("tickets.statusClosed") },
+  ];
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,6 +89,23 @@ export default function TicketsPage() {
           <Plus className="h-4 w-4" />
           {t("tickets.newTicket")}
         </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("tickets.filterStatus")}>
+        {statusFilters.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setFilter(f.value)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              filter === f.value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {composing && (

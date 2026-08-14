@@ -5,6 +5,7 @@ import { useI18n } from "@/i18n/i18n-provider";
 
 const statusClass: Record<string, string> = {
   open: "bg-secondary text-secondary-foreground",
+  awaiting_user: "bg-amber-500 text-white",
   in_progress: "bg-primary text-primary-foreground",
   resolved: "bg-cta text-cta-foreground",
   closed: "bg-muted text-muted-foreground",

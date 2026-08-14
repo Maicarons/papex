@@ -20,6 +20,16 @@ import { useI18n } from "@/i18n/i18n-provider";
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 
+/** Guess a reference type from a single line: paper id / DOI / title. */
+function parseReference(
+  ref: string,
+): { targetArxivId?: string; targetDoi?: string; targetTitle?: string } | null {
+  if (/^\d{4}\.\d{4,5}$/.test(ref)) return { targetArxivId: ref };
+  if (/^10\.\d{4,9}\/[\S]+$/i.test(ref)) return { targetDoi: ref };
+  if (ref.length >= 3 && ref.length <= 400) return { targetTitle: ref };
+  return null;
+}
+
 interface CategoryOption {
   id: string;
   name: string;
@@ -45,6 +55,8 @@ export function SubmitForm({
   const [doi, setDoi] = React.useState("");
   const [license, setLicense] = React.useState("CC-BY-4.0");
   const [comments, setComments] = React.useState("");
+  const [refsText, setRefsText] = React.useState("");
+  const [keywordsText, setKeywordsText] = React.useState("");
   const [authors, setAuthors] = React.useState([{ name: "" }]);
   const [error, setError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
@@ -108,6 +120,33 @@ export function SubmitForm({
       setSubmitting(false);
       return;
     }
+    // Link references (best-effort): each line is a paper id / DOI / title.
+    for (const ref of refsText.split("\n").map((s) => s.trim()).filter(Boolean)) {
+      const payload = parseReference(ref);
+      if (!payload) continue;
+      try {
+        await fetch(`/api/papers/${encodeURIComponent(data.paperId)}/citations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch {
+        // ignore per-reference failures; the paper itself is already created
+      }
+    }
+    // Keywords become tags (auto-created).
+    for (const kw of keywordsText.split(",").map((s) => s.trim()).filter(Boolean)) {
+      if (kw.length > 40) continue;
+      try {
+        await fetch(`/api/papers/${encodeURIComponent(data.paperId)}/tags`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: kw }),
+        });
+      } catch {
+        // ignore
+      }
+    }
     router.push(`/papers/${data.paperId}`);
   }
 
@@ -129,6 +168,16 @@ export function SubmitForm({
             rows={8}
             value={abstract}
             onChange={(e) => setAbstract(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="keywords">{t("submit.keywordsLabel")}</Label>
+          <Input
+            id="keywords"
+            value={keywordsText}
+            onChange={(e) => setKeywordsText(e.target.value)}
+            placeholder={t("submit.keywordsPlaceholder")}
           />
         </div>
 
@@ -277,6 +326,18 @@ export function SubmitForm({
             onChange={(e) => setComments(e.target.value)}
             placeholder={t("submit.commentsPlaceholder")}
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="references">{t("submit.referencesLabel")}</Label>
+          <Textarea
+            id="references"
+            rows={4}
+            value={refsText}
+            onChange={(e) => setRefsText(e.target.value)}
+            placeholder={t("submit.referencesPlaceholder")}
+          />
+          <p className="text-xs text-muted-foreground">{t("submit.referencesHint")}</p>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

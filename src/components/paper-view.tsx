@@ -25,6 +25,7 @@ import { SubscribeButton } from "@/components/subscribe-button";
 import { BookmarkButton } from "@/components/bookmark-button";
 import { CommentThread } from "@/components/comment-thread";
 import { CitationPanel } from "@/components/citation-panel";
+import { PaperTags } from "@/components/paper-tags";
 import { formatDate } from "@/lib/utils";
 import { useSession } from "@/lib/use-session";
 import { useI18n } from "@/i18n/i18n-provider";
@@ -350,6 +351,17 @@ export function PaperView({
                 <span className="text-muted-foreground">{t("paper.submittedAt")}</span>
                 <span>{formatDate(detail.paper.createdAt)}</span>
               </div>
+              {detail.submitter && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("paper.submittedBy")}</span>
+                  <Link
+                    href={`/u/${detail.submitter.username}`}
+                    className="truncate pl-2 font-medium hover:underline"
+                  >
+                    @{detail.submitter.username}
+                  </Link>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -371,6 +383,17 @@ export function PaperView({
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Tags */}
+          <Card>
+            <CardContent className="pt-6">
+              <PaperTags
+                paperId={detail.paper.id}
+                initialTags={detail.tags ?? []}
+                canManage={canEditCitations}
+              />
             </CardContent>
           </Card>
 
