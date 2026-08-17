@@ -10,6 +10,12 @@ Papex is an open-source (Apache-2.0) platform for managing and showcasing academ
 
 > A 60-second tour of Papex — submission, versioning, full-text search, community and open-source deployment.
 
+<p align="center">
+  <img src="docs/public/papex-whatsnew.gif" alt="What's new in Papex" width="720" />
+</p>
+
+> What's new in Papex — browser-based authoring (`/writespace`), the co-review loop, unified messages & tickets, and the role-based permission system.
+
 - **Front end and back end are both Next.js (App Router)**: Server Components read the database directly, Route Handlers expose the REST API.
 - **Data layer**: Drizzle ORM + PostgreSQL, full-text search backed by PostgreSQL `tsvector`.
 - **UI**: shadcn/ui style (Radix primitives + Tailwind CSS 4, CSS-first config + `@tailwindcss/postcss`), Lucide icons, next-themes dark mode; charts use ECharts 6.
