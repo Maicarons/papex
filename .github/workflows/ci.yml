@@ -17,7 +17,9 @@ jobs:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
     services:
       postgres:
-        image: postgres:16
+        # pgvector-enabled image so migrations that run `CREATE EXTENSION vector`
+        # (e.g. 0009) succeed in CI. Based on postgres:16, same env/ports.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
