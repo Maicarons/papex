@@ -6,6 +6,8 @@ export const en: Dictionary = {
     tagline: "Open-source academic literature platform",
     search: "Search",
     searchPlaceholder: "Search titles, abstracts, authors or categories…",
+    semanticSearch: "Semantic",
+    semanticSearchHint: "Rank by meaning similarity (requires embedding backend)",
     browse: "Browse",
     submit: "Submit",
     categories: "Categories",

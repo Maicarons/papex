@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -50,6 +52,7 @@ export function PapersFilter({
   initialSort = "new",
   initialField = "fieldAll",
   initialTime = "timeAll",
+  initialSemantic = false,
 }: {
   categories: CategoryOption[];
   initialQ?: string;
@@ -57,6 +60,7 @@ export function PapersFilter({
   initialSort?: "new" | "updated" | "by_citations";
   initialField?: string;
   initialTime?: string;
+  initialSemantic?: boolean;
 }) {
   const router = useRouter();
   const { t } = useI18n();
@@ -65,6 +69,7 @@ export function PapersFilter({
   const [sort, setSort] = React.useState(initialSort);
   const [field, setField] = React.useState(initialField);
   const [time, setTime] = React.useState(initialTime);
+  const [semantic, setSemantic] = React.useState(initialSemantic);
 
   function apply() {
     const params = new URLSearchParams();
@@ -73,6 +78,7 @@ export function PapersFilter({
       const prefix = FIELD_PREFIX[field] ?? "";
       params.set("q", `${prefix}${query}`);
     }
+    if (semantic) params.set("semantic", "1");
     if (category && category !== "__all") params.set("category", category);
     if (sort !== "new") params.set("sort", sort);
     const from = TIME_YEARS[time] ? yearsAgo(TIME_YEARS[time]!) : null;
@@ -141,6 +147,12 @@ export function PapersFilter({
           </SelectContent>
         </Select>
         <Button onClick={apply}>{t("papers.filter")}</Button>
+      </div>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Switch id="semantic-filter" checked={semantic} onCheckedChange={setSemantic} />
+        <Label htmlFor="semantic-filter" className="cursor-pointer">
+          {t("common.semanticSearch")}
+        </Label>
       </div>
     </div>
   );

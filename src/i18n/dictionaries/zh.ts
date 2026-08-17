@@ -4,6 +4,8 @@ export const zh = {
     tagline: "开源学术文献平台",
     search: "检索",
     searchPlaceholder: "检索标题、摘要、作者或分类…",
+    semanticSearch: "语义检索",
+    semanticSearchHint: "按含义相似度排序（需开启 embedding 后端）",
     browse: "浏览",
     submit: "投稿",
     categories: "分类",

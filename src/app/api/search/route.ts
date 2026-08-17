@@ -18,6 +18,7 @@ export async function GET(req: Request) {
     q: searchParams.get("q") ?? undefined,
     category: searchParams.get("category") ?? undefined,
     authorId: authorIdRaw ? Number(authorIdRaw) : undefined,
+    semantic: searchParams.get("semantic") === "1" || searchParams.get("semantic") === "true",
     sort: (searchParams.get("sort") as "new" | "updated") ?? "new",
     page: Number(searchParams.get("page") ?? 1),
     pageSize: Math.min(Number(searchParams.get("pageSize") ?? 20), 50),

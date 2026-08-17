@@ -17,6 +17,7 @@ import {
 import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import { generatePaperId } from "@/lib/paper-id";
 import { compileSearch } from "@/lib/search";
+import { embedQuery, isEmbeddingEnabled, toPgVectorLiteral } from "@/lib/embeddings";
 import { findOrCreateAuthor } from "@/lib/services/authors";
 import { notifyNewPaper } from "@/lib/services/feed";
 import { notifyReviewResult } from "@/lib/services/notifications";
@@ -36,6 +37,8 @@ export interface PaperListItem {
   version: typeof paperVersions.$inferSelect;
   category: typeof categories.$inferSelect;
   citationCount: number;
+  /** Cosine similarity to the query when semantic mode was used; null otherwise. */
+  similarity?: number | null;
 }
 
 export interface ListPaperFilters {
@@ -44,6 +47,8 @@ export interface ListPaperFilters {
   authorId?: number;
   tag?: string;
   q?: string;
+  /** When true and embeddings are enabled, rank by semantic similarity (fused with keyword relevance). Falls back to keyword mode otherwise. */
+  semantic?: boolean;
   sort?: "new" | "updated" | "by_citations";
   from?: string; // ISO date: only papers created on/after this date
   page?: number;
@@ -59,7 +64,11 @@ function buildCategoryValues(paperId: string, input: CreatePaperInput) {
   }));
 }
 
-export async function createSubmission(input: CreatePaperInput, owner: OwnerLike) {
+export async function createSubmission(
+  input: CreatePaperInput,
+  owner: OwnerLike,
+  opts: { skipEndorsementGate?: boolean } = {},
+) {
   return db.transaction(async (tx) => {
     const authorRows: { id: number; name: string; order: number }[] = [];
     for (const a of input.authors) {
@@ -125,17 +134,23 @@ export async function createSubmission(input: CreatePaperInput, owner: OwnerLike
         )
         .limit(1);
       if (!prior) {
-        const [endo] = await tx
-          .select({ id: endorsements.id })
-          .from(endorsements)
-          .where(
-            and(
-              eq(endorsements.endorseeId, owner.id),
-              eq(endorsements.categoryId, input.primaryCategoryId),
-            ),
-          )
-          .limit(1);
-        if (!endo) throw new Error("ENDORSEMENT_REQUIRED");
+        // Trusted imports / moderation ingests may bypass the endorsement gate
+        // (e.g. P0-B external import, admin batch ingest).
+        if (opts.skipEndorsementGate) {
+          // skip
+        } else {
+          const [endo] = await tx
+            .select({ id: endorsements.id })
+            .from(endorsements)
+            .where(
+              and(
+                eq(endorsements.endorseeId, owner.id),
+                eq(endorsements.categoryId, input.primaryCategoryId),
+              ),
+            )
+            .limit(1);
+          if (!endo) throw new Error("ENDORSEMENT_REQUIRED");
+        }
       }
     }
     let paperId = generatePaperId();
@@ -333,11 +348,17 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     authorId,
     tag,
     q,
+    semantic,
     sort = "new",
     from,
     page = 1,
     pageSize = 20,
   } = filters;
+
+  // Semantic mode is only active when explicitly requested, an embedding backend
+  // is configured, and there is a query to embed. Otherwise we transparently
+  // fall back to the existing keyword/boolean path.
+  const semanticMode = !!semantic && isEmbeddingEnabled() && !!q?.trim();
 
   const conditions = [sql`${papers.status} = ${status}`];
 
@@ -363,10 +384,31 @@ export async function listPapers(filters: ListPaperFilters = {}) {
       sql`exists (select 1 from paper_tags pt join tags t on t.id = pt.tag_id where pt.paper_id = ${papers.id} and lower(t.name) = lower(${tag}))`,
     );
   }
-  const searchSql = q ? compileSearch(q) : null;
+
+  // Keyword/boolean filter: applied in keyword mode. In semantic mode we do NOT
+  // filter by keyword (so semantically-close but lexically-distant papers can
+  // surface); their textual relevance is instead fused into the ranking below.
+  const searchSql = !semanticMode && q ? compileSearch(q) : null;
   if (searchSql) {
     conditions.push(searchSql);
   }
+  // In semantic mode only consider papers that actually have an embedding.
+  if (semanticMode) {
+    conditions.push(sql`${paperVersions.embedding} is not null`);
+  }
+
+  // Precompute the query embedding once for semantic ranking.
+  let queryVec: number[] | null = null;
+  if (semanticMode) {
+    queryVec = await embedQuery(q!.trim());
+  }
+  const vecLiteral = queryVec ? sql.raw(toPgVectorLiteral(queryVec)) : null;
+  const similarityExpr = semanticMode
+    ? sql<number>`1 - (${paperVersions.embedding} <=> (${vecLiteral})::vector)`
+    : sql<number>`null::real`;
+  const kwExpr = semanticMode
+    ? sql<number>`ts_rank(to_tsvector('english', coalesce(${paperVersions.title}, '') || ' ' || coalesce(${paperVersions.abstract}, '') || ' ' || coalesce(${paperVersions.authorsJson}::text, '')), plainto_tsquery('english', ${q}))`
+    : sql<number>`null::real`;
 
   const where = and(...conditions);
 
@@ -379,6 +421,9 @@ export async function listPapers(filters: ListPaperFilters = {}) {
       version: paperVersions,
       category: categories,
       citationCount: sql<number>`coalesce(cc.cnt, 0)`,
+      // Always present so the select shape is stable; null outside semantic mode.
+      similarity: similarityExpr,
+      kwScore: kwExpr,
     })
     .from(papers)
     .innerJoin(
@@ -389,11 +434,13 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     .leftJoin(ccSub, sql`cc.target_paper_id = ${papers.id}`)
     .where(where)
     .orderBy(
-      sort === "updated"
-        ? desc(papers.updatedAt)
-        : sort === "by_citations"
-          ? desc(sql`coalesce(cc.cnt, 0)`)
-          : desc(papers.createdAt),
+      semanticMode
+        ? desc(sql`(coalesce(similarity, 0) * 0.7 + coalesce(kw_score, 0) * 0.3)`)
+        : sort === "updated"
+          ? desc(papers.updatedAt)
+          : sort === "by_citations"
+            ? desc(sql`coalesce(cc.cnt, 0)`)
+            : desc(papers.createdAt),
     )
     .limit(pageSize)
     .offset((page - 1) * pageSize);
@@ -407,7 +454,13 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     )
     .where(where);
 
-  return { rows: rows as PaperListItem[], total: count, page, pageSize };
+  return {
+    rows: rows as PaperListItem[],
+    total: count,
+    page,
+    pageSize,
+    semanticUsed: semanticMode,
+  };
 }
 
 /** Number of approved papers per year (for the publication trend chart). */

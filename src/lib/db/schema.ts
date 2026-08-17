@@ -11,6 +11,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  vector,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -175,6 +176,10 @@ export const paperVersions = pgTable(
     license: text("license").notNull().default("CC-BY-4.0"),
     comments: text("comments"), // version note (e.g. "v2: camera-ready")
     withdrawalReason: text("withdrawal_reason"),
+    // Dense vector embedding of (title + abstract) for semantic / hybrid search.
+    // Dimension is fixed at 1024 (e.g. bge-m3 / multilingual-e5-large). Null until
+    // a backfill run populates it. Requires the `vector` extension (pgvector).
+    embedding: vector("embedding", { dimensions: 1024 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (_table) => ({
@@ -191,6 +196,13 @@ export const paperVersions = pgTable(
     trgmIdx: index("paper_versions_trgm_idx").using(
       "gin",
       sql`(coalesce(title, '') || ' ' || coalesce(abstract, '')) gin_trgm_ops`,
+    ),
+    // Approximate-nearest-neighbour index for cosine-distance semantic search.
+    // HNSW is build-on-write and query-time O(log n); created after the extension
+    // exists (see migration 0009).
+    embeddingIdx: index("paper_versions_embedding_idx").using(
+      "hnsw",
+      sql`${_table.embedding} vector_cosine_ops`,
     ),
   }),
 );
@@ -377,6 +389,32 @@ export const citations = pgTable(
       _table.targetDoi,
       _table.targetArxivId,
     ),
+  }),
+);
+
+// ----------------------------- External identifiers (cross-source dedup) -----------------------------
+//
+// Maps a paper to its identifiers on external scholarly sources so imports can
+// de-duplicate (e.g. an arXiv id and a Crossref DOI that describe the same work)
+// and so citation backfill can resolve references against locally-stored papers.
+
+export const paperExternalIds = pgTable(
+  "paper_external_ids",
+  {
+    id: serial("id").primaryKey(),
+    paperId: text("paper_id")
+      .notNull()
+      .references(() => papers.id, { onDelete: "cascade" }),
+    // Source registry: "arxiv" | "doi" | "semantic_scholar".
+    source: text("source").notNull(),
+    externalId: text("external_id").notNull(),
+    url: text("url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    uniq: uniqueIndex("paper_external_ids_uniq").on(_t.paperId, _t.source, _t.externalId),
+    // Fast lookup by external id when resolving citations / imports.
+    lookupIdx: index("paper_external_ids_lookup_idx").on(_t.source, _t.externalId),
   }),
 );
 
@@ -590,6 +628,7 @@ export const papersRelations = relations(papers, ({ one, many }) => ({
   versions: many(paperVersions),
   paperAuthors: many(paperAuthors),
   paperCategories: many(paperCategories),
+  externalIds: many(paperExternalIds),
   comments: many(comments),
   outgoingCitations: many(citations, { relationName: "citing" }),
   incomingCitations: many(citations, { relationName: "cited" }),
