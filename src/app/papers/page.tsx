@@ -22,6 +22,8 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
   const dict = getDictionary(locale);
   const t = (path: string) => translate(dict, path);
   const q = typeof sp.q === "string" ? sp.q : undefined;
+  const semantic =
+    typeof sp.semantic === "string" && (sp.semantic === "1" || sp.semantic === "true");
   const category = typeof sp.category === "string" ? sp.category : undefined;
   const tag = typeof sp.tag === "string" ? sp.tag : undefined;
   const sort =
@@ -33,7 +35,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
   const pageSize = 12;
 
   const [{ rows, total }, cats, coOccurrence, byYear] = await Promise.all([
-    listPapers({ q, category, tag, sort, from, page, pageSize }),
+    listPapers({ q, category, tag, semantic, sort, from, page, pageSize }),
     listCategories(),
     listTagCoOccurrence(30).catch(() => ({ nodes: [], links: [] })),
     listPapersByYear().catch(() => []),
@@ -58,6 +60,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
   function pageHref(p: number) {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
+    if (semantic) params.set("semantic", "1");
     if (category) params.set("category", category);
     if (tag) params.set("tag", tag);
     if (sort !== "new") params.set("sort", sort);
@@ -92,6 +95,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
         initialSort={sort}
         initialField={fieldFromQuery}
         initialTime={initialTime}
+        initialSemantic={semantic}
       />
 
       {!q && !category && !tag && (coOccurrence.nodes.length > 1 || byYear.length > 0) && (

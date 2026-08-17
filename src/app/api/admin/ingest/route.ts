@@ -104,7 +104,9 @@ async function ingestBuffer(buf: Buffer, meta: IngestMeta, owner: OwnerLike): Pr
     const title = (meta.title as string) || parsed.title || "Untitled (imported)";
     const abstract = (meta.abstract as string) || parsed.abstract || "";
 
-    const { paperId, version } = await createSubmission(makeInput(title, abstract, meta), owner);
+    const { paperId, version } = await createSubmission(makeInput(title, abstract, meta), owner, {
+      skipEndorsementGate: true,
+    });
     const saved = await savePdfBuffer(paperId, version, buf);
     await updatePdfUrl(paperId, version, saved.pdfUrl);
 
@@ -132,7 +134,9 @@ async function ingestItem(item: IngestMeta, buf: Buffer | null, owner: OwnerLike
     const title = item.title || parsed?.title || "Untitled (imported)";
     const abstract = item.abstract || parsed?.abstract || "";
 
-    const { paperId, version } = await createSubmission(makeInput(title, abstract, item), owner);
+    const { paperId, version } = await createSubmission(makeInput(title, abstract, item), owner, {
+      skipEndorsementGate: true,
+    });
 
     let pdfUrl: string | undefined = item.pdfUrl;
     if (buf) {

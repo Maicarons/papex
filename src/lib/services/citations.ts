@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { citations, papers, paperVersions } from "@/lib/db/schema";
+import { citations, papers, paperVersions, paperExternalIds } from "@/lib/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 
 export interface CitationOut {
@@ -18,7 +18,12 @@ export interface CitationGraph {
   incoming: CitationOut[];
 }
 
-/** Look up the internal paper id for an arXiv id or DOI, if it exists locally. */
+/**
+ * Look up the internal paper id for an arXiv id or DOI, if it exists locally.
+ * Checks three sources: the paper id itself (legacy arXiv-id-as-paper-id), the
+ * paper_versions.doi column, and the cross-source `paper_external_ids` table
+ * (populated by P0-B external imports).
+ */
 async function resolveTarget(opts: {
   targetArxivId?: string;
   targetDoi?: string;
@@ -29,6 +34,14 @@ async function resolveTarget(opts: {
       .from(papers)
       .where(eq(papers.id, opts.targetArxivId));
     if (row) return row.id;
+    const [ext] = await db
+      .select({ paperId: paperExternalIds.paperId })
+      .from(paperExternalIds)
+      .where(
+        sql`${paperExternalIds.source} = 'arxiv' and ${paperExternalIds.externalId} = ${opts.targetArxivId}`,
+      )
+      .limit(1);
+    if (ext) return ext.paperId;
   }
   if (opts.targetDoi) {
     const [row] = await db
@@ -37,6 +50,14 @@ async function resolveTarget(opts: {
       .where(eq(paperVersions.doi, opts.targetDoi))
       .limit(1);
     if (row) return row.paperId;
+    const [ext] = await db
+      .select({ paperId: paperExternalIds.paperId })
+      .from(paperExternalIds)
+      .where(
+        sql`${paperExternalIds.source} = 'doi' and ${paperExternalIds.externalId} = ${opts.targetDoi}`,
+      )
+      .limit(1);
+    if (ext) return ext.paperId;
   }
   return null;
 }

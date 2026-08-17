@@ -25,6 +25,7 @@ export async function GET(req: Request) {
     authorId: authorIdRaw ? Number(authorIdRaw) : undefined,
     tag: searchParams.get("tag") ?? undefined,
     q: searchParams.get("q") ?? undefined,
+    semantic: searchParams.get("semantic") === "1" || searchParams.get("semantic") === "true",
     sort: (searchParams.get("sort") as "new" | "updated" | "by_citations") ?? "new",
     from: searchParams.get("from") ?? undefined,
     page: Number(searchParams.get("page") ?? 1),

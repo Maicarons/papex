@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { storageDriver } from "./storage";
 import { buildS3Config } from "./s3-client";
+import { isEmbeddingEnabled } from "./embeddings";
 
 /**
  * Runtime capability detection (server-only).
@@ -23,6 +24,8 @@ import { buildS3Config } from "./s3-client";
 export interface Capabilities {
   pdfUpload: boolean;
   latex: boolean;
+  /** Whether semantic / hybrid search is operational (embedding backend configured). */
+  semanticSearch: boolean;
 }
 
 function checkPdfStorage(): boolean {
@@ -61,6 +64,10 @@ export function detectCapabilities(): Capabilities {
   // Cache per process: detection results do not change at runtime, and
   // spawning latexmk on every render is wasteful.
   if (cached) return cached;
-  cached = { pdfUpload: checkPdfStorage(), latex: checkLatex() };
+  cached = {
+    pdfUpload: checkPdfStorage(),
+    latex: checkLatex(),
+    semanticSearch: isEmbeddingEnabled(),
+  };
   return cached;
 }
