@@ -49,3 +49,10 @@ Papex is an open-source, independent platform for managing and discovering acade
   <img src="/papex-explainer.gif" alt="Papex 60-second product demo" style="max-width:100%;border-radius:12px" />
   <p><em>A 60-second tour of Papex — submission, versioning, full-text search, community and open-source deployment.</em></p>
 </div>
+
+<br />
+
+<div style="text-align:center">
+  <img src="/papex-whatsnew.gif" alt="What's new in Papex" style="max-width:100%;border-radius:12px" />
+  <p><em>What's new in Papex — browser-based authoring, the co-review loop, unified messages &amp; tickets, and role-based permissions.</em></p>
+</div>
