@@ -594,6 +594,8 @@ export const moderationLogs = pgTable(
 // only a SHA-256 hash of the secret; the plaintext is returned to the owner
 // exactly once at creation time.
 
+export const noteKindEnum = pgEnum("note_kind", ["highlight", "note"]);
+
 export const apiKeyScopeEnum = pgEnum("api_key_scope", [
   "read", // public read-only endpoints
   "write", // mutating endpoints the owner is permitted to call
@@ -619,6 +621,114 @@ export const apiKeys = pgTable(
   },
   (_t) => ({
     userIdx: index("api_keys_user_idx").on(_t.userId),
+  }),
+);
+
+// ----------------------------- Devices (cross-client login sessions) -----------------------------
+//
+// A "device" is one logged-in client (desktop / iOS / Android / Harmony / web).
+// Each device owns refresh tokens (see `refreshTokens`). The `id` is a
+// server-generated `dev_…` string returned to the client on login so it can
+// later list / revoke its sessions.
+
+export const devices = pgTable(
+  "devices",
+  {
+    id: text("id").primaryKey(), // dev_<random>
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    deviceName: text("device_name"),
+    platform: text("platform"), // desktop | ios | android | harmony | web
+    fingerprint: text("fingerprint"),
+    lastActiveAt: timestamp("last_active_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({ userIdx: index("devices_user_idx").on(_t.userId) }),
+);
+
+// ----------------------------- Refresh tokens (opaque, device-bound) -----------------------------
+//
+// Opaque 256-bit refresh tokens (not JWTs). Only their SHA-256 hash is stored.
+// They are bound to a device, rotatable (each refresh issues a new token and
+// marks the previous one revoked via `rotated_from_id`), and revocable.
+
+export const refreshTokens = pgTable(
+  "refresh_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    deviceId: text("device_id")
+      .notNull()
+      .references(() => devices.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    rotatedFromId: uuid("rotated_from_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    userIdx: index("refresh_tokens_user_idx").on(_t.userId),
+    deviceIdx: index("refresh_tokens_device_idx").on(_t.deviceId),
+  }),
+);
+
+// ----------------------------- Reading progress (cross-client sync) -----------------------------
+
+export const readingProgress = pgTable(
+  "reading_progress",
+  {
+    id: serial("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    paperId: text("paper_id")
+      .notNull()
+      .references(() => papers.id, { onDelete: "cascade" }),
+    version: integer("version").notNull().default(1),
+    page: integer("page").notNull().default(0),
+    /** Reading position as a percentage 0–100. */
+    percent: integer("percent").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    uniq: uniqueIndex("reading_progress_user_paper_version_unique").on(
+      _t.userId,
+      _t.paperId,
+      _t.version,
+    ),
+  }),
+);
+
+// ----------------------------- Notes / annotations (cross-client sync) -----------------------------
+
+export const notes = pgTable(
+  "notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    paperId: text("paper_id")
+      .notNull()
+      .references(() => papers.id, { onDelete: "cascade" }),
+    version: integer("version").notNull().default(1),
+    kind: noteKindEnum("kind").notNull().default("highlight"),
+    page: integer("page").notNull().default(0),
+    /** Highlight rectangle in PDF page coordinates: { x, y, w, h }. */
+    rect: jsonb("rect").notNull(),
+    color: text("color"),
+    content: text("content"),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    userPaperIdx: index("notes_user_paper_idx").on(_t.userId, _t.paperId),
   }),
 );
 
@@ -748,4 +858,14 @@ export const citationsRelations = relations(citations, ({ one }) => ({
     relationName: "cited",
   }),
   creator: one(users, { fields: [citations.createdById], references: [users.id] }),
+}));
+
+export const devicesRelations = relations(devices, ({ one, many }) => ({
+  user: one(users, { fields: [devices.userId], references: [users.id] }),
+  refreshTokens: many(refreshTokens),
+}));
+
+export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
+  user: one(users, { fields: [refreshTokens.userId], references: [users.id] }),
+  device: one(devices, { fields: [refreshTokens.deviceId], references: [devices.id] }),
 }));
