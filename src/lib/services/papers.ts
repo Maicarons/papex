@@ -435,7 +435,9 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     .where(where)
     .orderBy(
       semanticMode
-        ? desc(sql`(coalesce(similarity, 0) * 0.7 + coalesce(kw_score, 0) * 0.3)`)
+        ? desc(
+            sql`(coalesce(${similarityExpr}, 0) * 0.7 + coalesce(${kwExpr}, 0) * 0.3)`,
+          )
         : sort === "updated"
           ? desc(papers.updatedAt)
           : sort === "by_citations"
