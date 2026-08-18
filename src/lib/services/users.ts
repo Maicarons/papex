@@ -10,8 +10,8 @@ export async function createUser(input: RegisterInput) {
     .insert(users)
     .values({
       username: input.username,
-      email: input.email,
-      displayName: input.displayName,
+      email: input.email ?? `${input.username}@local`,
+      displayName: input.displayName ?? input.username,
       passwordHash,
     })
     .returning();

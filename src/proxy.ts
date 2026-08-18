@@ -33,8 +33,68 @@ async function verify(token?: string) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// CORS for the desktop (Tauri webview) / mobile clients.
+//
+// The web app is same-origin, but the desktop webview (dev: http://localhost:1420)
+// and React Native (no Origin, bearer auth) call the API cross-origin. We echo
+// the request Origin when it is in the allowlist (with credentials), and allow
+// anonymous cross-origin (`*`) when no Origin is present (RN). Origins outside
+// the allowlist get no CORS headers, so the browser blocks them by default.
+// Extend the list via CORS_ALLOW_ORIGINS (comma-separated) when needed.
+// ---------------------------------------------------------------------------
+const DEFAULT_CORS_ORIGINS = new Set<string>([
+  "http://localhost:1420", // Tauri dev server
+  "http://localhost:3000", // backend dev server (same-machine testing)
+  "http://127.0.0.1:1420",
+  "https://localhost",
+  "http://localhost",
+  "tauri://localhost", // Tauri production custom protocol
+  "null", // some webviews / RN send "null"
+]);
+
+function allowedOrigins(): Set<string> {
+  const set = new Set(DEFAULT_CORS_ORIGINS);
+  const extra = process.env.CORS_ALLOW_ORIGINS;
+  if (extra) {
+    for (const o of extra.split(",")) {
+      const t = o.trim();
+      if (t) set.add(t);
+    }
+  }
+  return set;
+}
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowed = allowedOrigins();
+  if (origin && allowed.has(origin)) {
+    return {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Credentials": "true",
+    };
+  }
+  if (!origin) {
+    // Same-origin server fetch, or RN bearer request with no Origin.
+    return { "Access-Control-Allow-Origin": "*" };
+  }
+  // Disallowed cross-origin origin: do not advertise CORS.
+  return {};
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const origin = req.headers.get("origin");
+
+  // CORS preflight: answer immediately, skipping rate limit & auth.
+  if (req.method === "OPTIONS" && pathname.startsWith("/api/")) {
+    const h = corsHeaders(origin);
+    if (h["Access-Control-Allow-Origin"]) {
+      h["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
+      h["Access-Control-Allow-Headers"] = "Content-Type,Authorization";
+      h["Access-Control-Max-Age"] = "600";
+    }
+    return new NextResponse(null, { status: 204, headers: h });
+  }
 
   // 基础 API 限流：在到达 handler 前拦截滥用（爆破登录 / 刷注册 / 刷反馈等）。
   // 仅返回 429，不影响正常流量。
@@ -68,7 +128,10 @@ export async function proxy(req: NextRequest) {
   // 读/写区分：写方法(POST/PUT/PATCH/DELETE)要求 key 含 "write" scope。
   if (pathname.startsWith("/api/")) {
     req.headers.set("x-papex-method", req.method);
-    return NextResponse.next({ request: req });
+    const res = NextResponse.next({ request: req });
+    const h = corsHeaders(origin);
+    for (const [k, v] of Object.entries(h)) res.headers.set(k, v);
+    return res;
   }
 
   const needsAuth =

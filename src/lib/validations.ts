@@ -1,20 +1,51 @@
 import { z } from "zod";
 
+/**
+ * Device metadata sent by the desktop / mobile clients on login & register.
+ * Desktop nests it under `device`; mobile sends the fields at the top level.
+ */
+export const deviceSchema = z.object({
+  deviceName: z.string().max(120).optional(),
+  platform: z.string().max(40).optional(),
+  fingerprint: z.string().max(256).optional(),
+});
+
 export const registerSchema = z.object({
   username: z
     .string()
     .min(3, "用户名至少 3 个字符")
     .max(30)
     .regex(/^[a-zA-Z0-9_]+$/, "用户名只能包含字母、数字、下划线"),
-  email: z.string().email("邮箱格式不正确"),
-  displayName: z.string().min(1).max(80),
+  // Clients (mobile) may omit email; the route synthesizes a local placeholder
+  // so the NOT-NULL unique column is satisfied for integration testing.
+  email: z.string().email("邮箱格式不正确").optional(),
+  displayName: z.string().min(1).max(80).optional(),
   password: z.string().min(8, "密码至少 8 位").max(128),
+  device: deviceSchema.optional(),
+  mode: z.string().optional(),
+  platform: z.string().max(40).optional(),
+  deviceName: z.string().max(120).optional(),
 });
 
-export const loginSchema = z.object({
-  identifier: z.string().min(1), // username or email
-  password: z.string().min(1),
-});
+/**
+ * Login accepts either a web `identifier` (username or email) or the explicit
+ * `email` / `username` fields the clients send, plus optional device metadata.
+ * At least one of identifier / email / username must be present.
+ */
+export const loginSchema = z
+  .object({
+    identifier: z.string().min(1).optional(),
+    email: z.string().min(1).optional(),
+    username: z.string().min(1).optional(),
+    password: z.string().min(1),
+    device: deviceSchema.optional(),
+    mode: z.string().optional(),
+    platform: z.string().max(40).optional(),
+    deviceName: z.string().max(120).optional(),
+  })
+  .refine((d) => !!(d.identifier || d.email || d.username), {
+    message: "请输入账号或邮箱",
+  });
 
 export const authorInputSchema = z.object({
   name: z.string().min(1).max(160),

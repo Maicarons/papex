@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
+import { randomBytes } from "node:crypto";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -21,9 +22,11 @@ export interface SessionPayload {
   username: string;
   role: "author" | "moderator" | "admin";
   /** How the session was authenticated. */
-  source?: "cookie" | "apikey";
+  source?: "cookie" | "apikey" | "bearer";
   /** Present only when source === "apikey". Inherited/owner scopes. */
   apiKeyScopes?: ApiKeyScope[];
+  /** Bound device id, present on client (app/desktop) access tokens. */
+  deviceId?: string;
 }
 
 export async function signSession(payload: SessionPayload): Promise<string> {
@@ -47,10 +50,43 @@ export async function verifySession(
       sub: payload.sub,
       username: payload.username as string,
       role: payload.role as SessionPayload["role"],
+      source: payload.source as SessionPayload["source"],
+      deviceId: payload.deviceId as string | undefined,
     };
   } catch {
     return null;
   }
+}
+
+/**
+ * Short-lived (15 min) access token for the mobile / desktop clients.
+ * Embedding `perms` + `deviceId` lets the clients do offline authz checks and
+ * the server mark the "current" device without extra round-trips. The `jti`
+ * supports future token revocation. Uses the same AUTH_SECRET as web cookies.
+ */
+const ACCESS_TTL_SECONDS = 15 * 60;
+
+export async function signAccessToken(payload: {
+  sub: string;
+  username: string;
+  role: SessionPayload["role"];
+  perms: string[];
+  deviceId?: string;
+}): Promise<string> {
+  const jti = randomBytes(8).toString("base64url");
+  return new SignJWT({
+    username: payload.username,
+    role: payload.role,
+    perms: payload.perms,
+    deviceId: payload.deviceId,
+    jti,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(payload.sub)
+    .setIssuer(ISSUER)
+    .setIssuedAt()
+    .setExpirationTime(`${ACCESS_TTL_SECONDS}s`)
+    .sign(getSecret());
 }
 
 export async function setSessionCookie(token: string) {
@@ -82,6 +118,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   const auth = headerStore.get("authorization");
   if (auth?.startsWith("Bearer ")) {
     const raw = auth.slice(7).trim();
+    // 1) Programmatic API key (pk_…) — resolves to the owning user.
     const resolved = await resolveApiKey(raw);
     if (resolved) {
       // scope 校验：写方法要求 "write"，读方法要求 "read"。不足则视为未认证
@@ -107,6 +144,13 @@ export async function getSession(): Promise<SessionPayload | null> {
           apiKeyScopes: resolved.scopes,
         };
       }
+    }
+    // 2) User access token (mobile / desktop clients) — a normal HS256 JWT.
+    // Expired / tampered tokens fail jwtVerify and return null → 401, which
+    // triggers the client's refresh flow.
+    const userSession = await verifySession(raw);
+    if (userSession) {
+      return { ...userSession, source: "bearer" };
     }
   }
   return null;
