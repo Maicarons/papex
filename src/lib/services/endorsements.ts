@@ -5,7 +5,10 @@ import { and, desc, eq, getTableColumns, type SQL } from "drizzle-orm";
 export type EndorsementRow = typeof endorsements.$inferSelect;
 
 export interface EndorsementView extends EndorsementRow {
+  /** Canonical (English/arXiv-aligned) category name. */
   categoryName: string | null;
+  /** Simplified-Chinese translation of the category name, when available. */
+  categoryNameZh: string | null;
   endorserName: string | null;
 }
 
@@ -62,6 +65,7 @@ export async function listEndorsements(opts: {
     .select({
       ...getTableColumns(endorsements),
       categoryName: categories.name,
+      categoryNameZh: categories.nameZh,
       endorserName: users.displayName,
     })
     .from(endorsements)

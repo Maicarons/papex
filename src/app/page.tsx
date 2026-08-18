@@ -8,6 +8,7 @@ import { PaperCard } from "@/components/paper-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { LocaleText } from "@/components/locale-text";
+import { CategoryName } from "@/components/category-name";
 
 export const revalidate = 300;
 
@@ -86,7 +87,8 @@ export default async function HomePage() {
               <Card className="transition-colors hover:border-primary">
                 <CardHeader className="p-4">
                   <CardTitle className="text-sm">
-                    <span className="font-mono text-xs text-muted-foreground">{c.id}</span> {c.name}
+                    <span className="font-mono text-xs text-muted-foreground">{c.id}</span>{" "}
+                    <CategoryName id={c.id} name={c.name} nameZh={c.nameZh} />
                   </CardTitle>
                 </CardHeader>
               </Card>

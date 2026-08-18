@@ -18,7 +18,7 @@ export default async function SubmitPage() {
   const dict = getDictionary(locale);
   const t = (path: string) => translate(dict, path);
   const cats = await listCategories();
-  const options = cats.map((c) => ({ id: c.id, name: c.name }));
+  const options = cats.map((c) => ({ id: c.id, name: c.name, nameZh: c.nameZh }));
   const caps = detectCapabilities();
 
   return (

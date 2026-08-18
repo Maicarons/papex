@@ -41,7 +41,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
     listPapersByYear().catch(() => []),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const catOptions = cats.map((c) => ({ id: c.id, name: c.name }));
+  const catOptions = cats.map((c) => ({ id: c.id, name: c.name, nameZh: c.nameZh }));
   // Reconstruct the field select state from the query prefix for the filter bar.
   const fieldFromQuery =
     q && q.includes(":")

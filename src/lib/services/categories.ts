@@ -20,6 +20,10 @@ export interface CategoryNode {
   id: string;
   name: string;
   description: string | null;
+  /** Simplified-Chinese translation of `name`. Null when not yet translated. */
+  nameZh: string | null;
+  /** Simplified-Chinese translation of `description`. Null when not yet translated. */
+  descriptionZh: string | null;
   children: CategoryNode[];
 }
 
@@ -31,6 +35,8 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
       id: c.id,
       name: c.name,
       description: c.description,
+      nameZh: c.nameZh ?? null,
+      descriptionZh: c.descriptionZh ?? null,
       children: [],
     });
   }
@@ -45,3 +51,10 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   }
   return roots;
 }
+
+// Re-export the client-safe localize helpers so server-side callers can resolve
+// category names/descriptions from the same source of truth.
+export {
+  localizeCategoryName,
+  localizeCategoryDescription,
+} from "@/lib/category-i18n";

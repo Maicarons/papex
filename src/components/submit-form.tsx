@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useI18n } from "@/i18n/i18n-provider";
+import { CategoryName } from "@/components/category-name";
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 
@@ -33,6 +34,7 @@ function parseReference(
 interface CategoryOption {
   id: string;
   name: string;
+  nameZh?: string | null;
 }
 
 export function SubmitForm({
@@ -191,7 +193,7 @@ export function SubmitForm({
               <SelectContent>
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.id} · {c.name}
+                    {c.id} · <CategoryName id={c.id} name={c.name} nameZh={c.nameZh} />
                   </SelectItem>
                 ))}
               </SelectContent>

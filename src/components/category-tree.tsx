@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { CategoryNode } from "@/lib/services/categories";
+import { CategoryName } from "@/components/category-name";
 
 export function CategoryTree({ nodes, depth = 0 }: { nodes: CategoryNode[]; depth?: number }) {
   return (
@@ -14,7 +15,7 @@ export function CategoryTree({ nodes, depth = 0 }: { nodes: CategoryNode[]; dept
               className="rounded px-1 py-0.5 text-sm hover:bg-accent hover:text-accent-foreground"
             >
               <span className="font-mono text-xs text-muted-foreground">{node.id}</span>{" "}
-              {node.name}
+              <CategoryName id={node.id} name={node.name} nameZh={node.nameZh} />
             </Link>
           </div>
           {node.children.length > 0 && <CategoryTree nodes={node.children} depth={depth + 1} />}
