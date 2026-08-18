@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Limit how many pages are statically generated in parallel. The build
+  // prerenders ~250 category/paper/author routes, each opening its own DB
+  // connection via the per-worker pool. Without this cap the cumulative
+  // connections can exceed Postgres' default max_connections (100) on both
+  // local Docker and CI, failing the build with "too many clients already".
+  experimental: {
+    staticGenerationMaxConcurrency: 4,
+  },
   // Vercel-friendly: keep server external packages out of bundling where needed
   serverExternalPackages: ["postgres", "bcryptjs", "nodemailer", "pdf-parse"],
   images: {

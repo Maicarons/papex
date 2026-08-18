@@ -11,6 +11,7 @@ import { Building2, MapPin, Globe, Link2 } from "lucide-react";
 import { initials } from "@/lib/utils";
 import { getServerLocale } from "@/i18n/server";
 import { getDictionary, t as translate, format } from "@/i18n";
+import { localizeCategoryName } from "@/lib/category-i18n";
 
 export const revalidate = 3600;
 
@@ -123,7 +124,9 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
           <ul className="space-y-2">
             {receivedEndorsements.map((e) => (
               <li key={e.id} className="rounded-md border p-3 text-sm">
-                <span className="font-medium">{e.categoryName ?? e.categoryId}</span>
+                <span className="font-medium">
+                  {localizeCategoryName(e.categoryName ?? e.categoryId, e.categoryNameZh, locale)}
+                </span>
                 <span className="text-muted-foreground">
                   {" "}· {format(t("profile.endorsedBy"), { name: e.endorserName ?? t("paper.anonymous") })}
                 </span>

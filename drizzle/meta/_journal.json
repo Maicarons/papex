@@ -71,6 +71,13 @@
       "when": 1786900000000,
       "tag": "0009_add_embeddings_and_external_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787025134896,
+      "tag": "0010_add_category_i18n",
+      "breakpoints": true
     }
   ]
 }

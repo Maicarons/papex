@@ -129,6 +129,12 @@ export const categories = pgTable("categories", {
   parentId: text("parent_id").references((): any => categories.id, { onDelete: "set null" }),
   name: text("name").notNull(),
   description: text("description"),
+  // Bilingual i18n columns. `name`/`description` are English (the default and
+  // the canonical arXiv-aligned value). `nameZh`/`descriptionZh` hold the
+  // Simplified-Chinese translations; when the active locale is `zh` and the
+  // zh column is non-null we prefer it, otherwise we fall back to English.
+  nameZh: text("name_zh"),
+  descriptionZh: text("description_zh"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
