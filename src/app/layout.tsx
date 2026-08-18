@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   },
   description:
     "Papex 是一个开源、独立的学术文献管理与发现平台：投稿、版本管理、全文检索、订阅与开放 API。",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

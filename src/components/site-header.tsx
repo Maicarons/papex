@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck, PenLine, LayoutGrid, Bell, Rss, Bookmark } from "lucide-react";
+import { Activity, Search, Upload, User as UserIcon, LogOut, ShieldCheck, BarChart3, Ticket, BookOpen, Info, MessageSquareText, ListChecks, Settings, LayoutDashboard, Users, KeyRound, Megaphone, ClipboardCheck, PenLine, LayoutGrid, Bell, Rss, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { MessagesBell } from "@/components/messages-bell";
@@ -40,11 +41,9 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 font-heading text-lg font-semibold tracking-tight">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <FileText className="h-4 w-4" />
-          </span>
-          <span>Papex</span>
+        <Link href="/" className="flex items-center gap-2">
+          <Logo size={30} />
+          <span className="font-heading text-lg font-semibold tracking-tight">Papex</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
