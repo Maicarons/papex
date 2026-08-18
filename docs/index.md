@@ -39,6 +39,10 @@ features:
     details: Per-author citation totals, H-index and co-author networks, plus publication trends and keyword co-occurrence analysis.
   - title: Tags & advanced search
     details: User-created tags with keyword co-occurrence graphs, hot-tag cloud, and a field/time-range/sort-aware search UI.
+  - title: Semantic & hybrid search
+    details: Vector (pgvector) embeddings fused with full-text ranking for meaning-aware paper discovery; silently falls back to keyword search when no embedding backend is configured.
+  - title: External metadata import
+    details: One-click import from Crossref, arXiv, Semantic Scholar and OpenCitations with cross-source de-duplication and automatic citation backfill.
 ---
 
 Papex is an open-source, independent platform for managing and discovering academic literature. Self-host it or build on top of it.
