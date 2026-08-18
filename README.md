@@ -360,6 +360,15 @@ endpoints work anonymously, with a cookie, or with an API key.
 
 ---
 
+## Official Clients
+
+- **[Papex App](https://github.com/Maicarons/papex-app)** — official mobile client (Android / HarmonyOS / iOS): a mobile replacement for the web version — read papers offline, manage your account and devices. Built with React Native 0.82 + RNOH.
+- **[Papex Desktop](https://github.com/Maicarons/papex-desktop)** — desktop research workbench (Windows / Linux / macOS): local-first library, PDF reading with highlights & notes, citation management (CSL / BibTeX / LaTeX), offline full-text search. Built with Tauri 2 + React 19.
+
+Development plans for both clients: [`docs/development/papex-app.md`](docs/development/papex-app.md) · [`docs/development/papex-desktop.md`](docs/development/papex-desktop.md)
+
+---
+
 ## Roadmap (completed)
 
 - [x] **Email alerts via Resend / SMTP** — `lib/email/*`: switch with `EMAIL_PROVIDER`; Resend uses fetch REST (no SDK), SMTP uses nodemailer. New-paper alerts fan out via `services/feed.ts`; delivery failure does not block publishing.
