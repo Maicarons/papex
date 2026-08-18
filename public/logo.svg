@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-label="Papex">
+  <rect width="32" height="32" rx="8" fill="hsl(224 76% 40%)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 9 H19 L23 13 V25 H11 Z"/>
+    <path d="M19 9 V13 H23"/>
+    <path d="M14 17 H20"/>
+    <path d="M14 20.5 H20"/>
+  </g>
+</svg>
