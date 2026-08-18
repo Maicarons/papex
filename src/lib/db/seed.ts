@@ -17,14 +17,14 @@ import { hashPassword } from "../auth/password";
 import { PERMISSIONS, DEFAULT_ROLE_PERMISSIONS } from "../permission-catalog";
 
 const CATEGORIES: { id: string; parentId: string | null; name: string; description: string }[] = [
-  { id: "cs", parentId: null, name: "Computer Science", description: "" },
-  { id: "econ", parentId: null, name: "Economics", description: "" },
-  { id: "eess", parentId: null, name: "Electrical Engineering and Systems Science", description: "" },
-  { id: "math", parentId: null, name: "Mathematics", description: "" },
-  { id: "physics", parentId: null, name: "Physics", description: "Accelerator theory and simulation. Accelerator technology. Accelerator experiments. Beam Physics. Accelerator design and optimization. Advanced accelerator concepts. Radiation sources including synchrotron light sources and free electron lasers. Applications of accelerators." },
-  { id: "q-bio", parentId: null, name: "Quantitative Biology", description: "" },
-  { id: "q-fin", parentId: null, name: "Quantitative Finance", description: "" },
-  { id: "stat", parentId: null, name: "Statistics", description: "" },
+  { id: "cs", parentId: null, name: "Computer Science", description: "All aspects of computer science, including artificial intelligence, programming languages, algorithms, and theory of computation." },
+  { id: "econ", parentId: null, name: "Economics", description: "Theory and applications of economics." },
+  { id: "eess", parentId: null, name: "Electrical Engineering and Systems Science", description: "All aspects of electrical engineering and systems science, including signal processing, systems and control, and audio and speech processing." },
+  { id: "math", parentId: null, name: "Mathematics", description: "All areas of mathematics, including algebra, analysis, geometry, topology, and number theory." },
+  { id: "physics", parentId: null, name: "Physics", description: "All aspects of physics, including astrophysics, condensed matter, and particle physics." },
+  { id: "q-bio", parentId: null, name: "Quantitative Biology", description: "All aspects of biology that involve quantitative approaches, including molecular biology, genomics, and systems biology." },
+  { id: "q-fin", parentId: null, name: "Quantitative Finance", description: "All aspects of quantitative finance, including mathematical finance, risk management, and portfolio management." },
+  { id: "stat", parentId: null, name: "Statistics", description: "All aspects of statistics, including statistical theory, methodology, and applications." },
   { id: "astro-ph", parentId: null, name: "Astrophysics", description: "Phenomenology of early universe, cosmic microwave background, cosmological parameters, primordial element abundances, extragalactic distance scale, large-scale structure of the universe. Groups, superclusters, voids, intergalactic medium. Particle astrophysics: dark energy, dark matter, baryogenesis, leptogenesis, inflationary models, reheating, monopoles, WIMPs, cosmic strings, primordial black holes, cosmological gravitational radiation" },
   { id: "cond-mat", parentId: null, name: "Condensed Matter", description: "Glasses and spin glasses; properties of random, aperiodic and quasiperiodic systems; transport in disordered media; localization; phenomena mediated by defects and disorder; neural networks" },
   { id: "gr-qc", parentId: null, name: "General Relativity and Quantum Cosmology", description: "General Relativity and Quantum Cosmology Areas of gravitational physics, including experiments and observations related to the detection and interpretation of gravitational waves, experimental tests of gravitational theories, computational general relativity, relativistic astrophysics, solutions to Einstein's equations and their properties, alternative theories of gravity, classical and quantum cosmology, and quantum gravity." },
@@ -183,6 +183,24 @@ const CATEGORIES: { id: string; parentId: string | null; name: string; descripti
   { id: "stat.ML", parentId: "stat", name: "Machine Learning", description: "Covers machine learning papers (supervised, unsupervised, semi-supervised learning, graphical models, reinforcement learning, bandits, high dimensional inference, etc.) with a statistical or theoretical grounding" },
   { id: "stat.OT", parentId: "stat", name: "Other Statistics", description: "Work in statistics that does not fit into the other stat classifications" },
   { id: "stat.TH", parentId: "stat", name: "Statistics Theory", description: "stat.TH is an alias for math.ST. Asymptotics, Bayesian Inference, Decision Theory, Estimation, Foundations, Inference, Testing." },
+
+  // Humanities — not part of arXiv; added so Papex can cover liberal arts.
+  { id: "hum", parentId: null, name: "Humanities", description: "All areas of the humanities, including philosophy, history, literature, language, society, politics, law, art, education, and culture." },
+  { id: "hum.phil", parentId: "hum", name: "Philosophy", description: "All areas of philosophy, including metaphysics, epistemology, ethics, logic, aesthetics, philosophy of mind, and political philosophy." },
+  { id: "hum.hist", parentId: "hum", name: "History", description: "All areas of history, including political, social, economic, cultural, intellectual, and global history." },
+  { id: "hum.lit", parentId: "hum", name: "Literature", description: "Literary studies, including literary theory, comparative literature, poetry, fiction, drama, and textual criticism." },
+  { id: "hum.ling", parentId: "hum", name: "Linguistics", description: "The scientific study of language, including phonetics, phonology, syntax, semantics, pragmatics, historical linguistics, and sociolinguistics." },
+  { id: "hum.soc", parentId: "hum", name: "Sociology", description: "The study of society, social institutions, social relationships, stratification, culture, and social change." },
+  { id: "hum.pol", parentId: "hum", name: "Political Science", description: "The study of politics and government, including political theory, comparative politics, international relations, and public policy." },
+  { id: "hum.law", parentId: "hum", name: "Law", description: "Legal studies, including jurisprudence, constitutional law, international law, criminal law, and legal theory." },
+  { id: "hum.art", parentId: "hum", name: "Arts", description: "Art history, visual culture, musicology, performance studies, and the theory and criticism of the arts." },
+  { id: "hum.edu", parentId: "hum", name: "Education", description: "Educational theory and practice, including pedagogy, curriculum, educational policy, learning sciences, and assessment." },
+  { id: "hum.anth", parentId: "hum", name: "Anthropology", description: "The study of humanity, including cultural and social anthropology and biological anthropology." },
+  { id: "hum.psy", parentId: "hum", name: "Psychology", description: "The scientific study of mind and behavior, including cognitive, social, developmental, clinical, and personality psychology." },
+  { id: "hum.rel", parentId: "hum", name: "Religious Studies", description: "The academic study of religion, including comparative religion, theology, sacred texts, and religious history." },
+  { id: "hum.arch", parentId: "hum", name: "Archaeology", description: "The study of past human societies through material remains, including method, fieldwork, and interpretation." },
+  { id: "hum.com", parentId: "hum", name: "Communication and Media", description: "Media studies, journalism, rhetoric, discourse analysis, and the study of communication in society." },
+  { id: "hum.geo", parentId: "hum", name: "Human Geography", description: "The study of people, places, and their relationships, including urban, cultural, economic, and social geography." },
 ];
 
 
@@ -234,7 +252,13 @@ async function seedRbac() {
 async function main() {
   console.log("Seeding categories…");
   for (const c of CATEGORIES) {
-    await db.insert(categories).values(c).onConflictDoNothing();
+    await db
+      .insert(categories)
+      .values(c)
+      .onConflictDoUpdate({
+        target: categories.id,
+        set: { name: c.name, parentId: c.parentId, description: c.description },
+      });
   }
 
   await seedRbac();

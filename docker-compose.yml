@@ -1,6 +1,8 @@
 services:
   db:
-    image: postgres:16-alpine
+    # pgvector-enabled Postgres 16 (image bundles the `vector` extension), so
+    # migration 0009 (`CREATE EXTENSION vector`) and semantic-search embeddings work.
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: papex
