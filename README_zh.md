@@ -342,6 +342,15 @@ docker compose up -d        # 含 Postgres + Next 服务
 
 ---
 
+## 官方客户端
+
+- **[Papex App](https://github.com/Maicarons/papex-app)** — 官方移动端（Android / HarmonyOS / iOS）：网页版的移动替代品——随时随地离线读论文、管理账号与设备。基于 React Native 0.82 + RNOH 构建。
+- **[Papex Desktop](https://github.com/Maicarons/papex-desktop)** — 桌面科研工作平台（Windows / Linux / macOS）：本地优先的文献库、带高亮与笔记的 PDF 阅读、引用管理（CSL / BibTeX / LaTeX）、离线全文检索。基于 Tauri 2 + React 19 构建。
+
+两个客户端的开发方案：[`docs/development/papex-app.md`](docs/development/papex-app.md) · [`docs/development/papex-desktop.md`](docs/development/papex-desktop.md)
+
+---
+
 ## 路线图（已完成）
 
 - [x] **邮件提醒对接 Resend / SMTP** — `lib/email/*`：`EMAIL_PROVIDER` 切换；Resend 走 fetch REST（无需 SDK），SMTP 走 nodemailer。新论文提醒经 `services/feed.ts` 扇出，投递失败不阻塞发布。
