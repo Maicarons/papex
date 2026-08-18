@@ -123,8 +123,11 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
 
 /**
  * Format a vector as a pgvector literal string `'[v0,v1,...]'`.
- * Used by raw SQL distance operators (`<=>`). Numbers are safe to inline.
+ * The surrounding single quotes are REQUIRED: pgvector expects a quoted text
+ * literal (`'[...]'::vector`), not a bare `[...]` (which Postgres parses as an
+ * array constructor and raises `syntax error at or near "["`). Used by raw SQL
+ * distance operators (`<=>`). Numbers are safe to inline.
  */
 export function toPgVectorLiteral(vec: number[]): string {
-  return `[${vec.join(",")}]`;
+  return `'[${vec.join(",")}]'`;
 }
