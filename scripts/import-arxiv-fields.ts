@@ -166,7 +166,7 @@ async function alreadyImported(arxivId: string): Promise<boolean> {
   return !!ext;
 }
 
-async function importField(top: string, cat: string): Promise<void> {
+async function importField(top: string, cat: string, createdAt: Date): Promise<void> {
   console.log(`\n=== ${top} (via ${cat}) ===`);
 
   const entries = await fetchRecent(cat);
@@ -236,6 +236,9 @@ async function importField(top: string, cat: string): Promise<void> {
         status: "approved",
         createdById: ADMIN_USER_ID,
         latestVersion: 1,
+        // Stagger creation times so the "latest submissions" feed has a stable
+        // ordering (batch-imported rows would otherwise share the same second).
+        createdAt,
       })
       .onConflictDoNothing();
     await tx
@@ -275,14 +278,18 @@ async function importField(top: string, cat: string): Promise<void> {
 async function main() {
   let ok = 0;
   let failed = 0;
+  // Stagger createdAt: one minute apart, ending "now", so the batch behaves
+  // like papers submitted over the last ~20 minutes (stable feed ordering).
+  let stamp = Date.now() - FIELD_CATS.length * 60_000;
   for (const { top, cat } of FIELD_CATS) {
     try {
-      await importField(top, cat);
+      await importField(top, cat, new Date(stamp));
       ok++;
     } catch (e) {
       console.error(`  ✗ ${top}: ${(e as Error).message}`);
       failed++;
     }
+    stamp += 60_000;
     await new Promise((r) => setTimeout(r, 800)); // be polite to export.arxiv.org
   }
   console.log(`\nDone. ${ok} fields imported, ${failed} failed.`);

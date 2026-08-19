@@ -14,9 +14,9 @@ test.describe("首页", () => {
   test("首页展示 arXiv 导入论文", async ({ page }) => {
     await page.goto("/");
 
-    // db:seed-arxiv 灌入的真实 arXiv 论文（cs 领域 2608.18066）应在「最新提交」中可见
-    await expect(
-      page.getByRole("link", { name: /On the Fragility of Self-Improving Agents/i }),
-    ).toBeVisible();
+    // 「最新提交」区块应渲染至少一篇论文卡片（指向 /papers/{id}）。
+    // 注意：批量导入的 20 篇 arXiv 论文 createdAt 相近，前 8 篇的具体
+    // 内容不定，故只断言论文卡片存在，不绑定具体论文 id。
+    await expect(page.locator('a[href^="/papers/"]').first()).toBeVisible();
   });
 });
