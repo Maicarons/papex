@@ -3,6 +3,7 @@ import { loginSchema } from "@/lib/validations";
 import type { DeviceInput } from "@/lib/auth/refresh-token";
 import { verifyLogin } from "@/lib/services/users";
 import { resolveDevice, issueAuthPair } from "@/lib/auth/refresh-token";
+import { signSession, setSessionCookie } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -40,5 +41,11 @@ export async function POST(req: Request) {
   }
   const device = await resolveDevice(user.id, extractDevice(parsed.data as Record<string, unknown>));
   const auth = await issueAuthPair(user, device.id);
+
+  // Web clients authenticate via the `papex_session` cookie; plant it in
+  // addition to the bearer token pair returned for desktop/mobile clients.
+  const token = await signSession({ sub: user.id, username: user.username, role: user.role });
+  await setSessionCookie(token);
+
   return NextResponse.json(auth);
 }
