@@ -67,21 +67,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "参数错误" }, { status: 400 });
   }
 
-  try {
-    const created = await createSubmission(parsed.data, { id: user.id, role: user.role });
-    const result: { paperId: string; version: number; pdf?: AttachedPdf } = { ...created };
+  // Policy: no paper without a PDF. A multipart submission must carry a `pdf`
+  // file; a JSON submission must supply a non-empty `pdfUrl`.
+  if (contentType.includes("multipart/form-data") && !pdfFile) {
+    return NextResponse.json({ error: "必须上传 PDF 文件" }, { status: 400 });
+  }
+  if (!contentType.includes("multipart/form-data") && !parsed.data.pdfUrl?.trim()) {
+    return NextResponse.json({ error: "必须提供 PDF（pdfUrl 或上传文件）" }, { status: 400 });
+  }
 
-    // Persist an uploaded PDF (if any) and auto-link its references.
-    if (pdfFile) {
-      const buf = Buffer.from(await pdfFile.arrayBuffer());
-      if (buf.length === 0) return NextResponse.json({ error: "空文件" }, { status: 400 });
-      if (buf.length > MAX_SIZE)
+  try {
+    const pdfBuffer = pdfFile ? Buffer.from(await pdfFile.arrayBuffer()) : undefined;
+    if (pdfBuffer) {
+      if (pdfBuffer.length === 0) return NextResponse.json({ error: "空文件" }, { status: 400 });
+      if (pdfBuffer.length > MAX_SIZE)
         return NextResponse.json({ error: "文件过大（>50MB）" }, { status: 413 });
       // Magic bytes: %PDF
-      if (!(buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46)) {
+      if (!(pdfBuffer[0] === 0x25 && pdfBuffer[1] === 0x50 && pdfBuffer[2] === 0x44 && pdfBuffer[3] === 0x46)) {
         return NextResponse.json({ error: "不是有效的 PDF 文件" }, { status: 400 });
       }
-      result.pdf = await attachPdf(result.paperId, result.version, buf, user.id);
+    }
+    const created = await createSubmission(parsed.data, { id: user.id, role: user.role }, { pdfBuffer });
+    const result: { paperId: string; version: number; pdf?: AttachedPdf } = { ...created };
+
+    // Extract & auto-link references from the freshly stored PDF (inline upload
+    // already persisted it inside the submission transaction).
+    if (pdfBuffer) {
+      result.pdf = await attachPdf(result.paperId, result.version, pdfBuffer, user.id, {
+        alreadyStored: true,
+      });
     }
 
     revalidatePath("/");

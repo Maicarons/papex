@@ -223,6 +223,28 @@ export function parseIdentifierFromUrl(url: string): { doi?: string; arxivId?: s
 
 const UA = { "user-agent": "Papex/0.1 (+https://github.com/Maicarons/papex)" };
 
+/**
+ * Download a paper's PDF bytes from an external source URL and validate the
+ * `%PDF` magic bytes. Policy: every paper version must carry a PDF, so an
+ * import whose PDF cannot be fetched must fail rather than create a PDF-less
+ * record.
+ */
+async function downloadPdf(url: string): Promise<Buffer> {
+  const res = await fetch(url, { headers: UA, signal: AbortSignal.timeout(90_000) });
+  if (!res.ok) throw new Error(`PDF download HTTP ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (
+    buf.length < 5 ||
+    buf[0] !== 0x25 ||
+    buf[1] !== 0x50 ||
+    buf[2] !== 0x44 ||
+    buf[3] !== 0x46
+  ) {
+    throw new Error("INVALID_PDF");
+  }
+  return buf;
+}
+
 async function fetchJson(url: string): Promise<any> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 12_000);
@@ -488,6 +510,12 @@ export async function importByIdentifier(
   }
 
   const primaryCategoryId = await resolvePrimaryCategory(meta.categories);
+
+  // Download the PDF into local storage (the storage layer stores `pdfUrl` as
+  // the streaming route) so imported papers always carry a real PDF.
+  if (!meta.pdfUrl) throw new Error("PDF_UNAVAILABLE");
+  const pdfBuffer = await downloadPdf(meta.pdfUrl);
+
   const input: CreatePaperInput = {
     title: meta.title,
     abstract: meta.abstract ?? "",
@@ -496,7 +524,6 @@ export async function importByIdentifier(
     authors: meta.authors.length
       ? meta.authors
       : [{ name: "Unknown Author", order: 0 }],
-    pdfUrl: meta.pdfUrl,
     doi: meta.doi,
     sourceUrl: meta.sourceUrl,
     license: "CC-BY-4.0",
@@ -504,6 +531,7 @@ export async function importByIdentifier(
 
   const { paperId, version } = await createSubmission(input, owner, {
     skipEndorsementGate: true,
+    pdfBuffer,
   });
   await recordExternalIds(paperId, dedupeExternalIds(meta));
 

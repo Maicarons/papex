@@ -67,7 +67,7 @@ function buildCategoryValues(paperId: string, input: CreatePaperInput) {
 export async function createSubmission(
   input: CreatePaperInput,
   owner: OwnerLike,
-  opts: { skipEndorsementGate?: boolean } = {},
+  opts: { skipEndorsementGate?: boolean; pdfBuffer?: Buffer } = {},
 ) {
   return db.transaction(async (tx) => {
     const authorRows: { id: number; name: string; order: number }[] = [];
@@ -85,12 +85,24 @@ export async function createSubmission(
       title: input.title,
       abstract: input.abstract,
       authorsJson,
-      pdfUrl: input.pdfUrl || null,
       sourceUrl: input.sourceUrl || null,
       doi: input.doi || null,
       license: input.license,
       comments: input.comments || null,
     };
+
+    // Every paper version MUST have a PDF (policy: "no paper without a PDF").
+    // It is either uploaded inline (pdfBuffer → stored via the storage layer,
+    // `pdfUrl` becomes the streaming route) or supplied as a direct URL.
+    async function resolvePdfUrl(paperId: string, version: number): Promise<string> {
+      if (opts.pdfBuffer) {
+        const saved = await savePdfBuffer(paperId, version, opts.pdfBuffer);
+        return saved.pdfUrl;
+      }
+      const url = input.pdfUrl?.trim();
+      if (!url) throw new Error("PDF_REQUIRED");
+      return url;
+    }
 
     // ----- New version of an existing paper -----
     if (input.basePaperId) {
@@ -104,7 +116,8 @@ export async function createSubmission(
         throw new Error("FORBIDDEN");
       }
       const newVersion = paper.latestVersion + 1;
-      await tx.insert(paperVersions).values({ paperId: paper.id, version: newVersion, ...baseVersion });
+      const pdfUrl = await resolvePdfUrl(paper.id, newVersion);
+      await tx.insert(paperVersions).values({ paperId: paper.id, version: newVersion, ...baseVersion, pdfUrl });
       await tx
         .update(papers)
         .set({ title: input.title, latestVersion: newVersion, updatedAt: new Date() })
@@ -172,7 +185,8 @@ export async function createSubmission(
     }
     if (!created) throw new Error("ID_GENERATION_FAILED");
 
-    await tx.insert(paperVersions).values({ paperId, version: 1, ...baseVersion });
+    const pdfUrl = await resolvePdfUrl(paperId, 1);
+    await tx.insert(paperVersions).values({ paperId, version: 1, ...baseVersion, pdfUrl });
     await tx.insert(paperCategories).values(buildCategoryValues(paperId, input));
     await tx
       .insert(paperAuthors)
@@ -193,18 +207,34 @@ export interface AttachedPdf {
  * Persist an uploaded PDF for a specific paper version and auto-link any
  * references it contains. Shared by `POST /api/papers/{id}/pdf` and the
  * multipart `POST /api/papers` submission flow so both paths stay in sync.
+ *
+ * When `opts.alreadyStored` is set (inline submission already persisted the
+ * buffer inside its transaction), the storage write + pdfUrl update are
+ * skipped and only reference extraction/linking runs.
  */
 export async function attachPdf(
   paperId: string,
   version: number,
   buf: Buffer,
   userId: string,
+  opts: { alreadyStored?: boolean } = {},
 ): Promise<AttachedPdf> {
-  const { pdfUrl } = await savePdfBuffer(paperId, version, buf);
-  await db
-    .update(paperVersions)
-    .set({ pdfUrl })
-    .where(and(eq(paperVersions.paperId, paperId), eq(paperVersions.version, version)));
+  let pdfUrl: string;
+  if (!opts.alreadyStored) {
+    const saved = await savePdfBuffer(paperId, version, buf);
+    pdfUrl = saved.pdfUrl;
+    await db
+      .update(paperVersions)
+      .set({ pdfUrl })
+      .where(and(eq(paperVersions.paperId, paperId), eq(paperVersions.version, version)));
+  } else {
+    const [row] = await db
+      .select({ url: paperVersions.pdfUrl })
+      .from(paperVersions)
+      .where(and(eq(paperVersions.paperId, paperId), eq(paperVersions.version, version)))
+      .limit(1);
+    pdfUrl = row?.url ?? "";
+  }
 
   const parsed = await parsePdf(buf);
   const refs = extractReferences(parsed.text);

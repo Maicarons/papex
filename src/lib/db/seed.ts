@@ -4,11 +4,6 @@ import {
   affiliations,
   authors,
   categories,
-  papers,
-  paperVersions,
-  paperAuthors,
-  paperCategories,
-  citations,
   roles,
   permissions,
   rolePermissions,
@@ -386,71 +381,15 @@ async function main() {
     .values({ name: "Papex University", country: "CN" })
     .onConflictDoNothing()
     .returning();
-  const [author] = await db
+  await db
     .insert(authors)
     .values({ name: "Demo Author", affiliationId: aff?.id, userId: user?.id })
-    .onConflictDoNothing()
-    .returning();
-
-  console.log("Seeding demo papers…");
-  const demo = [
-    {
-      id: "2608.00001",
-      title: "A Modern Open-Source Paper Management System",
-      abstract:
-        "We present Papex, an open-source platform for managing and discovering scholarly literature. Built with Next.js and Drizzle ORM, it supports versioning, full-text search, and open APIs.",
-      cat: "cs.LG",
-    },
-    {
-      id: "2608.00002",
-      title: "Efficient Full-Text Retrieval for Scholarly Repositories",
-      abstract:
-        "This paper studies tsvector-based indexing for large scholarly corpora and demonstrates sub-second query latency at scale.",
-      cat: "cs.IR",
-    },
-    {
-      id: "2608.00003",
-      title: "面向学术论文的中文全文检索方法研究",
-      abstract:
-        "本文研究面向中英混合学术论文的全文检索方法，结合 trigram 三元组索引与分词策略，在中文子串匹配场景下取得了良好的召回率与查询延迟。",
-      cat: "cs.CL",
-    },
-  ];
-
-  for (const d of demo) {
-    await db
-      .insert(papers)
-      .values({ id: d.id, title: d.title, primaryCategoryId: d.cat, status: "approved", createdById: user?.id })
-      .onConflictDoNothing();
-    await db
-      .insert(paperVersions)
-      .values({
-        paperId: d.id,
-        version: 1,
-        title: d.title,
-        abstract: d.abstract,
-        authorsJson: [{ name: "Demo Author", order: 0, authorId: author?.id }],
-        pdfUrl: null,
-        license: "CC-BY-4.0",
-      })
-      .onConflictDoNothing();
-    if (author) {
-      await db
-        .insert(paperAuthors)
-        .values({ paperId: d.id, authorId: author.id, order: 0 })
-        .onConflictDoNothing();
-    }
-    await db
-      .insert(paperCategories)
-      .values({ paperId: d.id, categoryId: d.cat, isPrimary: true })
-      .onConflictDoNothing();
-  }
-
-  console.log("Seeding demo citation…");
-  await db
-    .insert(citations)
-    .values({ paperId: "2608.00002", targetPaperId: "2608.00001", targetTitle: "A Modern Open-Source Paper Management System" })
     .onConflictDoNothing();
+
+  // NOTE: no demo papers are seeded here. Every paper in the catalogue MUST
+  // carry a PDF (enforced by a CHECK constraint on paper_versions.pdf_url and
+  // by the submission/import services). Demo/sample papers are populated with
+  // real arXiv papers via `npm run db:seed-arxiv` instead.
 
   console.log("Seed complete.");
   process.exit(0);
