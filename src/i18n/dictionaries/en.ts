@@ -189,6 +189,7 @@ export const en: Dictionary = {
     commentsCount: "{n} comments",
     newVersionDesc: "Submitting a new version for {id}. Previous versions are kept permanently.",
     etAl: " et al.",
+    moreAuthors: " and {count} more authors",
     anonymous: "Anonymous",
   },
   writespace: {
@@ -619,7 +620,7 @@ admin: {
     content: "Content",
     contentPlaceholder: "Notification body",
     link: "Link (optional)",
-    linkPlaceholder: "e.g. /papers/2608.00001",
+    linkPlaceholder: "e.g. /papers/2608.18066",
     sendFailed: "Send failed",
     broadcastSubtitle: "Send an in-app message to a chosen set of users. All sends are delivered through the unified notification center.",
     sendBroadcast: "Send broadcast",
