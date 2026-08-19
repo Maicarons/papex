@@ -677,6 +677,35 @@ export const refreshTokens = pgTable(
   }),
 );
 
+// ----------------------------- QR login sessions (web <- app confirm) -----------------------------
+//
+// QR code login flow: the web client creates a session and renders the
+// sessionId as a QR code; the mobile app scans it and confirms with its own
+// session; the web client polls and then exchanges the session for a fresh
+// token pair (one-time, TTL-limited).
+
+export const qrSessions = pgTable(
+  "qr_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: text("session_id").notNull().unique(),
+    status: text("status")
+      .notNull()
+      .default("pending"), // pending | confirmed | consumed | expired
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    deviceId: text("device_id"),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    sessionIdIdx: index("qr_sessions_session_idx").on(_t.sessionId),
+  }),
+);
+
 // ----------------------------- Reading progress (cross-client sync) -----------------------------
 
 export const readingProgress = pgTable(
