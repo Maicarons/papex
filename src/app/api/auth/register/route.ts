@@ -3,6 +3,7 @@ import { registerSchema } from "@/lib/validations";
 import type { DeviceInput } from "@/lib/auth/refresh-token";
 import { createUser } from "@/lib/services/users";
 import { resolveDevice, issueAuthPair } from "@/lib/auth/refresh-token";
+import { signSession, setSessionCookie } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,9 @@ export async function POST(req: Request) {
       extractDevice(parsed.data as Record<string, unknown>),
     );
     const auth = await issueAuthPair(user, device.id);
+    // Plant the web session cookie in addition to the bearer token pair.
+    const token = await signSession({ sub: user.id, username: user.username, role: user.role });
+    await setSessionCookie(token);
     return NextResponse.json(auth, { status: 201 });
   } catch {
     return NextResponse.json({ error: "用户名或邮箱已被占用" }, { status: 409 });
