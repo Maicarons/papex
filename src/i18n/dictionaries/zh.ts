@@ -187,6 +187,7 @@ export const zh = {
     commentsCount: "{n} 条讨论",
     newVersionDesc: "正在为 {id} 提交新版本。历史版本将被永久保留。",
     etAl: " 等",
+    moreAuthors: " 等 {count} 位作者",
     anonymous: "匿名",
   },
   writespace: {
@@ -666,7 +667,7 @@ comments: {
     content: "内容",
     contentPlaceholder: "通知正文",
     link: "跳转链接（可选）",
-    linkPlaceholder: "例如 /papers/2608.00001",
+    linkPlaceholder: "例如 /papers/2608.18066",
     sendFailed: "发送失败",
     broadcastSubtitle: "向指定范围的用户群发站内信。所有发送均通过统一通知中心投递。",
     sendBroadcast: "发送广播",

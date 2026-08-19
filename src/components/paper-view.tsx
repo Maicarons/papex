@@ -64,7 +64,7 @@ export function PaperView({
     (isOwner || user.role === "moderator" || user.role === "admin");
   const withdrawn = detail.paper.status === "withdrawn";
 
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const router = useRouter();
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -131,7 +131,7 @@ export function PaperView({
         <h1 className="text-2xl font-bold leading-tight md:text-3xl lg:text-4xl">{version.title}</h1>
 
         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-          {detail.authors.map((a) => (
+          {detail.authors.slice(0, 30).map((a) => (
             <span key={a.id} className="inline-flex items-center gap-1.5">
               <UserIcon className="h-4 w-4" />
               <Link href={`/authors/${a.id}`} className="font-medium hover:underline">
@@ -142,6 +142,14 @@ export function PaperView({
               )}
             </span>
           ))}
+          {detail.authors.length > 30 && (
+            <span className="inline-flex items-center gap-1.5">
+              <UserIcon className="h-4 w-4" />
+              <span className="font-medium">
+                {format(t("paper.moreAuthors"), { count: detail.authors.length - 30 })}
+              </span>
+            </span>
+          )}
         </div>
 
         {/* Action buttons */}
