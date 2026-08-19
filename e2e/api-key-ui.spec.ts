@@ -17,11 +17,21 @@ test("混合流程：UI 登录 → 申请 key → 抓取明文 → key 调需登
   await page.goto("/login");
   await page.fill("#identifier", "demo");
   await page.fill("#password", "password123");
-  await page.getByRole("button", { name: /登录|Sign in|Login/i }).click();
+  // 等登录 API 真正完成（Set-Cookie 已被浏览器接受）再继续，避免在
+  // cookie 还没写入时跳转到受保护页面导致 useSession 误判未登录。
+  const [loginResp] = await Promise.all([
+    page.waitForResponse((r) => r.url().endsWith("/api/auth/login") && r.status() === 200, {
+      timeout: 10_000,
+    }),
+    page.getByRole("button", { name: /登录|Sign in|Login/i }).click(),
+  ]);
+  expect(loginResp.ok()).toBeTruthy();
   await expect(page).toHaveURL(/\/(?!login)/);
 
   // 进入 API Key 管理页
   await page.goto("/settings/api-keys");
+  // 登录态锚点：已登录 → 创建表单 (#keyName) 可见；未登录 → 提示页，无 #keyName
+  await expect(page.locator("#keyName")).toBeVisible({ timeout: 10_000 });
   await expect(
     page.getByRole("heading", { name: /API 密钥|API Keys|API Key/i }),
   ).toBeVisible();
@@ -40,11 +50,9 @@ test("混合流程：UI 登录 → 申请 key → 抓取明文 → key 调需登
 
   // ---- 申请一个 key（开启 write 权限）----
   await page.locator("#keyName").fill("e2e-ui-key");
-  const writeSwitch = page.getByRole("switch");
-  if (await writeSwitch.count()) {
-    const checked = await writeSwitch.first().getAttribute("aria-checked");
-    if (checked !== "true") await writeSwitch.first().click();
-  }
+  const writeSwitch = page.getByRole("switch").first();
+  const checked = await writeSwitch.getAttribute("aria-checked");
+  if (checked !== "true") await writeSwitch.click();
   await page.getByRole("button", { name: /创建|Create|生成/i }).click();
 
   // ---- 抓取仅展示一次的明文 token ----
