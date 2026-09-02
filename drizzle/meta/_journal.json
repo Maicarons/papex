@@ -92,6 +92,13 @@
       "when": 1787129983048,
       "tag": "0012_qr_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788373222687,
+      "tag": "0013_add_push_devices",
+      "breakpoints": true
     }
   ]
 }
