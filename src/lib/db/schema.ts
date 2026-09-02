@@ -677,6 +677,27 @@ export const refreshTokens = pgTable(
   }),
 );
 
+// ----------------------------- Push devices (FCM / APNs / PushKit) -----------------------------
+//
+// Registered device tokens for push notifications. One user may have several
+// devices; a token is bound to (userId, token).
+
+export const pushDevices = pgTable(
+  "push_devices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").notNull(),
+    platform: text("platform").notNull().default("unknown"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    uniq: uniqueIndex("push_devices_user_token_uniq").on(_t.userId, _t.token),
+  }),
+);
+
 // ----------------------------- QR login sessions (web <- app confirm) -----------------------------
 //
 // QR code login flow: the web client creates a session and renders the
