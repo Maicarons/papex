@@ -1,6 +1,6 @@
 {
-  "id": "0004_add_api_keys",
-  "prevId": "0003_add_rbac_co_review_messages",
+  "id": "0006_add_tags",
+  "prevId": "0005_add_bookmarks",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
