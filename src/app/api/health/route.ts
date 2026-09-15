@@ -15,6 +15,10 @@ interface HealthComponent {
 
 const DB_TIMEOUT_MS = 2500;
 
+// C3: honest uptime — seconds online since this process started, instead of a
+// hard-coded availability figure.
+const PROCESS_STARTED_AT = Date.now();
+
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     p,
@@ -84,7 +88,7 @@ export async function GET() {
       time: new Date().toISOString(),
       overall,
       components,
-      uptime: 99.98,
+      uptimeSeconds: Math.floor((Date.now() - PROCESS_STARTED_AT) / 1000),
     },
     { headers: { "Cache-Control": "no-store" } },
   );

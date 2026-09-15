@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/i18n/i18n-provider";
 import { formatDate } from "@/lib/utils";
+import { SavedSearches } from "@/components/saved-searches";
 
 interface Subscription {
   id: number;
@@ -136,6 +137,17 @@ export default function SubscriptionsPage() {
           ))}
         </div>
       )}
+
+      {/* Saved keyword alerts (B1) */}
+      <Card>
+        <CardContent className="space-y-3 pt-6">
+          <div className="flex items-center gap-2">
+            <Rss className="h-4 w-4 text-primary" />
+            <h2 className="font-medium">{t("subscriptions.savedSearchesTitle")}</h2>
+          </div>
+          <SavedSearches />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -57,13 +57,14 @@ export async function createMessage(input: {
     })
     .returning();
 
-  // P0-C: every in-app message is a push trigger. Fire-and-forget — a failing
-  // push must never roll back or block the message write.
+  // P0-C / A4: every in-app message is a push trigger, filtered by the
+  // recipient's per-kind preference. Fire-and-forget — a failing push must
+  // never roll back or block the message write.
   void sendPushToUser(input.userId, {
     title: input.title,
     body: input.body ?? null,
     url: input.link ?? null,
-  }).catch((err) => console.warn(`[push] 触发失败: ${String(err).slice(0, 200)}`));
+  }, input.kind ?? "system").catch((err) => console.warn(`[push] 触发失败: ${String(err).slice(0, 200)}`));
 
   return row;
 }

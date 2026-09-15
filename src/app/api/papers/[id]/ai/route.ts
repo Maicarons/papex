@@ -65,18 +65,23 @@ export async function POST(
   const url = new URL(req.url);
   const version = Number(url.searchParams.get("version")) || 1;
   const lang = url.searchParams.get("lang") === "zh" ? "zh" : "en";
+  // A3: `refresh=1` bypasses the cache so an existing summary can be
+  // regenerated (e.g. after a remark, or when the model was upgraded).
+  const forceRefresh = url.searchParams.get("refresh") === "1";
 
-  const [cached] = await db
-    .select()
-    .from(aiSummaries)
-    .where(and(eq(aiSummaries.paperId, id), eq(aiSummaries.version, version), eq(aiSummaries.kind, KIND)))
-    .limit(1);
-  if (cached) {
-    return NextResponse.json({
-      enabled: true,
-      summary: cached.data as AiSummary,
-      fromCache: true,
-    });
+  if (!forceRefresh) {
+    const [cached] = await db
+      .select()
+      .from(aiSummaries)
+      .where(and(eq(aiSummaries.paperId, id), eq(aiSummaries.version, version), eq(aiSummaries.kind, KIND)))
+      .limit(1);
+    if (cached) {
+      return NextResponse.json({
+        enabled: true,
+        summary: cached.data as AiSummary,
+        fromCache: true,
+      });
+    }
   }
 
   const [ver] = await db
