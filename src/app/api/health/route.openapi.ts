@@ -21,7 +21,7 @@ export default {
                     time: { type: "string", format: "date-time" },
                     overall: { type: "string", enum: ["operational", "degraded", "down"] },
                     components: { type: "array", items: { $ref: "#/components/schemas/HealthComponent" } },
-                    uptime: { type: "number" },
+                    uptimeSeconds: { type: "integer" },
                   },
                 },
               },

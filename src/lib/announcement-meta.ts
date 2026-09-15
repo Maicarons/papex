@@ -16,6 +16,7 @@ export const ANNOUNCEMENT_CATEGORY_META: Record<
   new_from_author: { label: "订阅作者·新论文", tone: "success" },
   comment_reply: { label: "评论回复", tone: "purple" },
   announcement: { label: "公告", tone: "warning" },
+  search_match: { label: "检索提醒", tone: "success" },
 };
 
 export { TONE_CLASSES };

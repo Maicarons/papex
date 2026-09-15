@@ -18,6 +18,7 @@ export function PushSettings() {
   const [configured, setConfigured] = React.useState<boolean | null>(null);
   const [publicKey, setPublicKey] = React.useState<string | null>(null);
   const [enabled, setEnabled] = React.useState(false);
+  const [prefs, setPrefs] = React.useState<Record<string, boolean> | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [notice, setNotice] = React.useState<string | null>(null);
 
@@ -44,6 +45,29 @@ export function PushSettings() {
       .then((sub) => setEnabled(!!sub))
       .catch(() => setEnabled(false));
   }, [configured]);
+
+  // Load per-kind preferences (A4).
+  React.useEffect(() => {
+    if (!enabled) return;
+    fetch("/api/me/notifications/prefs", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { prefs?: Record<string, boolean> } | null) => setPrefs(d?.prefs ?? null))
+      .catch(() => setPrefs(null));
+  }, [enabled]);
+
+  async function setKind(kind: string, value: boolean) {
+    if (!prefs) return;
+    setPrefs((p) => (p ? { ...p, [kind]: value } : p));
+    try {
+      await fetch("/api/me/notifications/prefs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prefs: { [kind]: value } }),
+      });
+    } catch {
+      setPrefs((p) => (p ? { ...p, [kind]: !value } : p));
+    }
+  }
 
   async function enable() {
     setBusy(true);
@@ -108,24 +132,57 @@ export function PushSettings() {
   }
 
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-start gap-3">
-        <BellRing className="mt-0.5 h-5 w-5 text-muted-foreground" />
-        <div className="space-y-0.5">
-          <p className="font-medium">{t("settings.pushTitle")}</p>
-          <p className="text-sm text-muted-foreground">{t("settings.pushSubtitle")}</p>
-          {notice && <p className="text-sm text-destructive">{notice}</p>}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <BellRing className="mt-0.5 h-5 w-5 text-muted-foreground" />
+          <div className="space-y-0.5">
+            <p className="font-medium">{t("settings.pushTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("settings.pushSubtitle")}</p>
+            {notice && <p className="text-sm text-destructive">{notice}</p>}
+          </div>
         </div>
+        <Switch
+          checked={enabled}
+          disabled={busy}
+          onCheckedChange={(next) => (next ? enable() : disable())}
+          aria-label={t("settings.pushTitle")}
+        />
       </div>
-      <Switch
-        checked={enabled}
-        disabled={busy}
-        onCheckedChange={(next) => (next ? enable() : disable())}
-        aria-label={t("settings.pushTitle")}
-      />
+
+      {enabled && prefs && (
+        <div className="grid gap-1.5 rounded-lg border bg-muted/30 p-3">
+          <p className="text-xs font-medium text-muted-foreground">{t("settings.notifKinds")}</p>
+          {PREF_KINDS.map((k) => (
+            <label
+              key={k.key}
+              className="flex items-center justify-between gap-3 text-sm"
+            >
+              <span>{t(k.labelKey)}</span>
+              <Switch
+                checked={prefs[k.key] ?? true}
+                onCheckedChange={(v) => setKind(k.key, v)}
+                aria-label={t(k.labelKey)}
+                className="data-[state=checked]:bg-primary"
+              />
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+const PREF_KINDS: { key: string; labelKey: string }[] = [
+  { key: "new_paper", labelKey: "settings.notifNewPaper" },
+  { key: "review_result", labelKey: "settings.notifReviewResult" },
+  { key: "ticket_reply", labelKey: "settings.notifTicketReply" },
+  { key: "community_reply", labelKey: "settings.notifCommunityReply" },
+  { key: "co_review_request", labelKey: "settings.notifCoReviewRequest" },
+  { key: "co_review_result", labelKey: "settings.notifCoReviewResult" },
+  { key: "admin_message", labelKey: "settings.notifAdminMessage" },
+  { key: "system", labelKey: "settings.notifSystem" },
+];
 
 /** Convert a base64url VAPID public key into a Uint8Array for subscribe(). */
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {

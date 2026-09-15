@@ -1,7 +1,8 @@
 import webpush from "web-push";
 import { db } from "@/lib/db";
-import { pushDevices } from "@/lib/db/schema";
+import { notificationPrefs, pushDevices } from "@/lib/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
+import { logger } from "@/lib/log";
 
 /**
  * Web Push sender (P0-C).
@@ -11,6 +12,10 @@ import { and, eq, inArray } from "drizzle-orm";
  * JSON-serialized PushSubscription. Fire-and-forget by design: a failing push
  * never blocks the announcement/message write that triggered it.
  *
+ * Per-kind opt-out (A4): callers pass the notification `kind`; delivery is
+ * skipped for users who have a `notification_prefs` row disabling that kind
+ * (opt-out model — absence of a row means "allowed").
+ *
  * Self-host friendly: when VAPID keys are not configured the sender is a no-op
  * (`isPushEnabled() === false`), same pattern as the embedding layer.
  */
@@ -19,6 +24,28 @@ export interface PushPayload {
   title: string;
   body?: string | null;
   url?: string | null;
+}
+
+/** Whether the user allows push for `kind` (nothing recorded = allowed). */
+export async function pushKindAllowed(userId: string, kind: string): Promise<boolean> {
+  const [pref] = await db
+    .select({ enabled: notificationPrefs.enabled })
+    .from(notificationPrefs)
+    .where(and(eq(notificationPrefs.userId, userId), eq(notificationPrefs.kind, kind)))
+    .limit(1);
+  return pref ? pref.enabled : true;
+}
+
+/** Filter a set of user ids down to those who allow push for `kind`. */
+export async function pushAllowedUserIds(userIds: string[], kind: string): Promise<string[]> {
+  if (userIds.length === 0) return [];
+  const prefs = await db
+    .select({ userId: notificationPrefs.userId, kind: notificationPrefs.kind, enabled: notificationPrefs.enabled })
+    .from(notificationPrefs)
+    .where(and(eq(notificationPrefs.enabled, false), inArray(notificationPrefs.userId, userIds)));
+  const disabled = new Set<string>();
+  for (const p of prefs) if (p.kind === kind) disabled.add(p.userId);
+  return userIds.filter((u) => !disabled.has(u));
 }
 
 let vapidConfigured = false;
@@ -92,7 +119,7 @@ async function deliver(devices: DeviceRow[], payload: PushPayload): Promise<void
             .delete(pushDevices)
             .where(and(eq(pushDevices.id, device.id), eq(pushDevices.userId, device.userId)));
         } else {
-          console.warn(`[push] 发送到 ${device.userId} 失败 (${code ?? "unknown"}): ${String(err).slice(0, 200)}`);
+          logger.warn("push", "delivery failed", { userId: device.userId, code: code ?? null });
         }
       }
     }),
@@ -100,8 +127,13 @@ async function deliver(devices: DeviceRow[], payload: PushPayload): Promise<void
 }
 
 /** Send a push to every registered device of a single user. */
-export async function sendPushToUser(userId: string, payload: PushPayload): Promise<void> {
+export async function sendPushToUser(
+  userId: string,
+  payload: PushPayload,
+  kind?: string,
+): Promise<void> {
   if (!isPushEnabled()) return;
+  if (kind && !(await pushKindAllowed(userId, kind))) return;
   const devices = await db
     .select({ id: pushDevices.id, userId: pushDevices.userId, token: pushDevices.token })
     .from(pushDevices)
@@ -111,12 +143,18 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
 }
 
 /** Send a push to every registered device of a set of users (fan-out). */
-export async function sendPushToUsers(userIds: string[], payload: PushPayload): Promise<void> {
+export async function sendPushToUsers(
+  userIds: string[],
+  payload: PushPayload,
+  kind?: string,
+): Promise<void> {
   if (!isPushEnabled() || userIds.length === 0) return;
+  const targetIds = kind ? await pushAllowedUserIds(userIds, kind) : userIds;
+  if (targetIds.length === 0) return;
   const devices = await db
     .select({ id: pushDevices.id, userId: pushDevices.userId, token: pushDevices.token })
     .from(pushDevices)
-    .where(inArray(pushDevices.userId, userIds));
+    .where(inArray(pushDevices.userId, targetIds));
   if (devices.length === 0) return;
   await deliver(devices, payload);
 }

@@ -21,6 +21,7 @@ import { embedQuery, isEmbeddingEnabled, toPgVectorLiteral } from "@/lib/embeddi
 import { findOrCreateAuthor } from "@/lib/services/authors";
 import { notifyNewPaper } from "@/lib/services/feed";
 import { notifyReviewResult } from "@/lib/services/notifications";
+import { notifySavedSearches } from "@/lib/services/saved-searches";
 import { parsePdf, extractReferences } from "@/lib/pdf";
 import { savePdfBuffer } from "@/lib/storage";
 import { addCitation } from "@/lib/services/citations";
@@ -583,6 +584,11 @@ export async function moderate(
         primaryCategoryId: detail.paper.primaryCategoryId,
         authorIds: detail.authors.map((a) => a.id),
       });
+      // B1: keyword-alert fan-out for saved searches; fire-and-forget so a
+      // matching failure never blocks the approval audit below.
+      await notifySavedSearches(paperId).catch((err) =>
+        console.warn(`[saved-search] 匹配失败: ${String(err).slice(0, 200)}`),
+      );
     }
   } else {
     await db

@@ -55,6 +55,9 @@ jobs:
         # typecheck so the `/api/openapi.json` route import resolves.
         run: npm run openapi:generate
 
+      - name: Unit tests
+        run: npx vitest run
+
       - name: Typecheck
         run: npm run typecheck
 

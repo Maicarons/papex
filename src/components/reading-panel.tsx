@@ -81,7 +81,8 @@ export function ReadingPanel({ paperId, version }: { paperId: string; version: n
 
   React.useEffect(() => {
     // `loading` starts true; reload() flips it off when it settles.
-    reload()
+    Promise.resolve()
+      .then(() => reload())
       .catch(() => setNeedsLogin(true))
       .finally(() => setLoading(false));
   }, [reload]);

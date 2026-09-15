@@ -88,5 +88,21 @@ export async function GET() {
     }
   }
 
+  // 3) Cold-start fallback (A1): a user with no bookmarks and no category
+  // subscriptions has an empty interest set, so the tiers above produce
+  // nothing. Fill with currently hot / newest approved papers so the section is
+  // never empty even on a brand-new account.
+  if (rows.length === 0 && !semanticUsed) {
+    try {
+      const res = await listPapers({ sort: "by_citations", pageSize: LIMIT });
+      for (const r of res.rows) {
+        if (bookmarkIds.has(r.paper.id)) continue;
+        rows.push(r);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
   return NextResponse.json({ rows: rows.slice(0, LIMIT), total: rows.length, semanticUsed });
 }

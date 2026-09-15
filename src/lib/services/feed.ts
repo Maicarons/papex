@@ -95,13 +95,14 @@ export async function notifyNewPaper(opts: {
       .where(inArray(announcements.id, inserted.filter((r) => emailedUserIds.has(r.userId)).map((r) => r.id)));
   }
 
-  // P0-C: push the same "new paper" alert to every subscribed user's devices.
-  // Fire-and-forget, same best-effort contract as the email fan-out above.
+  // P0-C / A4: push the same "new paper" alert to every subscribed user's
+  // devices (respecting per-kind opt-out). Fire-and-forget, same best-effort
+  // contract as the email fan-out above.
   void sendPushToUsers([...userIds], {
     title: `新论文发布：${opts.title}`,
     body: "您订阅的主题或作者发布了新论文。",
     url: `/papers/${opts.paperId}`,
-  }).catch((err) => console.warn(`[push] 新论文推送失败: ${String(err).slice(0, 200)}`));
+  }, "new_paper").catch((err) => console.warn(`[push] 新论文推送失败: ${String(err).slice(0, 200)}`));
 }
 
 export async function listAnnouncements(userId: string, onlyUnread = false) {

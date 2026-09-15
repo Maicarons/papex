@@ -22,6 +22,16 @@ const nextConfig = {
       .filter(Boolean)
       .map((hostname) => ({ protocol: "https", hostname })),
   },
+  // C2: cache well-known static assets at the edge. Hashed build chunks already
+  // ship with immutable cache headers; this only covers the stable public files.
+  async headers() {
+    return [
+      {
+        source: "/(logo.svg|manifest.webmanifest|sw.js|favicon.ico)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, must-revalidate" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

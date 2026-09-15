@@ -37,6 +37,7 @@ export const announcementKindEnum = pgEnum("announcement_kind", [
   "new_from_author",
   "comment_reply",
   "announcement",
+  "search_match",
 ]);
 
 export const messageKindEnum = pgEnum("message_kind", [
@@ -700,6 +701,28 @@ export const pushDevices = pgTable(
   }),
 );
 
+// ----------------------------- Notification preferences (per-kind push opt-out) -----------------------------
+//
+// Per (user, kind) opt-out rows for push delivery. Absence means "enabled by
+// default"; a row with `enabled = false` suppresses push for that notification
+// kind (e.g. "new_paper", "ticket_reply"). This replaces the previous
+// all-or-nothing model without changing device registration.
+
+export const notificationPrefs = pgTable(
+  "notification_prefs",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    pk: primaryKey({ columns: [_t.userId, _t.kind] }),
+  }),
+);
+
 // ----------------------------- QR login sessions (web <- app confirm) -----------------------------
 //
 // QR code login flow: the web client creates a session and renders the
@@ -826,6 +849,30 @@ export const paperLinks = pgTable(
   },
   (_t) => ({
     paperIdx: index("paper_links_paper_idx").on(_t.paperId),
+  }),
+);
+
+// ----------------------------- Saved searches / keyword alerts (B1, Google Scholar-style) -----------------------------
+//
+// A user-persisted search query that generates an announcement + push when a
+// newly approved paper matches (`kind` = "search_match").
+export const savedSearches = pgTable(
+  "saved_searches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** The search query string, including field prefixes (e.g. `ti:transformer`). */
+    q: text("q").notNull(),
+    category: text("category"),
+    semantic: boolean("semantic").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    uniq: uniqueIndex("saved_searches_user_q_uniq").on(_t.userId, _t.q),
+    userIdx: index("saved_searches_user_idx").on(_t.userId),
   }),
 );
 

@@ -6,6 +6,7 @@ import { listTagCoOccurrence } from "@/lib/services/tags";
 import { PaperCard } from "@/components/paper-card";
 import { PapersFilter } from "@/components/papers-filter";
 import { AiReview } from "@/components/ai-review";
+import { SaveSearchBar } from "@/components/saved-searches";
 import { TagCooccurrenceGraph } from "@/components/tag-cooccurrence-graph";
 import { PublicationTrend } from "@/components/publication-trend";
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,9 +100,12 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
         initialSemantic={semantic}
       />
 
-      {/* RAG corpus review (P1-C) — only meaningful for a query */}
+      {/* RAG corpus review (P1-C) + save-as-alert (B1) — only meaningful for a query */}
       {q && (
-        <div className="mb-6">
+        <div className="mb-6 space-y-3">
+          <div className="flex justify-end">
+            <SaveSearchBar q={q} category={category} semantic={semantic} />
+          </div>
           <AiReview q={q} />
         </div>
       )}

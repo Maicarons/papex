@@ -30,6 +30,7 @@ import { PaperTags } from "@/components/paper-tags";
 import { CiteButton } from "@/components/cite-button";
 import { ReadingPanel } from "@/components/reading-panel";
 import { AiSummary } from "@/components/ai-summary";
+import { RelatedReview } from "@/components/related-review";
 import { PaperLinks } from "@/components/paper-links";
 import { PublicReviews } from "@/components/public-reviews";
 import { VersionDiff } from "@/components/version-diff";
@@ -361,6 +362,11 @@ export function PaperView({
 
           {/* AI summary (P1-C) — hidden entirely when no LLM backend is configured */}
           <AiSummary paperId={detail.paper.id} version={version.version} />
+
+          {/* Related-works AI review (B2) */}
+          <div className="rounded-xl border bg-card p-4">
+            <RelatedReview paperId={detail.paper.id} />
+          </div>
 
           {/* Discussion */}
           <Card>
