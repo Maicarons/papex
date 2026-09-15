@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/use-session";
 import { useI18n } from "@/i18n/i18n-provider";
+import { PushSettings } from "@/components/push-settings";
+import { OrcidImport } from "@/components/orcid-import";
 
 interface ProfileForm {
   displayName: string;
@@ -191,6 +193,18 @@ export default function SettingsPage() {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <PushSettings />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <OrcidImport orcid={form.orcid} />
         </CardContent>
       </Card>
     </div>

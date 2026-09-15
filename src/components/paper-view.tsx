@@ -15,6 +15,7 @@ import {
   MessageSquare,
   AlertCircle,
   Info,
+  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,11 @@ import { CommentThread } from "@/components/comment-thread";
 import { CitationPanel } from "@/components/citation-panel";
 import { PaperTags } from "@/components/paper-tags";
 import { CiteButton } from "@/components/cite-button";
+import { ReadingPanel } from "@/components/reading-panel";
+import { AiSummary } from "@/components/ai-summary";
+import { PaperLinks } from "@/components/paper-links";
+import { PublicReviews } from "@/components/public-reviews";
+import { VersionDiff } from "@/components/version-diff";
 import { formatDate } from "@/lib/utils";
 import { useSession } from "@/lib/use-session";
 import { useI18n } from "@/i18n/i18n-provider";
@@ -237,6 +243,10 @@ export function PaperView({
                 <Link2 className="h-4 w-4" />
                 {t("paper.tabCitations")}
               </TabsTrigger>
+              <TabsTrigger value="reading" className="gap-1.5">
+                <BookOpen className="h-4 w-4" />
+                {t("paper.tabReading")}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="abstract" className="space-y-4">
@@ -307,6 +317,20 @@ export function PaperView({
               </Card>
             </TabsContent>
 
+            <TabsContent value="reading">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <BookOpen className="h-4 w-4" />
+                    {t("paper.tabReading")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ReadingPanel paperId={detail.paper.id} version={version.version} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="citations">
               <Card>
                 <CardHeader>
@@ -334,6 +358,9 @@ export function PaperView({
               )}
             </TabsContent>
           </Tabs>
+
+          {/* AI summary (P1-C) — hidden entirely when no LLM backend is configured */}
+          <AiSummary paperId={detail.paper.id} version={version.version} />
 
           {/* Discussion */}
           <Card>
@@ -431,6 +458,32 @@ export function PaperView({
             </CardContent>
           </Card>
 
+          {/* Code & data links (P1-D) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Link2 className="h-4 w-4" />
+                {t("paper.linksTitle")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PaperLinks paperId={detail.paper.id} canManage={canEditCitations} />
+            </CardContent>
+          </Card>
+
+          {/* Public co-reviews (P1-E) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Eye className="h-4 w-4" />
+                {t("paper.publicReviews")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PublicReviews paperId={detail.paper.id} />
+            </CardContent>
+          </Card>
+
           {/* Version history */}
           <Card>
             <CardHeader>
@@ -443,18 +496,26 @@ export function PaperView({
               <ul className="space-y-2 text-sm">
                 {detail.paper.latestVersion >= 1 &&
                   Array.from({ length: detail.paper.latestVersion }, (_, i) => i + 1).map((ver) => (
-                    <li key={ver} className="flex items-center justify-between">
-                      <Link
-                        href={`/papers/${detail.paper.id}/${ver}`}
-                        className="text-muted-foreground hover:underline"
-                      >
-                        v{ver}
-                      </Link>
-                      {ver === detail.paper.latestVersion && (
-                        <Badge variant="outline" className="text-xs">
-                          {t("paper.current")}
-                        </Badge>
-                      )}
+                    <li key={ver} className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href={`/papers/${detail.paper.id}/${ver}`}
+                          className="text-muted-foreground hover:underline"
+                        >
+                          v{ver}
+                        </Link>
+                        {ver === detail.paper.latestVersion ? (
+                          <Badge variant="outline" className="text-xs">
+                            {t("paper.current")}
+                          </Badge>
+                        ) : (
+                          <VersionDiff
+                            paperId={detail.paper.id}
+                            version={ver}
+                            latestVersion={detail.paper.latestVersion}
+                          />
+                        )}
+                      </div>
                     </li>
                   ))}
               </ul>

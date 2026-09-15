@@ -5,6 +5,7 @@ import { listCategories } from "@/lib/services/categories";
 import { listTagCoOccurrence } from "@/lib/services/tags";
 import { PaperCard } from "@/components/paper-card";
 import { PapersFilter } from "@/components/papers-filter";
+import { AiReview } from "@/components/ai-review";
 import { TagCooccurrenceGraph } from "@/components/tag-cooccurrence-graph";
 import { PublicationTrend } from "@/components/publication-trend";
 import { Card, CardContent } from "@/components/ui/card";
@@ -97,6 +98,13 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
         initialTime={initialTime}
         initialSemantic={semantic}
       />
+
+      {/* RAG corpus review (P1-C) — only meaningful for a query */}
+      {q && (
+        <div className="mb-6">
+          <AiReview q={q} />
+        </div>
+      )}
 
       {!q && !category && !tag && (coOccurrence.nodes.length > 1 || byYear.length > 0) && (
         <details className="group mb-6" open>

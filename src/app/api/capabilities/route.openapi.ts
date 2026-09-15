@@ -25,6 +25,8 @@ export default {
                   properties: {
                     pdfUpload: { type: "boolean" },
                     latex: { type: "boolean" },
+                    semanticSearch: { type: "boolean" },
+                    aiSummaries: { type: "boolean" },
                   },
                 },
               },

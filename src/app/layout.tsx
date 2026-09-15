@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { I18nProvider } from "@/i18n/i18n-provider";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -31,12 +32,14 @@ export const metadata: Metadata = {
     icon: "/logo.svg",
     apple: "/logo.svg",
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN" suppressHydrationWarning className={`${poppins.variable} ${openSans.variable}`}>
       <body className="flex min-h-screen flex-col font-sans">
+        <ServiceWorkerRegister />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <I18nProvider>
             <SiteHeader />

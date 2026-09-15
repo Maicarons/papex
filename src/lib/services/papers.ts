@@ -49,10 +49,34 @@ export interface ListPaperFilters {
   q?: string;
   /** When true and embeddings are enabled, rank by semantic similarity (fused with keyword relevance). Falls back to keyword mode otherwise. */
   semantic?: boolean;
+  /**
+   * When set and embeddings are enabled, rank by cosine similarity to this
+   * paper's latest-version embedding ("similar papers", P0-D). Falls back to
+   * the plain sort when the backend or the reference embedding is unavailable.
+   */
+  similarToPaperId?: string;
   sort?: "new" | "updated" | "by_citations";
   from?: string; // ISO date: only papers created on/after this date
   page?: number;
   pageSize?: number;
+}
+
+/**
+ * Parse a pgvector value returned by the driver (postgres.js hands unknown
+ * types back as text like `[0.1,0.2,…]`; some drivers return arrays) into a
+ * plain number array. Returns null when the value is not a usable vector.
+ */
+function parseStoredVector(value: unknown): number[] | null {
+  if (Array.isArray(value)) {
+    return value.every((n) => typeof n === "number") ? (value as number[]) : null;
+  }
+  if (typeof value === "string") {
+    const m = /^\[(.*)\]$/.exec(value.trim());
+    if (!m) return null;
+    const parts = m[1].split(",").map((s) => Number(s.trim()));
+    return parts.some((n) => Number.isNaN(n)) ? null : parts;
+  }
+  return null;
 }
 
 function buildCategoryValues(paperId: string, input: CreatePaperInput) {
@@ -324,25 +348,17 @@ export interface RelatedPaper {
 }
 
 export async function listRelatedPapers(paperId: string, primaryCategoryId: string, limit = 5) {
-  const rows = await db
-    .select({ paper: papers, version: paperVersions })
-    .from(papers)
-    .innerJoin(
-      paperVersions,
-      and(eq(paperVersions.paperId, papers.id), eq(paperVersions.version, papers.latestVersion)),
-    )
-    .where(
-      and(
-        eq(papers.primaryCategoryId, primaryCategoryId),
-        eq(papers.status, "approved"),
-        sql`${papers.id} <> ${paperId}`,
-      ),
-    )
-    .orderBy(desc(papers.createdAt))
-    .limit(limit);
+  // When embeddings are available, rank related papers by vector similarity to
+  // this paper (within the same category) instead of plain recency (P0-D).
+  const res = await listPapers({
+    status: "approved",
+    category: primaryCategoryId,
+    pageSize: limit,
+    ...(isEmbeddingEnabled() ? { similarToPaperId: paperId } : {}),
+  });
 
   const related: RelatedPaper[] = [];
-  for (const r of rows) {
+  for (const r of res.rows) {
     const authorRows = await db
       .select({ name: authors.name })
       .from(paperAuthors)
@@ -379,6 +395,7 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     tag,
     q,
     semantic,
+    similarToPaperId,
     sort = "new",
     from,
     page = 1,
@@ -389,6 +406,34 @@ export async function listPapers(filters: ListPaperFilters = {}) {
   // is configured, and there is a query to embed. Otherwise we transparently
   // fall back to the existing keyword/boolean path.
   const semanticMode = !!semantic && isEmbeddingEnabled() && !!q?.trim();
+
+  // Similar mode (P0-D): rank by distance to a reference paper's embedding.
+  // Active only when the backend is configured AND the reference paper's latest
+  // version actually carries an embedding; otherwise falls back to plain sort.
+  let similarMode = false;
+  let refVec: number[] | null = null;
+  if (similarToPaperId && isEmbeddingEnabled()) {
+    const [refPaper] = await db
+      .select({ latestVersion: papers.latestVersion })
+      .from(papers)
+      .where(eq(papers.id, similarToPaperId));
+    if (refPaper) {
+      const [refVersion] = await db
+        .select({ embedding: paperVersions.embedding })
+        .from(paperVersions)
+        .where(
+          and(
+            eq(paperVersions.paperId, similarToPaperId),
+            eq(paperVersions.version, refPaper.latestVersion),
+          ),
+        );
+      const parsed = refVersion?.embedding ? parseStoredVector(refVersion.embedding) : null;
+      if (parsed && parsed.length > 0) {
+        refVec = parsed;
+        similarMode = true;
+      }
+    }
+  }
 
   const conditions = [sql`${papers.status} = ${status}`];
 
@@ -422,9 +467,13 @@ export async function listPapers(filters: ListPaperFilters = {}) {
   if (searchSql) {
     conditions.push(searchSql);
   }
-  // In semantic mode only consider papers that actually have an embedding.
-  if (semanticMode) {
+  // In semantic/similar mode only consider papers that actually have an
+  // embedding (and never the reference paper itself).
+  if (semanticMode || similarMode) {
     conditions.push(sql`${paperVersions.embedding} is not null`);
+  }
+  if (similarMode && similarToPaperId) {
+    conditions.push(sql`${papers.id} <> ${similarToPaperId}`);
   }
 
   // Precompute the query embedding once for semantic ranking.
@@ -432,8 +481,9 @@ export async function listPapers(filters: ListPaperFilters = {}) {
   if (semanticMode) {
     queryVec = await embedQuery(q!.trim());
   }
-  const vecLiteral = queryVec ? sql.raw(toPgVectorLiteral(queryVec)) : null;
-  const similarityExpr = semanticMode
+  const rankVec = queryVec ?? refVec;
+  const vecLiteral = rankVec ? sql.raw(toPgVectorLiteral(rankVec)) : null;
+  const similarityExpr = semanticMode || similarMode
     ? sql<number>`1 - (${paperVersions.embedding} <=> (${vecLiteral})::vector)`
     : sql<number>`null::real`;
   const kwExpr = semanticMode
@@ -451,7 +501,7 @@ export async function listPapers(filters: ListPaperFilters = {}) {
       version: paperVersions,
       category: categories,
       citationCount: sql<number>`coalesce(cc.cnt, 0)`,
-      // Always present so the select shape is stable; null outside semantic mode.
+      // Always present so the select shape is stable; null outside semantic/similar mode.
       similarity: similarityExpr,
       kwScore: kwExpr,
     })
@@ -464,15 +514,17 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     .leftJoin(ccSub, sql`cc.target_paper_id = ${papers.id}`)
     .where(where)
     .orderBy(
-      semanticMode
-        ? desc(
-            sql`(coalesce(${similarityExpr}, 0) * 0.7 + coalesce(${kwExpr}, 0) * 0.3)`,
-          )
-        : sort === "updated"
-          ? desc(papers.updatedAt)
-          : sort === "by_citations"
-            ? desc(sql`coalesce(cc.cnt, 0)`)
-            : desc(papers.createdAt),
+      similarMode
+        ? desc(similarityExpr)
+        : semanticMode
+          ? desc(
+              sql`(coalesce(${similarityExpr}, 0) * 0.7 + coalesce(${kwExpr}, 0) * 0.3)`,
+            )
+          : sort === "updated"
+            ? desc(papers.updatedAt)
+            : sort === "by_citations"
+              ? desc(sql`coalesce(cc.cnt, 0)`)
+              : desc(papers.createdAt),
     )
     .limit(pageSize)
     .offset((page - 1) * pageSize);
@@ -491,7 +543,7 @@ export async function listPapers(filters: ListPaperFilters = {}) {
     total: count,
     page,
     pageSize,
-    semanticUsed: semanticMode,
+    semanticUsed: semanticMode || similarMode,
   };
 }
 
