@@ -43,6 +43,16 @@ features:
     details: Vector (pgvector) embeddings fused with full-text ranking for meaning-aware paper discovery; silently falls back to keyword search when no embedding backend is configured.
   - title: External metadata import
     details: One-click import from Crossref, arXiv, Semantic Scholar and OpenCitations with cross-source de-duplication and automatic citation backfill.
+  - title: AI summaries & reviews
+    details: Pluggable LLM (OpenAI-compatible or local) TLDR summaries with per-claim provenance and confidence, plus RAG reviews of search results that cite their source papers.
+  - title: Code & data links
+    details: Papers With Code-style association of repositories, datasets and websites with a paper, with auto-detected GitHub titles.
+  - title: Web Push notifications
+    details: VAPID-based browser push for new papers, ticket replies and messages, with a per-user settings toggle.
+  - title: Notes & reading progress
+    details: Highlights and annotations plus a reading-progress bar on the paper page, synced across devices.
+  - title: Open reviews
+    details: Co-review opinions can be published to the paper page, and any two versions can be compared with an inline field-level and abstract diff.
 ---
 
 Papex is an open-source, independent platform for managing and discovering academic literature. Self-host it or build on top of it.

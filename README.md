@@ -74,6 +74,15 @@ Papex is an open-source (Apache-2.0) platform for managing and showcasing academ
 | Notification center | `/feed` announcements hub + Rss bell with a live unread badge (Zustand-synced) | Yes |
 | Bookmarks | `bookmarks` table + `/bookmarks` collection page + one-click save on paper detail | Yes |
 | Bookmark groups | organize bookmarks into named groups, move items between groups | Yes |
+| Semantic & hybrid search | pgvector 1024-dim HNSW fused with keyword ranking; silently falls back to keyword mode without an embedding backend | Yes |
+| Personalized recommendations | bookmarks/subscriptions → vector neighbours (reusing the embedding layer) + top-cited per interest category; "Recommended for you" on the feed | Yes |
+| Code & data links | Papers With Code-style `paper_links` (repository / dataset / website), auto-detected GitHub titles | Yes |
+| Notes & reading progress | highlights / annotations + a reading progress bar on the paper page, synced across devices | Yes |
+| Web Push | VAPID + browser subscriptions; new papers, ticket replies and messages push in real time; settings toggle | Yes |
+| AI summaries & reviews | pluggable LLM (OpenAI-compatible / local); TLDR with per-claim provenance + confidence; RAG review of search results | Yes |
+| Open reviews | co-reviews can be published to the paper page (OpenReview-style); inline version diff view | Yes |
+| ORCID import | one-click import of the user's own ORCID works, DOI de-duplication + standard import pipeline | Yes |
+| PWA / offline export | manifest + service worker shell; `/api/papers/{id}/export` offline bundle; cross-end API client skeleton | Yes |
 
 ---
 

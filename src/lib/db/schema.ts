@@ -554,6 +554,8 @@ export const coReviews = pgTable(
     decision: coReviewDecisionEnum("decision"),
     // Reviewer's submitted opinion.
     comment: text("comment"),
+    /** Whether the completed review is publicly visible on the paper page (P1-E). */
+    isPublic: boolean("is_public").notNull().default(false),
     // Assignment note shown to the invited reviewer.
     note: text("note"),
     // The request message created for the reviewer (so they can jump straight there).
@@ -779,6 +781,51 @@ export const notes = pgTable(
   },
   (_t) => ({
     userPaperIdx: index("notes_user_paper_idx").on(_t.userId, _t.paperId),
+  }),
+);
+
+// ----------------------------- AI summaries (P1-C, cost-controlled cache) -----------------------------
+
+export const aiSummaries = pgTable(
+  "ai_summaries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    paperId: text("paper_id")
+      .notNull()
+      .references(() => papers.id, { onDelete: "cascade" }),
+    version: integer("version").notNull().default(1),
+    kind: text("kind").notNull().default("tldr"),
+    model: text("model").notNull(),
+    /** Validated AiSummary / ReviewResult payload. */
+    data: jsonb("data").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    uniq: uniqueIndex("ai_summaries_paper_version_kind_uniq").on(
+      _t.paperId,
+      _t.version,
+      _t.kind,
+    ),
+  }),
+);
+
+// ----------------------------- Paper external links (P1-D, Papers With Code style) -----------------------------
+
+export const paperLinks = pgTable(
+  "paper_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    paperId: text("paper_id")
+      .notNull()
+      .references(() => papers.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull().default("website"),
+    url: text("url").notNull(),
+    title: text("title"),
+    addedById: uuid("added_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    paperIdx: index("paper_links_paper_idx").on(_t.paperId),
   }),
 );
 

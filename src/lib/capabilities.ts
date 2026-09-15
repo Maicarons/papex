@@ -4,6 +4,7 @@ import path from "path";
 import { storageDriver } from "./storage";
 import { buildS3Config } from "./s3-client";
 import { isEmbeddingEnabled } from "./embeddings";
+import { isAiEnabled } from "./ai/provider";
 
 /**
  * Runtime capability detection (server-only).
@@ -26,6 +27,8 @@ export interface Capabilities {
   latex: boolean;
   /** Whether semantic / hybrid search is operational (embedding backend configured). */
   semanticSearch: boolean;
+  /** Whether the AI assistant layer (TLDR / corpus review) is configured. */
+  aiSummaries: boolean;
 }
 
 function checkPdfStorage(): boolean {
@@ -68,6 +71,7 @@ export function detectCapabilities(): Capabilities {
     pdfUpload: checkPdfStorage(),
     latex: checkLatex(),
     semanticSearch: isEmbeddingEnabled(),
+    aiSummaries: isAiEnabled(),
   };
   return cached;
 }

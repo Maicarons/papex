@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { getServerLocale } from "@/i18n/server";
 import { getDictionary, t as translate, format as i18nFormat } from "@/i18n";
+import { CoReviewVisibility } from "@/components/co-review-visibility";
 
 export const dynamic = "force-dynamic";
 
@@ -94,7 +95,7 @@ export default async function AdminCoReviewDetailPage({
           <CardHeader>
             <CardTitle className="text-base">{t("coReviews.conclusion")}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="space-y-3 text-sm">
             {review.decision && (
               <p>
                 {t("coReviews.decisionLabel")}
@@ -104,6 +105,9 @@ export default async function AdminCoReviewDetailPage({
             {review.comment && (
               <p className="whitespace-pre-wrap rounded-lg bg-muted p-3">{review.comment}</p>
             )}
+            <div className="rounded-lg border p-3">
+              <CoReviewVisibility reviewId={review.id} initialPublic={review.isPublic} />
+            </div>
           </CardContent>
         </Card>
       )}

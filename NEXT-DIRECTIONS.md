@@ -21,6 +21,39 @@
 
 ---
 
+## 0. 2026-09-15 增补：路线图落地核对
+
+> 本文件第三、四、五节的 P0/P1/P2 与「立即可做」清单，已于 2026-09-15 批量落地。下方为逐项核对结果（代码实态，`git log` 至 09fbd5a 之后的本轮改动）。
+
+### P0 — 已全部落地
+
+- ✅ **P0-C 推送闭环**：`push_devices` 迁移 0013 + register/unregister/vapid 接口；`lib/push/send.ts` Web Push 发送器（VAPID，失效设备自动清理）；触发点挂在 `createMessage`（工单回复/站内信/协审/审核结果）与 `notifyNewPaper`（新论文订阅）；`public/sw.js` + 设置页开关（按 token 注销，保留其他端设备）。
+- ✅ **P0-D 语义推荐**：`listPapers` 新增 `similarToPaperId` 模式（pgvector 近邻，无 embedding/无源向量时回退）；`/api/recommendations` 双池混合（语义近邻 + 分类高被引）；论文页「相关论文」在有 embedding 时语义化；feed「为你推荐」区块（i18n zh/en）。
+- ✅ **P0-E 笔记/进度前端**：论文页「阅读与批注」页签（进度条 + 高亮/笔记增删改色）；顺带修复 `notes.rect` NOT NULL 与 `reading-progress` GET 版本写死两个隐性 bug。
+
+### P1 — 已落地
+
+- ✅ **P1-C AI 辅助层**：`lib/ai/provider.ts`（OpenAI 兼容 chat/completions，可本地）；`lib/ai/tldr.ts` TLDR 强制引用溯源（`evidence` 必须是摘要原文子串，服务端校验丢弃不合规点）+ 置信度；`lib/ai/review.ts` 站内 RAG 综述（逐条标注来源论文 id）；`ai_summaries` 缓存表（迁移 0014）+ 登录限流；能力门控 `capabilities.aiSummaries`；论文页 AI 摘要卡 + 检索页「生成综述」。
+- ✅ **P1-D 代码/数据关联**：`paper_links` 表（迁移 0015）+ `/api/papers/{id}/links`（GitHub 自动识别 owner/repo 标题，仅存元数据不镜像内容）；论文页侧栏卡片（作者/审核者可增删）。
+- ✅ **P1-E 开放评审**：`co_reviews.is_public`（迁移 0016）+ PATCH 可见性开关（指派方/管理员）；论文页「公开评审」卡片；版本 diff（`lib/diff.ts` LCS + `/api/papers/{id}/diff` + 版本历史内联对比）；ORCID 导入（`/api/me/orcid/import`，DOI 匹配去重 + 标准导入管线，限流）。
+
+### P2 — 部分落地
+
+- ✅ **P2-A Phase 0（跨端地基）**：PWA manifest + Service Worker 离线壳（网络优先 + 缓存回退）；`/api/papers/{id}/export` 离线数据包；`packages/api-client` 零依赖跨端客户端骨架（refresh/devices/recommendations/notes/progress/export）。QR 登录、跨端 sync、devices 已就绪 → 后端契约齐，下一步是真实 RN/Electron 仓库。
+- ✅ **P2-B 安全**：`npm audit fix` 升级 next 16.3.5（修复 critical RCE）、nodemailer 9.1.1；CI 增加官方 registry 高严重度审计门禁。遗留：vitest 4.1.10 三个 moderate（dev-only，vitest 5 有依赖冲突暂不升）。
+- ✅ **P2-C 性能**：`scripts/benchmark.ts` HTTP 延迟基准（p50/p90/max、有界并发、零依赖）。
+- ✅ **P2-D 测试**：新增 `lib/ai/tldr.test.ts`（溯源门禁）、`lib/paper-links.test.ts`、`lib/diff.test.ts`；e2e 新增 `paper-new-blocks.spec.ts`（阅读页签/代码与数据/版本历史）。
+- ✅ **P2-E 文档**：CONTRIBUTING.md；README(zh/en) 功能矩阵补 10 行新能力；docs 首页功能网格补 5 项；release 工作流（tag → build + release notes）；OpenAPI 从 45 路径扩到 67 路径（补全 recommendations/push/notes/reading-progress/qr/refresh/devices/ai/diff/export 等片段）。
+
+### 剩余开放项（下一轮）
+
+- **真实跨端客户端**：P2-A 的 RN/Electron 仓库与上架（依赖本文件第六节跨端策略决定）。
+- **vitest moderate 升级**、TS7/ESLint 新规则解封后的告警归零。
+- **大规模数据基准**：跑 `scripts/benchmark.ts` 定基线、pgvector 索引调优。
+- **seed 分类描述**、公开演示实例、规范 release 流程（工作流已备）。
+
+---
+
 ## 一、当前真实状态盘点（2026-09-03）
 
 ### 1.1 已落地能力（含 8-17 后新增）

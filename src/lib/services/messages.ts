@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { messages, users } from "@/lib/db/schema";
 import { desc, eq, and, count, inArray } from "drizzle-orm";
 import { MESSAGE_KINDS, MESSAGE_CATEGORY_META, type MessageKind } from "@/lib/message-meta";
+import { sendPushToUser } from "@/lib/push/send";
 
 export type { MessageKind } from "@/lib/message-meta";
 export { MESSAGE_KINDS, MESSAGE_CATEGORY_META };
@@ -55,6 +56,15 @@ export async function createMessage(input: {
       link: input.link ?? null,
     })
     .returning();
+
+  // P0-C: every in-app message is a push trigger. Fire-and-forget — a failing
+  // push must never roll back or block the message write.
+  void sendPushToUser(input.userId, {
+    title: input.title,
+    body: input.body ?? null,
+    url: input.link ?? null,
+  }).catch((err) => console.warn(`[push] 触发失败: ${String(err).slice(0, 200)}`));
+
   return row;
 }
 

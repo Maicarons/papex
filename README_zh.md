@@ -65,6 +65,15 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 | 管理后台统计 | 投稿/分类/作者/审核聚合面板（ECharts 6 图表） | ✅ |
 | 通知中心 | `/feed` 提醒中心 + Rss 铃铛（未读角标实时同步，Zustand） | ✅ |
 | 收藏 | `bookmarks` 表 + `/bookmarks` 收藏夹 + 详情页一键收藏 | ✅ |
+| 语义 / 混合检索 | pgvector 1024 维 HNSW + 关键词融合排序；无 embedding 后端时静默回退关键字模式 | ✅ |
+| 个性化推荐 | 收藏/订阅兴趣 → 语义近邻（复用向量层）+ 分类高被引启发式；feed「为你推荐」区块 | ✅ |
+| 代码 / 数据集关联 | `paper_links`（Papers With Code 风格）：仓库/数据集/网站链接，GitHub 自动识别标题 | ✅ |
+| 笔记与阅读进度 | 论文页高亮/批注 + 阅读进度条，跨端同步（`notes` / `reading-progress`） | ✅ |
+| Web Push 推送 | VAPID + 浏览器订阅；新论文 / 工单回复 / 站内信实时推送，设置页开关 | ✅ |
+| AI 摘要与综述 | 可插拔 LLM（OpenAI 兼容 / 本地），TLDR 强制引用溯源 + 置信度；检索结果 RAG 综述 | ✅ |
+| 开放评审 | 协审意见可公开到论文页（OpenReview 风格），版本对比 diff 视图 | ✅ |
+| ORCID 导入 | 一键导入本人 ORCID 作品，DOI 匹配去重 + 标准导入管线 | ✅ |
+| PWA / 离线导出 | manifest + Service Worker 壳；`/api/papers/{id}/export` 离线数据包；跨端 API client 骨架 | ✅ |
 
 ---
 
@@ -236,7 +245,13 @@ papex/
 9. **API**（`app/api/**`）— 统一 REST，zod 校验，JWT 鉴权写操作。
 10. **提醒中心与通知**（`services/feed.ts` + `/feed`）— 当前用户的统一提醒中心（新入分类、新来自作者、评论回复、管理员公告）；通过 `POST /api/feed` 单条已读、`GET /api/feed?markRead=1` 全部已读。顶部 `FeedBell` 通过 Zustand 通知 store 同步未读角标，任何一处已读都会立即更新角标。
 11. **收藏**（`services/bookmarks.ts` + `/bookmarks`）— 论文详情页一键 `BookmarkButton` 收藏；`/bookmarks` 列出收藏论文（标题取自 `papers`）；个人主页显示「N 个收藏」角标。
-12. **主题与响应式** — `next-themes` + Tailwind 容器断点。
+12. **语义检索与推荐**（`lib/embeddings.ts` + `services/papers.ts`）— `listPapers` 支持 `semantic`（查询向量）与 `similarToPaperId`（论文近邻）两种向量模式；`/api/recommendations` 双池混合排序（语义近邻 + 分类高被引）；feed 页「为你推荐」区块；论文页相关论文在有 embedding 时自动语义化。
+13. **推送通知**（`lib/push/send.ts` + `/api/push/*` + `public/sw.js`）— Web Push：VAPID 配置，站内信（`createMessage`）与新论文（`notifyNewPaper`）触发，失效设备自动清理，设置页开关。
+14. **AI 辅助层**（`lib/ai/*` + `/api/papers/[id]/ai` + `/api/papers/summarize`）— OpenAI 兼容 LLM 可插拔；TLDR 每条结论强制引用摘要原文（溯源）+ 置信度；检索结果 RAG 综述逐条标注来源论文；结果入库缓存，登录 + 限流防滥用；能力门控（`capabilities.aiSummaries`）。
+15. **开放评审与对比** — 协审完成后指派方可一键「公开评审意见」（论文页展示）；版本历史支持任意版本与最新版的内联 diff（字段级 + 摘要行级 LCS）。
+16. **个人知识管理**（`components/reading-panel.tsx`）— 论文页「阅读与批注」：阅读进度（页数/百分比）、高亮与笔记（颜色/页码），经 `notes` / `reading-progress` API 跨端同步。
+17. **ORCID 导入**（`/api/me/orcid/import`）— 读取资料中的 ORCID，拉取公开作品；DOI 命中本地论文则匹配，未命中走 arXiv/Crossref/S2 标准导入（单次限 5 篇）。
+18. **主题与响应式** — `next-themes` + Tailwind 容器断点；PWA manifest + Service Worker 离线壳；`packages/api-client` 零依赖跨端客户端骨架。
 
 ---
 

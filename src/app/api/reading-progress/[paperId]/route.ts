@@ -29,12 +29,14 @@ function toView(row: typeof readingProgress.$inferSelect) {
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ paperId: string }> },
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
   const { paperId } = await params;
+  const url = new URL(req.url);
+  const version = Number(url.searchParams.get("version")) || 1;
   const [row] = await db
     .select()
     .from(readingProgress)
@@ -42,7 +44,7 @@ export async function GET(
       and(
         eq(readingProgress.userId, user.id),
         eq(readingProgress.paperId, paperId),
-        eq(readingProgress.version, 1),
+        eq(readingProgress.version, version),
       ),
     )
     .limit(1);

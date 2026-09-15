@@ -99,7 +99,8 @@ export async function POST(req: Request) {
       version: parsed.data.version,
       kind: parsed.data.kind,
       page: parsed.data.page,
-      rect: parseRect(parsed.data.rect),
+      // The column is NOT NULL; absent rect (abstract highlight / note) → {}.
+      rect: parseRect(parsed.data.rect) ?? {},
       color: parsed.data.color ?? null,
       content: parsed.data.content ?? null,
     })
@@ -125,7 +126,7 @@ export async function PUT(req: Request) {
   const update: Partial<typeof notes.$inferInsert> = { updatedAt: new Date() };
   if (parsed.data.content !== undefined) update.content = parsed.data.content;
   if (parsed.data.color !== undefined) update.color = parsed.data.color;
-  if (parsed.data.rect !== undefined) update.rect = parseRect(parsed.data.rect);
+  if (parsed.data.rect !== undefined) update.rect = parseRect(parsed.data.rect) ?? {};
   const [row] = await db
     .update(notes)
     .set(update)

@@ -2,13 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, CheckCheck, Inbox, Rss } from "lucide-react";
+import { Check, CheckCheck, Inbox, Rss, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/i18n/i18n-provider";
 import { formatDate } from "@/lib/utils";
 import { useNotifications } from "@/lib/stores/notifications";
+import { PaperCard } from "@/components/paper-card";
+import type { PaperListItem } from "@/lib/services/papers";
 import {
   ANNOUNCEMENT_KINDS,
   ANNOUNCEMENT_CATEGORY_META,
@@ -26,6 +28,12 @@ interface Announcement {
   kind: AnnouncementKind;
 }
 
+interface RecommendationsResponse {
+  rows: PaperListItem[];
+  total: number;
+  semanticUsed: boolean;
+}
+
 export default function FeedPage() {
   const { t } = useI18n();
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
@@ -33,6 +41,8 @@ export default function FeedPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = React.useState(false);
   const [activeKind, setActiveKind] = React.useState<AnnouncementKind | null>(null);
+  const [recs, setRecs] = React.useState<PaperListItem[]>([]);
+  const [recsLoading, setRecsLoading] = React.useState(true);
 
   React.useEffect(() => {
     fetch("/api/feed", { cache: "no-store" })
@@ -47,6 +57,17 @@ export default function FeedPage() {
       .catch(() => setError(t("feed.empty")))
       .finally(() => setLoading(false));
   }, [t]);
+
+  // Recommended papers (P0-D): only meaningful when signed in, so it piggybacks
+  // on the same 401 signal as the feed itself.
+  React.useEffect(() => {
+    if (needsLogin) return;
+    fetch("/api/recommendations", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: RecommendationsResponse | null) => setRecs(d?.rows ?? []))
+      .catch(() => setRecs([]))
+      .finally(() => setRecsLoading(false));
+  }, [needsLogin]);
 
   async function markAll() {
     setAnnouncements((prev) => prev.map((a) => ({ ...a, read: true })));
@@ -117,6 +138,32 @@ export default function FeedPage() {
           />
         ))}
       </div>
+
+      {/* Recommended papers (P0-D) */}
+      {!needsLogin && (recsLoading || recs.length > 0) && (
+        <section className="space-y-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+              <Sparkles className="h-4 w-4 text-primary" />
+              {t("feed.recommended")}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t("feed.recommendedHint")}</p>
+          </div>
+          {recsLoading ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-44 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {recs.map((item) => (
+                <PaperCard key={item.paper.id} item={item} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {needsLogin ? (
         <Card>
