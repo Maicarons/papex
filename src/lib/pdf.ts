@@ -1,5 +1,3 @@
-import { PDFParse } from "pdf-parse";
-
 export interface ParsedPdf {
   text: string;
   numPages: number;
@@ -24,8 +22,14 @@ const DOI_RE = /10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/;
  * Parse a PDF buffer into text plus light metadata heuristics.
  * Uses pdf-parse v2, whose API is class-based: construct `PDFParse` with the
  * binary data, then `getText()` resolves to a `TextResult` ({ text, pages, total }).
+ *
+ * pdf-parse is imported lazily: its pdfjs-dist dependency needs DOM/canvas
+ * globals that are absent on serverless (Vercel). Keeping the import inside
+ * the function means routes that never parse a PDF (list/search/detail) can
+ * load this module safely.
  */
 export async function parsePdf(buffer: Buffer): Promise<ParsedPdf> {
+  const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
   try {
     const result = await parser.getText();
