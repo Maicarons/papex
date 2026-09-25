@@ -5,6 +5,12 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["hkg1"],
+  "crons": [
+    {
+      "path": "/api/health/cron",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "env": {
     "NEXT_PUBLIC_APP_NAME": "Papex"
   }

@@ -876,6 +876,28 @@ export const savedSearches = pgTable(
   }),
 );
 
+// ----------------------------- Health checks / uptime history (status page) -----------------------------
+//
+// One row per probed component per snapshot. Aggregated by day for the
+// "30-day uptime" chart on /status. Inserted by /api/health (throttled) and
+// /api/health/cron (scheduled).
+export const healthChecks = pgTable(
+  "health_checks",
+  {
+    id: serial("id").primaryKey(),
+    checkedAt: timestamp("checked_at", { withTimezone: true }).notNull().defaultNow(),
+    /** overall | web | api | database | search | notifications | storage */
+    component: text("component").notNull(),
+    /** operational | degraded | down */
+    status: text("status").notNull(),
+    latency: integer("latency"),
+  },
+  (_t) => ({
+    checkedAtIdx: index("health_checks_checked_at_idx").on(_t.checkedAt),
+    componentIdx: index("health_checks_component_idx").on(_t.component, _t.checkedAt),
+  }),
+);
+
 // ----------------------------- Relations (typed joins) -----------------------------
 
 import { relations } from "drizzle-orm";

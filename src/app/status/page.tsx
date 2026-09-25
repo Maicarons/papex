@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart } from "@/components/charts";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/i18n-provider";
 
@@ -40,6 +41,22 @@ interface Health {
   components: HealthComponent[];
   /** Seconds this server process has been online (see /api/health). */
   uptimeSeconds: number;
+}
+
+interface DailyUptime {
+  date: string;
+  uptimePercent: number | null;
+  checks: number;
+  operational: number;
+  degraded: number;
+  down: number;
+}
+
+interface UptimeHistory {
+  days: number;
+  overallUptimePercent: number | null;
+  totalChecks: number;
+  daily: DailyUptime[];
 }
 
 const COMP_ICON: Record<string, LucideIcon> = {
@@ -119,6 +136,7 @@ function fmtUptime(seconds: number): string {
 export default function StatusPage() {
   const { t } = useI18n();
   const [data, setData] = React.useState<Health | null>(null);
+  const [history, setHistory] = React.useState<UptimeHistory | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(false);
   const [autoRefresh, setAutoRefresh] = React.useState(true);
@@ -133,6 +151,13 @@ export default function StatusPage() {
       setError(true);
     } finally {
       setLoading(false);
+    }
+    // History is independent of the live probe — never blocks the page.
+    try {
+      const h = await fetch("/api/health/history?days=30", { cache: "no-store" });
+      if (h.ok) setHistory((await h.json()) as UptimeHistory);
+    } catch {
+      // leave history empty; the chart shows the "no data" hint
     }
   }, []);
 
@@ -153,6 +178,12 @@ export default function StatusPage() {
       .finally(() => {
         if (active) setLoading(false);
       });
+    fetch("/api/health/history?days=30", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: UptimeHistory | null) => {
+        if (active && json) setHistory(json);
+      })
+      .catch(() => {});
     return () => {
       active = false;
     };
@@ -279,16 +310,60 @@ export default function StatusPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{t("status.incidents")}</CardTitle>
+                <CardTitle className="text-base">{t("status.uptimeOverall")}</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                  {t("status.noIncidents")}
-                </div>
+                <p className="text-3xl font-semibold tabular-nums">
+                  {history?.overallUptimePercent != null
+                    ? `${history.overallUptimePercent.toFixed(2)}%`
+                    : "—"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("status.uptimeChecks")}: {history?.totalChecks ?? 0}
+                </p>
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("status.uptimeChartTitle")}</CardTitle>
+              <p className="text-sm text-muted-foreground">{t("status.uptimeChartSubtitle")}</p>
+            </CardHeader>
+            <CardContent>
+              {!history && <Skeleton className="h-56 w-full rounded-lg" />}
+              {history && history.daily.some((d) => d.uptimePercent != null) ? (
+                <BarChart
+                  height={240}
+                  valueSuffix="%"
+                  yMin={0}
+                  yMax={100}
+                  data={history.daily
+                    .filter((d) => d.uptimePercent != null)
+                    .map((d) => ({
+                      label: d.date.slice(5), // MM-DD
+                      value: Number(d.uptimePercent!.toFixed(2)),
+                    }))}
+                />
+              ) : history ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">
+                  {t("status.uptimeNoData")}
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t("status.incidents")}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                {t("status.noIncidents")}
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
