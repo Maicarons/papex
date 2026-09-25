@@ -13,11 +13,9 @@ import { getServerLocale } from "@/i18n/server";
 import { getDictionary, t as translate, format } from "@/i18n";
 import { localizeCategoryName } from "@/lib/category-i18n";
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  return [];
-}
+// Dynamic on purpose: getServerLocale() reads cookies(), which cannot run in
+// the static/ISR path (Next.js throws DYNAMIC_SERVER_USAGE).
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
   const { username } = await params;

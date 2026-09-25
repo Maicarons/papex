@@ -1,24 +1,15 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getCategory, getAllCategorySlugs, localizeCategoryName, localizeCategoryDescription } from "@/lib/services/categories";
+import { getCategory, localizeCategoryName, localizeCategoryDescription } from "@/lib/services/categories";
 import { listPapers } from "@/lib/services/papers";
 import { PaperCard } from "@/components/paper-card";
 import { SubscribeButton } from "@/components/subscribe-button";
 import { LocaleText } from "@/components/locale-text";
 import { getServerLocale } from "@/i18n/server";
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  try {
-    const cats = await getAllCategorySlugs();
-    return cats;
-  } catch {
-    // No DB at build time (e.g. CI without DATABASE_URL): skip prerender and
-    // fall back to on-demand ISR via dynamicParams (default true).
-    return [];
-  }
-}
+// Dynamic on purpose: getServerLocale() reads cookies(), which cannot run in
+// the static/ISR path (Next.js throws DYNAMIC_SERVER_USAGE).
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
