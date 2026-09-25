@@ -1,7 +1,7 @@
-# Papex 下一步发展方向研究（刷新版 2026-09-03）
+# Papex 下一步发展方向研究（刷新版 2026-09-25）
 
 > 研究视角：项目技术合伙人（MaiBot）
-> 目的：在 2026-08-17 版路线图基础上，**基于 2026-09-03 真实代码状态**重新校准方向。旧版判定（缺数据深度与检索智能）已部分落地，现重点转移到「收口半成品 + AI 层 + 跨端」。
+> 目的：在 2026-08-17 / 2026-09-03 路线图基础上，**基于 2026-09-25 真实代码状态**（v0.3.0 已发布）校准第三波方向。旧版「收口半成品 + AI 层 + 跨端地基」已落地，现重点转移到「产品化分发 + 跨端客户端 + 科研工作流深度」。
 > 配套规划文档：`多端扩展方案-桌面与移动.md`（跨平台）、`SSR-SSG-结合优化方案.md`（渲染优化）。
 
 ---
@@ -45,12 +45,76 @@
 - ✅ **P2-D 测试**：新增 `lib/ai/tldr.test.ts`（溯源门禁）、`lib/paper-links.test.ts`、`lib/diff.test.ts`；e2e 新增 `paper-new-blocks.spec.ts`（阅读页签/代码与数据/版本历史）。
 - ✅ **P2-E 文档**：CONTRIBUTING.md；README(zh/en) 功能矩阵补 10 行新能力；docs 首页功能网格补 5 项；release 工作流（tag → build + release notes）；OpenAPI 从 45 路径扩到 67 路径（补全 recommendations/push/notes/reading-progress/qr/refresh/devices/ai/diff/export 等片段）。
 
-### 剩余开放项（下一轮）
+### 剩余开放项（下一轮）→ 已在 2026-09-25 部分收口
 
-- **真实跨端客户端**：P2-A 的 RN/Electron 仓库与上架（依赖本文件第六节跨端策略决定）。
-- **vitest moderate 升级**、TS7/ESLint 新规则解封后的告警归零。
-- **大规模数据基准**：跑 `scripts/benchmark.ts` 定基线、pgvector 索引调优。
-- **seed 分类描述**、公开演示实例、规范 release 流程（工作流已备）。
+- **真实跨端客户端**：P2-A 的 RN/Tauri 仓库与上架（仍开放，见第三波）。
+- **vitest moderate 升级** → ✅ 已升 `vitest@4.1.11`，开放 Dependabot 告警清零，`npm audit` 0 vulnerabilities。
+- **大规模数据基准**：本地小数据基线已跑（见下）；**大体量 / pgvector 调优仍开放**。
+- **seed 分类描述**、公开演示实例、规范 release 流程 → release 工作流已产出 **v0.3.0**；公开演示实例见第三波清单。
+
+---
+
+## 0b. 2026-09-25 增补：第三波规划（Wave 3–5）与本轮收口
+
+### 本轮已完成（2026-09-25）
+
+| 项 | 结果 |
+| --- | --- |
+| 推送积压 | 10 个提交已推送 `origin/main`（含两波 NEXT-DIRECTIONS 功能） |
+| 发布 | `v0.3.0` tag + GitHub Release（Release 工作流 success） |
+| 安全 | vitest 4.1.10→4.1.11；开放告警 0；历史 critical/high（next RCE、nodemailer、sharp 等）均已随 lockfile 修复 |
+| 质量门禁 | `tsc` 干净、`eslint` 0 error、`vitest` 85/85 |
+| 性能基线 | 本地 20 论文库 / concurrency=8 / 20 iter：`/api/papers?pageSize=10` p50≈7ms p90≈10ms；`/api/search` p50≈6–7ms；`/api/categories` p50≈5.5ms；`/api/health` p50≈5.7ms。**语义检索与关键词延迟接近，需在开启 embedding 且有向量时复测** |
+| 渲染现状 | `next build` 显示 `/` ISR 5m、`/categories` ISR 1h、`/papers/[id]` SSG——SSR-SSG 方案已部分生效，全站仍有大量动态路由 |
+
+### 迁移编号备注
+
+`drizzle/meta/_journal.json` 中 `idx:18` 对应 tag `0019_add_saved_searches`，**历史上跳过了 0018 文件名**。链完整可迁移，**不必重编号**；后续新迁移从 `0020` 起继续即可。
+
+### 第三波方向总览
+
+```mermaid
+flowchart LR
+  A[v0.3.0 功能矩阵完整] --> B[Wave 3 产品化+性能]
+  A --> C[Wave 4 跨端客户端]
+  A --> D[Wave 5 科研工作流深度]
+  B --> E[demo / release / 测试纵深 / SSR-SSG 收口]
+  C --> F[桌面 Tauri 优先 + 移动 RN 跟随]
+  D --> G[全文问答 / 综述工作台 / 文献库]
+```
+
+> 核心判断：**再堆功能的边际收益已经很低**。接下来投「让人用得上（分发/跨端）」和「让人离不开（科研工作流）」。
+
+#### Wave 3 · 产品化与性能（2–4 周）— 优先
+
+| 优先级 | 事项 | 要点 | 工作量 |
+| --- | --- | --- | --- |
+| P0 | **公开演示实例常态化** | 见下方清单；Vercel/自托管 + Neon + seed；健康检查进 README badge | S |
+| P0 | **SSR/SSG 收口** | 按 `SSR-SSG-结合优化方案.md`：根布局 cookie 外移；公开页 SSG/ISR；个性化页保留 SSR；`revalidate` 挂 mutation | M |
+| P1 | **测试纵深** | e2e 补 submit / bookmark / co-review / admin / 工单；`lib/services` 覆盖率目标 ≥60% | M |
+| P1 | **大规模基准** | 万级论文 + 真实 embedding 后再跑 `scripts/benchmark.ts`；HNSW 参数 / 分页 / 缓存 | S–M |
+| P2 | **依赖与工具链** | TS7 / ESLint 新规则解封后迁移；capabilities 的 Turbopack 全项目 trace 警告收口 | S |
+
+#### Wave 4 · 跨端客户端（1–2 月）
+
+依 `多端扩展方案-桌面与移动.md` Phase 1–2：**桌面 Tauri 2 + Vite React 先行**（科研主场景在桌面读 PDF、无商店审核），**RN 移动端跟随**（可先 PWA 验证）。`packages/shared` 承载 OpenAPI 类型 + i18n + api-client。
+
+#### Wave 5 · 科研工作流深度（持续）
+
+1. **全文 PDF 问答**（Chat with Paper）——RAG 从摘要扩到全文分块，沿用强制溯源 + 置信度
+2. **文献综述工作台**——Writespace + AI 大纲 + 引用管理器
+3. **Zotero 式文献库**——智能收藏夹、更强 PDF 阅读/高亮
+4. Papers With Code 加深（benchmark 排行仍是深坑，本期只做最小可用）
+5. 课题组协作空间
+
+### 公开演示实例清单（Wave 3-P0）
+
+1. 数据库：Neon / Supabase（pgvector）或自托管 `docker compose up db`
+2. 环境：复制 `.env.example`，必填 `DATABASE_URL` / `DATABASE_URL_UNPOOLED` / `AUTH_SECRET`；可选 embedding / AI / 推送
+3. 迁移与种子：`npm run db:migrate && npm run db:seed && npm run db:seed-arxiv`
+4. 部署：Vercel 导入仓库（`vercel.json` 已有）或 `docker compose up --build`
+5. 验收：`/api/health` 全绿（notifications 可 degraded）、首页有论文、检索可用、设置页可登录
+6. 运维：只读演示账号 + 定期重置种子；`scripts/benchmark.ts` 周期打点
 
 ---
 
