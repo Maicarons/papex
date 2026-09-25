@@ -1,6 +1,6 @@
 {
   "name": "papex",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "license": "Apache-2.0",
   "description": "Papex — an open-source, independent platform for managing and discovering academic literature, built with Next.js.",
@@ -71,7 +71,7 @@
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@types/web-push": "^3.6.4",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.5",
@@ -83,7 +83,7 @@
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=18.18.0"
