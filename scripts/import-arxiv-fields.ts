@@ -26,9 +26,7 @@ import {
 import { and, eq } from "drizzle-orm";
 import { savePdfBuffer } from "@/lib/storage";
 import { findOrCreateAuthor } from "@/lib/services/authors";
-
-/** createdById for ingested papers — the seeded administrator account. */
-const ADMIN_USER_ID = "1477a93b-15b1-4281-bc88-b7a534042aef";
+import { users } from "@/lib/db/schema";
 
 /**
  * Top-level field → the concrete arXiv category used to query it.
@@ -166,7 +164,7 @@ async function alreadyImported(arxivId: string): Promise<boolean> {
   return !!ext;
 }
 
-async function importField(top: string, cat: string, createdAt: Date): Promise<void> {
+async function importField(top: string, cat: string, createdAt: Date, createdById: string): Promise<void> {
   console.log(`\n=== ${top} (via ${cat}) ===`);
 
   const entries = await fetchRecent(cat);
@@ -234,7 +232,7 @@ async function importField(top: string, cat: string, createdAt: Date): Promise<v
         title: entry.title,
         primaryCategoryId: top,
         status: "approved",
-        createdById: ADMIN_USER_ID,
+        createdById,
         latestVersion: 1,
         // Stagger creation times so the "latest submissions" feed has a stable
         // ordering (batch-imported rows would otherwise share the same second).
@@ -278,12 +276,27 @@ async function importField(top: string, cat: string, createdAt: Date): Promise<v
 async function main() {
   let ok = 0;
   let failed = 0;
+  // Resolve an existing local user — hardcoded UUIDs break against a fresh
+  // database (e.g. a new Neon project), where seed generates new ids.
+  const ingestUser = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, "admin"))
+    .limit(1)
+    .then((rows) => rows[0]?.id)
+    .catch(() => undefined);
+  if (!ingestUser) {
+    console.error(
+      "No 'admin' user found — run `npm run db:seed` first so imported papers have an owner.",
+    );
+    process.exit(1);
+  }
   // Stagger createdAt: one minute apart, ending "now", so the batch behaves
   // like papers submitted over the last ~20 minutes (stable feed ordering).
   let stamp = Date.now() - FIELD_CATS.length * 60_000;
   for (const { top, cat } of FIELD_CATS) {
     try {
-      await importField(top, cat, new Date(stamp));
+      await importField(top, cat, new Date(stamp), ingestUser);
       ok++;
     } catch (e) {
       console.error(`  ✗ ${top}: ${(e as Error).message}`);
