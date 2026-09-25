@@ -53,3 +53,9 @@ next-env.d.ts
 
 # assistant internal data (not project source)
 /.workbuddy/
+
+# Vercel link / local deploy state
+.vercel
+.env
+.env.*
+!.env.example
