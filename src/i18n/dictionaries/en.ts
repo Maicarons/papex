@@ -518,7 +518,7 @@ export const en: Dictionary = {
     refresh: "Refresh",
     autoRefresh: "Auto-refresh",
     components: "Components",
-    uptime: "Uptime (30 days)",
+    uptime: "Process uptime",
     incidents: "Recent incidents",
     noIncidents: "No major incidents in the last 90 days.",
     web: "Website",

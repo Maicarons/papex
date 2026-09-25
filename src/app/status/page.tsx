@@ -38,7 +38,8 @@ interface Health {
   time: string;
   overall: Status;
   components: HealthComponent[];
-  uptime: number;
+  /** Seconds this server process has been online (see /api/health). */
+  uptimeSeconds: number;
 }
 
 const COMP_ICON: Record<string, LucideIcon> = {
@@ -102,6 +103,17 @@ function fmtTime(iso: string) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleString();
+}
+
+function fmtUptime(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ${m % 60}m`;
+  const d = Math.floor(h / 24);
+  return `${d}d ${h % 24}h`;
 }
 
 export default function StatusPage() {
@@ -260,7 +272,9 @@ export default function StatusPage() {
                 <CardTitle className="text-base">{t("status.uptime")}</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-3xl font-semibold tabular-nums">{data.uptime.toFixed(2)}%</p>
+                <p className="text-3xl font-semibold tabular-nums">
+                  {fmtUptime(data.uptimeSeconds ?? 0)}
+                </p>
               </CardContent>
             </Card>
             <Card>

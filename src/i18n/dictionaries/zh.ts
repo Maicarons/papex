@@ -516,7 +516,7 @@ export const zh = {
     refresh: "刷新",
     autoRefresh: "自动刷新",
     components: "服务组件",
-    uptime: "近 30 天可用率",
+    uptime: "进程在线时长",
     incidents: "近期事件",
     noIncidents: "过去 90 天无重大事件。",
     web: "网站",
