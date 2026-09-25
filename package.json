@@ -24,6 +24,7 @@
     "db:seed": "tsx src/lib/db/seed.ts",
     "db:seed-arxiv": "tsx scripts/import-arxiv-fields.ts",
     "demo:prepare": "node scripts/prepare-demo.mjs",
+    "deploy:vercel": "node scripts/deploy-vercel.mjs",
     "embeddings:backfill": "tsx scripts/backfill-embeddings.ts",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
