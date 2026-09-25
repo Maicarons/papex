@@ -1,0 +1,27 @@
+name: Health probe
+
+# Periodic probe so /status has uptime samples even when Vercel Cron is
+# limited (Hobby allows one cron run per day). Hits /api/health/cron which
+# writes a forced snapshot into health_checks.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Papex health
+        run: |
+          set -euo pipefail
+          URL="${HEALTH_URL:-https://papex-steel.vercel.app}"
+          # Optional shared secret (same value as Vercel CRON_SECRET).
+          AUTH=()
+          if [ -n "${CRON_SECRET:-}" ]; then
+            AUTH=(-H "Authorization: Bearer ${CRON_SECRET}")
+          fi
+          curl -fsS -X POST "${AUTH[@]}" "${URL}/api/health/cron" | tee /tmp/health.json
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

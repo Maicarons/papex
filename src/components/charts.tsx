@@ -32,10 +32,14 @@ export function BarChart({
   data,
   height = 260,
   valueSuffix = "",
+  yMin,
+  yMax,
 }: {
   data: BarDatum[];
   height?: number;
   valueSuffix?: string;
+  yMin?: number;
+  yMax?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof echarts.init> | null>(null);
@@ -90,7 +94,12 @@ export function BarChart({
       },
       yAxis: {
         type: "value",
-        axisLabel: { color: mutedColor },
+        min: yMin,
+        max: yMax,
+        axisLabel: {
+          color: mutedColor,
+          formatter: valueSuffix ? `{value}${valueSuffix}` : undefined,
+        },
         splitLine: { lineStyle: { color: borderColor, type: "dashed" } },
       },
       series: [
@@ -112,7 +121,7 @@ export function BarChart({
 
     chart.setOption(option, true); // notMerge：数据变少时清掉旧系列
     chart.resize();
-  }, [data, valueSuffix, resolvedTheme]);
+  }, [data, valueSuffix, yMin, yMax, resolvedTheme]);
 
   return <div ref={containerRef} style={{ width: "100%", height }} />;
 }

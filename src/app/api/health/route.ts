@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { recordHealthSnapshot } from "@/lib/services/health-history";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,10 @@ export async function GET() {
     : components.some((c) => c.status === "degraded")
       ? "degraded"
       : "operational";
+
+  // Feed the /status 30-day uptime chart. Fire-and-forget + in-process
+  // throttle so this never adds latency to the public health endpoint.
+  void recordHealthSnapshot(components, overall);
 
   return NextResponse.json(
     {
