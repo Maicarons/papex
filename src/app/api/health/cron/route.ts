@@ -91,7 +91,17 @@ async function probe() {
       : "operational";
 
   await recordHealthSnapshot(components, overall, { force: true });
-  return { overall, components };
+
+  // Same daily job also refreshes the static site counters for /stats.
+  let snapshot: unknown = null;
+  try {
+    const { recordSiteDailyStats } = await import("@/lib/services/site-stats");
+    snapshot = await recordSiteDailyStats();
+  } catch {
+    // stats are best-effort; never fail the health probe
+  }
+
+  return { overall, components, snapshot };
 }
 
 export async function GET(req: NextRequest) {

@@ -898,6 +898,29 @@ export const healthChecks = pgTable(
   }),
 );
 
+// ----------------------------- Daily site statistics (status/stats page) -----------------------------
+//
+// One row per UTC day. Written by the daily Vercel Cron (`/api/stats/cron`)
+// so /stats can render a static snapshot without hitting live COUNT(*) on
+// every page view.
+export const siteDailyStats = pgTable(
+  "site_daily_stats",
+  {
+    /** UTC date YYYY-MM-DD — one snapshot per day. */
+    day: text("day").primaryKey(),
+    papersTotal: integer("papers_total").notNull().default(0),
+    papersApproved: integer("papers_approved").notNull().default(0),
+    papersSubmitted: integer("papers_submitted").notNull().default(0),
+    usersTotal: integer("users_total").notNull().default(0),
+    authorsTotal: integer("authors_total").notNull().default(0),
+    commentsTotal: integer("comments_total").notNull().default(0),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (_t) => ({
+    recordedAtIdx: index("site_daily_stats_recorded_at_idx").on(_t.recordedAt),
+  }),
+);
+
 // ----------------------------- Relations (typed joins) -----------------------------
 
 import { relations } from "drizzle-orm";

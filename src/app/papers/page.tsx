@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Network } from "lucide-react";
-import { listPapers, listPapersByYear } from "@/lib/services/papers";
+import { listPapers } from "@/lib/services/papers";
 import { listCategories } from "@/lib/services/categories";
 import { listTagCoOccurrence } from "@/lib/services/tags";
 import { PaperCard } from "@/components/paper-card";
@@ -8,7 +8,6 @@ import { PapersFilter } from "@/components/papers-filter";
 import { AiReview } from "@/components/ai-review";
 import { SaveSearchBar } from "@/components/saved-searches";
 import { TagCooccurrenceGraph } from "@/components/tag-cooccurrence-graph";
-import { PublicationTrend } from "@/components/publication-trend";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getServerLocale } from "@/i18n/server";
@@ -36,11 +35,10 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
   const page = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1);
   const pageSize = 12;
 
-  const [{ rows, total }, cats, coOccurrence, byYear] = await Promise.all([
+  const [{ rows, total }, cats, coOccurrence] = await Promise.all([
     listPapers({ q, category, tag, semantic, sort, from, page, pageSize }),
     listCategories(),
     listTagCoOccurrence(30).catch(() => ({ nodes: [], links: [] })),
-    listPapersByYear().catch(() => []),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const catOptions = cats.map((c) => ({ id: c.id, name: c.name, nameZh: c.nameZh }));
@@ -110,7 +108,7 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
         </div>
       )}
 
-      {!q && !category && !tag && (coOccurrence.nodes.length > 1 || byYear.length > 0) && (
+      {!q && !category && !tag && coOccurrence.nodes.length > 1 && (
         <details className="group mb-6" open>
           <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
             <Network className="h-4 w-4" />
@@ -119,24 +117,12 @@ export default async function PapersPage({ searchParams }: { searchParams: Promi
               {t("common.expand")}
             </span>
           </summary>
-          <div className="mt-3 grid gap-4 md:grid-cols-2">
-            {coOccurrence.nodes.length > 1 && (
-              <Card>
-                <CardContent className="p-4">
-                  <TagCooccurrenceGraph data={coOccurrence} />
-                </CardContent>
-              </Card>
-            )}
-            {byYear.length > 0 && (
-              <Card>
-                <CardContent className="p-4">
-                  <p className="mb-1 text-center text-xs text-muted-foreground">
-                    {t("papers.publicationTrend")}
-                  </p>
-                  <PublicationTrend data={byYear} />
-                </CardContent>
-              </Card>
-            )}
+          <div className="mt-3">
+            <Card>
+              <CardContent className="p-4">
+                <TagCooccurrenceGraph data={coOccurrence} />
+              </CardContent>
+            </Card>
           </div>
         </details>
       )}

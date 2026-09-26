@@ -89,6 +89,12 @@ export function SiteHeader() {
               {t("nav.status")}
             </Link>
           </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/stats">
+              <BarChart3 className="h-4 w-4" />
+              {t("nav.stats")}
+            </Link>
+          </Button>
         </nav>
 
         <div className="ml-auto flex items-center gap-1">
