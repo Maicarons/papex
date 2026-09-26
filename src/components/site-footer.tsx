@@ -42,6 +42,9 @@ export function SiteFooter() {
           <Link href="/status" className="hover:underline">
             {t("footer.status")}
           </Link>
+          <Link href="/stats" className="hover:underline">
+            {t("nav.stats")}
+          </Link>
         </nav>
       </div>
     </footer>

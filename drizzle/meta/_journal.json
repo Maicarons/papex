@@ -136,10 +136,10 @@
       "breakpoints": true
     },
     {
-      "idx": 19,
+      "idx": 20,
       "version": "7",
-      "when": 1790351890371,
-      "tag": "0020_add_health_checks",
+      "when": 1790352000000,
+      "tag": "0021_add_site_daily_stats",
       "breakpoints": true
     }
   ]

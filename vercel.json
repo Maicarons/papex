@@ -9,6 +9,10 @@
     {
       "path": "/api/health/cron",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/stats/cron",
+      "schedule": "0 0 * * *"
     }
   ],
   "env": {
