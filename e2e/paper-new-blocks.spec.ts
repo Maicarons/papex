@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 // e2e coverage for the P0-E / P1-D additions on the paper page (runs against
-// papers ingested via `npm run db:seed-arxiv` — 2608.18066 is the seeded paper).
+// papers ingested into the catalogue — 2608.18066 is the seeded paper).
 
 test.describe("论文页新增区块", () => {
   test("「阅读与批注」页签在未登录时显示登录提示", async ({ page }) => {

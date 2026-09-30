@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 يحوّل Papex Desktop [Papex](https://github.com/Maicarons/papex) — منصة أدبيات أكاديمية مفتوحة المصدر — إلى **ورشة بحث** كاملة على سطح مكتبك: مكتبة محلية أولًا، وقراءة PDF عميقة مع تمييز وملاحظات، وإدارة الاقتباسات، والبحث في النص الكامل دون اتصال، والمزامنة السحابية.
 
@@ -111,8 +111,6 @@ pnpm gen:types       # إعادة توليد أنواع API من openapi.json
 pnpm sync:i18n       # مزامنة قواميس zh/en من مستودع Papex
 ```
 
-تغطية الاختبار: الواجهة ≥80% للعبارات على الوحدات الأساسية؛ Rust ≥85% على `commands/*` و`db/*` و`indexer/*`؛ ويغطي E2E تدفقات P0 (التوثيق ← المكتبة ← القراءة ← التعليق ← دون اتصال ← الرفع). تُغطى سيناريوهات الأجهزة المتعددة (سطح المكتب ↔ الجوال ↔ الويب) معًا مع عميل الجوال — انظر [خطة التطوير](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md).
-
 ---
 
 ## البنية (أبرز النقاط)
@@ -121,8 +119,6 @@ pnpm sync:i18n       # مزامنة قواميس zh/en من مستودع Papex
 - **محلي أولًا**: SQLite `papex_local.db` للذاكرة المؤقتة / التعليقات / التقدّم / طابور المزامنة؛ tantivy لفهرس النص الكامل دون اتصال (P2).
 - **الرفوعات**: إرسال واستيراد PDF، والصورة الرمزية، وغلاف الورقة — تُتحقق في Rust، وتُرفع إلى خادم Papex مع تقدّم وإعادة محاولة.
 - **الأنواع**: مولّدة من `openapi.json` لخادم Papex — لا تُكتب يدويًا أبدًا.
-
-طالع [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) في مستودع Papex لخطة التطوير الكاملة.
 
 ---
 

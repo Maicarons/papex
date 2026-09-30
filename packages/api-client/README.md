@@ -1,7 +1,7 @@
 # @papex/api-client
 
 Zero-dependency, typed client for the Papex HTTP API — the shared API surface
-for **cross-end clients** (Phase 0 of `多端扩展方案-桌面与移动.md`). The web
+for **cross-end clients**. The web
 app, a React Native app and an Electron desktop app can all talk to the same
 backend through this client.
 

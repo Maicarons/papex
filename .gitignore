@@ -22,6 +22,10 @@ yarn-error.log*
 .bench-server*.log
 bun.lockb
 
+# local tool / session artifacts (never upload)
+.playwright-mcp/
+.railway-login.*
+
 # local env files
 .env
 .env*.local
@@ -53,6 +57,11 @@ next-env.d.ts
 
 # assistant internal data (not project source)
 /.workbuddy/
+
+# python caches (papex-latex tooling)
+__pycache__/
+*.py[cod]
+.mypy_cache/
 
 # Vercel link / local deploy state
 .vercel

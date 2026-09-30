@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS%20%7C%20iOS-lightgrey.svg)]()
 [![React Native](https://img.shields.io/badge/React%20Native-0.82-61dafb.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex App은 오픈소스 학술 문헌 플랫폼인 [Papex](https://github.com/Maicarons/papex)의 공식 모바일 클라이언트입니다. 웹 버전의 **모바일 대체**로 설계되었습니다: 논문을 읽고, 계정을 관리하고, 최신 상태를 유지하세요 — 어디서든.
 
@@ -103,8 +103,6 @@ npm run gen:types     # openapi.json에서 API 타입 재생성
 npm run sync:i18n     # Papex 저장소에서 zh/en 사전 동기화
 ```
 
-테스트 커버리지: 단위 테스트는 핵심 모듈(`lib/api`, `lib/security`, `lib/storage`, stores)에서 문장 커버리지 ≥80%를 목표; E2E는 P0 흐름(인증 → 탐색 → 읽기 → 북마크 → 구독 → 기기)을 커버. 기기 간 시나리오는 데스크톱 클라이언트와 함께 커버됩니다 ([개발 계획](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md) 참조).
-
 ---
 
 ## 아키텍처 (하이라이트)
@@ -113,8 +111,6 @@ npm run sync:i18n     # Papex 저장소에서 zh/en 사전 동기화
 - **데이터**: 세션/환경설정/캐시용 MMKV; 앱 샌드박스에 LRU 교체로 캐시된 PDF 파일.
 - **i18n**: i18next, Papex 저장소에서 동기화된 zh/en 사전.
 - **타입**: Papex 서버 `openapi.json`에서 생성 — 절대 손으로 작성하지 않음.
-
-전체 개발 계획은 Papex 저장소의 [`docs/development/papex-app.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)를 보세요.
 
 ---
 

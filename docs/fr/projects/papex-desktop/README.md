@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex Desktop transforme [Papex](https://github.com/Maicarons/papex) — une plateforme open-source de littérature académique — en un véritable **bureau de recherche** installé sur votre poste : une bibliothèque local-first, une lecture PDF approfondie avec surlignages & notes, la gestion des citations, la recherche en texte intégral hors ligne, et la synchronisation cloud.
 
@@ -111,8 +111,6 @@ pnpm gen:types       # regenerate API types from openapi.json
 pnpm sync:i18n       # sync zh/en dictionaries from the Papex repo
 ```
 
-Couverture de tests : frontend ≥80 % des instructions sur les modules cœur ; Rust ≥85 % sur `commands/*`, `db/*` et `indexer/*` ; les E2E couvrent les flux P0 (auth → bibliothèque → lecture → annotation → hors ligne → envoi). Les scénarios inter-appareils (desktop ↔ mobile ↔ web) sont couverts avec le client mobile — voir le [plan de développement](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md).
-
 ---
 
 ## Architecture (points clés)
@@ -121,8 +119,6 @@ Couverture de tests : frontend ≥80 % des instructions sur les modules cœur ; 
 - **Local-first** : SQLite `papex_local.db` pour cache / annotations / progression / file de sync ; tantivy pour l'index texte intégral hors ligne (P2).
 - **Envois** : soumission & import PDF, avatar, couverture d'article — validés en Rust, envoyés au serveur Papex avec progression & reprise.
 - **Types** : générés depuis le `openapi.json` du serveur Papex — jamais écrits à la main.
-
-Voir [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) dans le dépôt Papex pour le plan de développement complet.
 
 ---
 

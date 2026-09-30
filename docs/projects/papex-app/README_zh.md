@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS%20%7C%20iOS-lightgrey.svg)]()
 [![React Native](https://img.shields.io/badge/React%20Native-0.82-61dafb.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
 Papex App 是开源学术文献平台 [Papex](https://github.com/Maicarons/papex) 的官方移动客户端，定位为**网页版的移动替代品**：随时随地读论文、管账号、追更新。
 
@@ -103,8 +103,6 @@ npm run gen:types     # 重新生成 API 类型
 npm run sync:i18n     # 从 Papex 仓库同步中英文字典
 ```
 
-测试覆盖：核心模块（`lib/api`、`lib/security`、`lib/storage`、stores）单元测试语句覆盖 ≥80%；E2E 覆盖 P0 主流程（登录→浏览→阅读→收藏→订阅→设备管理）。跨端联动场景与桌面客户端一起覆盖（详见[开发方案](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)）。
-
 ---
 
 ## 架构要点
@@ -113,8 +111,6 @@ npm run sync:i18n     # 从 Papex 仓库同步中英文字典
 - **数据**：MMKV 存会话/偏好/缓存；PDF 文件缓存于应用沙盒，LRU 淘汰。
 - **i18n**：i18next，中英文字典从 Papex 仓库同步。
 - **类型**：从 Papex 服务端 `openapi.json` 生成，禁止手写。
-
-完整开发方案见 Papex 仓库 [`docs/development/papex-app.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)。
 
 ---
 

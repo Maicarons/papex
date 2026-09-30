@@ -37,6 +37,13 @@ export default defineConfig({
               { text: "API", link: "/guide/api" },
             ],
           },
+          {
+            text: "Project",
+            items: [
+              { text: "Upgrade Notes", link: "/UPGRADE" },
+              { text: "Contributing", link: "/CONTRIBUTING" },
+            ],
+          },
           { text: "About Papex", link: "/about" },
         ],
       },
@@ -64,6 +71,13 @@ export default defineConfig({
               { text: "配置", link: "/zh/guide/configuration" },
               { text: "部署", link: "/zh/guide/deployment" },
               { text: "API", link: "/zh/guide/api" },
+            ],
+          },
+          {
+            text: "项目文档",
+            items: [
+              { text: "升级说明", link: "/UPGRADE" },
+              { text: "贡献指南", link: "/CONTRIBUTING" },
             ],
           },
           { text: "关于 Papex", link: "/zh/about" },

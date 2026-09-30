@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS%20%7C%20iOS-lightgrey.svg)]()
 [![React Native](https://img.shields.io/badge/React%20Native-0.82-61dafb.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
 Papex App is the official mobile client for [Papex](https://github.com/Maicarons/papex), an open-source academic literature platform. It is designed as a **mobile replacement for the web version**: read papers, manage your account, and stay up to date — anywhere.
 
@@ -103,8 +103,6 @@ npm run gen:types     # regenerate API types from openapi.json
 npm run sync:i18n     # sync zh/en dictionaries from the Papex repo
 ```
 
-Test coverage: unit tests target ≥80% statement coverage on core modules (`lib/api`, `lib/security`, `lib/storage`, stores); E2E covers the P0 flows (auth → browse → read → bookmark → subscribe → devices). Cross-device scenarios are covered together with the desktop client (see [development plan](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)).
-
 ---
 
 ## Architecture (highlights)
@@ -113,8 +111,6 @@ Test coverage: unit tests target ≥80% statement coverage on core modules (`lib
 - **Data**: MMKV for session/preferences/cache; PDF files cached in the app sandbox with LRU eviction.
 - **i18n**: i18next, zh/en dictionaries synced from the Papex repo.
 - **Types**: generated from the Papex server `openapi.json` — never hand-written.
-
-See [`docs/development/papex-app.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md) in the Papex repo for the full development plan.
 
 ---
 

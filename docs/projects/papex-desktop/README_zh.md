@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
 Papex Desktop 把开源学术文献平台 [Papex](https://github.com/Maicarons/papex) 变成常驻桌面的**科研工作平台**：本地优先的文献库、带高亮与笔记的深度 PDF 阅读、引用管理、离线全文检索与云同步。
 
@@ -111,8 +111,6 @@ pnpm gen:types       # 重新生成 API 类型
 pnpm sync:i18n       # 从 Papex 仓库同步中英文字典
 ```
 
-测试覆盖：前端核心模块语句覆盖 ≥80%；Rust `commands/*`、`db/*`、`indexer/*` ≥85%；E2E 覆盖 P0 主流程（登录→文献库→阅读→标注→离线→上传）。跨端联动场景（桌面↔移动↔网页）与移动端一起覆盖——详见[开发方案](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md)。
-
 ---
 
 ## 架构要点
@@ -121,8 +119,6 @@ pnpm sync:i18n       # 从 Papex 仓库同步中英文字典
 - **本地优先**：SQLite `papex_local.db` 存缓存/标注/进度/同步队列；tantivy 做离线全文索引（P2）。
 - **上传**：PDF 投稿与导入、头像、论文封面——Rust 侧校验，直传 Papex 服务端，带进度与重试。
 - **类型**：从 Papex 服务端 `openapi.json` 生成，禁止手写。
-
-完整开发方案见 Papex 仓库 [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md)。
 
 ---
 

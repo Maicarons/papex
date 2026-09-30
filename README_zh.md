@@ -29,6 +29,7 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 - [数据库迁移与种子](#数据库迁移与种子)
 - [部署](#部署)
 - [API 速览](#api-速览)
+- [文档](#文档)
 - [路线图](#路线图)
 
 ---
@@ -116,7 +117,7 @@ Papex 是一个开源（Apache-2.0）的学术论文管理与展示系统，覆�
 
 ## 技术栈版本
 
-> 当前主版本（2026-08 升级后）。详见仓库根目录 `UPGRADE.md`。
+> 当前主版本（2026-08 升级后）。详见 [`docs/UPGRADE.md`](docs/UPGRADE.md)。
 
 | 领域 | 技术 | 版本 |
 | --- | --- | --- |
@@ -362,7 +363,19 @@ docker compose up -d        # 含 Postgres + Next 服务
 - **[Papex App](https://github.com/Maicarons/papex-app)** — 官方移动端（Android / HarmonyOS / iOS）：网页版的移动替代品——随时随地离线读论文、管理账号与设备。基于 React Native 0.82 + RNOH 构建。
 - **[Papex Desktop](https://github.com/Maicarons/papex-desktop)** — 桌面科研工作平台（Windows / Linux / macOS）：本地优先的文献库、带高亮与笔记的 PDF 阅读、引用管理（CSL / BibTeX / LaTeX）、离线全文检索。基于 Tauri 2 + React 19 构建。
 
-两个客户端的开发方案：[`docs/development/papex-app.md`](docs/development/papex-app.md) · [`docs/development/papex-desktop.md`](docs/development/papex-desktop.md)
+
+---
+
+## 文档
+
+| 文档 | 说明 |
+| --- | --- |
+| [`docs/index.md`](docs/index.md) | 文档站首页（VitePress，9 种语言） |
+| [`docs/guide/`](docs/zh/guide/getting-started.md) | 用户与管理指南（快速开始、投稿、在线创作、配置、部署、API） |
+| [`docs/UPGRADE.md`](docs/UPGRADE.md) | 2026-08 依赖与工具链升级说明 |
+| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | 如何参与代码、文档与评审贡献 |
+
+完整文档站由 `docs/` 经 VitePress 构建（`npm run docs:dev`），由 Next.js 应用在 `/docs` 路径提供服务。
 
 ---
 

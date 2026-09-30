@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS%20%7C%20iOS-lightgrey.svg)]()
 [![React Native](https://img.shields.io/badge/React%20Native-0.82-61dafb.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex App — это официальный мобильный клиент для [Papex](https://github.com/Maicarons/papex), открытой платформы академической литературы. Он задуман как **мобильная замена веб-версии**: читайте работы, управляйте учётной записью и будьте в курсе — где угодно.
 
@@ -103,8 +103,6 @@ npm run gen:types     # перегенерировать типы API из opena
 npm run sync:i18n     # синхронизировать словари zh/en из репозитория Papex
 ```
 
-Покрытие тестами: юнит-тесты нацелены на ≥80% покрытия операторов в основных модулях (`lib/api`, `lib/security`, `lib/storage`, stores); E2E покрывает потоки P0 (auth → просмотр → чтение → закладка → подписка → устройства). Сценарии между устройствами покрываются совместно с десктоп-клиентом (см. [план разработки](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)).
-
 ---
 
 ## Архитектура (кратко)
@@ -113,8 +111,6 @@ npm run sync:i18n     # синхронизировать словари zh/en и
 - **Данные**: MMKV для сессии/настроек/кэша; PDF-файлы кэшируются в песочнице приложения с вытеснением LRU.
 - **i18n**: i18next, словари zh/en синхронизируются из репозитория Papex.
 - **Типы**: генерируются из `openapi.json` сервера Papex — никогда не пишутся вручную.
-
-Полный план разработки см. в [`docs/development/papex-app.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md) репозитория Papex.
 
 ---
 

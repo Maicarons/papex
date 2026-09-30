@@ -37,6 +37,7 @@ Papex is an open-source (Apache-2.0) platform for managing and showcasing academ
 - [Database Migration & Seed](#database-migration--seed)
 - [Deployment](#deployment)
 - [API Overview](#api-overview)
+- [Documentation](#documentation)
 - [Roadmap](#roadmap)
 
 ---
@@ -124,7 +125,7 @@ Papex is an open-source (Apache-2.0) platform for managing and showcasing academ
 
 ## Tech Stack Versions
 
-> Current major versions (after the 2026-08 upgrade). See `UPGRADE.md` at the repo root for details.
+> Current major versions (after the 2026-08 upgrade). See [`docs/UPGRADE.md`](docs/UPGRADE.md) for details.
 
 | Area | Technology | Version |
 | --- | --- | --- |
@@ -374,7 +375,19 @@ endpoints work anonymously, with a cookie, or with an API key.
 - **[Papex App](https://github.com/Maicarons/papex-app)** — official mobile client (Android / HarmonyOS / iOS): a mobile replacement for the web version — read papers offline, manage your account and devices. Built with React Native 0.82 + RNOH.
 - **[Papex Desktop](https://github.com/Maicarons/papex-desktop)** — desktop research workbench (Windows / Linux / macOS): local-first library, PDF reading with highlights & notes, citation management (CSL / BibTeX / LaTeX), offline full-text search. Built with Tauri 2 + React 19.
 
-Development plans for both clients: [`docs/development/papex-app.md`](docs/development/papex-app.md) · [`docs/development/papex-desktop.md`](docs/development/papex-desktop.md)
+
+---
+
+## Documentation
+
+| Document | Description |
+| --- | --- |
+| [`docs/README.md`](docs/index.md) | Documentation site home (VitePress, 9 languages) |
+| [`docs/guide/`](docs/guide/getting-started.md) | User & admin guides (getting started, submission, writespace, configuration, deployment, API) |
+| [`docs/UPGRADE.md`](docs/UPGRADE.md) | 2026-08 dependency & toolchain upgrade notes |
+| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | How to contribute code, docs and reviews |
+
+The full docs site is built from `docs/` via VitePress (`npm run docs:dev`) and served at `/docs` by the Next.js app.
 
 ---
 

@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex Desktop превращает [Papex](https://github.com/Maicarons/papex) — открытую платформу академической литературы — в полноценную **настольную рабочую среду исследований**: локальную библиотеку (local-first), глубокое чтение PDF с выделениями и заметками, управление цитированиями, офлайн-полнотекстовый поиск и синхронизацию с облаком.
 
@@ -111,8 +111,6 @@ pnpm gen:types       # перегенерировать типы API из openap
 pnpm sync:i18n       # синхронизировать словари zh/en из репозитория Papex
 ```
 
-Покрытие тестами: фронтенд ≥80% покрытия операторов в основных модулях; Rust ≥85% на `commands/*`, `db/*` и `indexer/*`; E2E покрывает потоки P0 (auth → библиотека → чтение → аннотации → офлайн → загрузка). Сценарии между устройствами (десктоп ↔ мобильное ↔ веб) покрываются совместно с мобильным клиентом — см. [план разработки](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md).
-
 ---
 
 ## Архитектура (кратко)
@@ -121,8 +119,6 @@ pnpm sync:i18n       # синхронизировать словари zh/en и�
 - **Local-first**: SQLite `papex_local.db` для кэша / аннотаций / прогресса / очереди синхронизации; tantivy для офлайн-полнотекстового индекса (P2).
 - **Загрузки**: подача и импорт PDF, аватар, обложка работы — проверяются в Rust, загружаются на сервер Papex с отображением прогресса и повтором.
 - **Типы**: генерируются из `openapi.json` сервера Papex — никогда не пишутся вручную.
-
-Полный план разработки см. в [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) репозитория Papex.
 
 ---
 

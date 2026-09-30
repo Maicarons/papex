@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex Desktop trasforma [Papex](https://github.com/Maicarons/papex) — una piattaforma di letteratura accademica open-source — in un vero **workbench di ricerca** che vive sul tuo desktop: una libreria local-first, lettura PDF approfondita con evidenziazioni e note, gestione delle citazioni, ricerca full-text offline e sincronizzazione cloud.
 
@@ -111,8 +111,6 @@ pnpm gen:types       # rigenera i tipi API da openapi.json
 pnpm sync:i18n       # sincronizza i dizionari zh/en dal repo Papex
 ```
 
-Copertura test: frontend ≥80% di copertura delle istruzioni sui moduli core; Rust ≥85% su `commands/*`, `db/*` e `indexer/*`; l'E2E copre i flussi P0 (auth → libreria → leggi → annota → offline → carica). Gli scenari tra dispositivi (desktop ↔ mobile ↔ web) sono coperti insieme al client mobile — vedi il [piano di sviluppo](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md).
-
 ---
 
 ## Architettura (punti salienti)
@@ -121,8 +119,6 @@ Copertura test: frontend ≥80% di copertura delle istruzioni sui moduli core; R
 - **Local-first**: SQLite `papex_local.db` per cache / annotazioni / progressi / coda di sincronizzazione; tantivy per l'indice full-text offline (P2).
 - **Upload**: invio e import PDF, avatar, copertina articolo — validati in Rust, caricati sul server Papex con progressi e retry.
 - **Tipi**: generati dal `openapi.json` del server Papex — mai scritti a mano.
-
-Vedi [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) nel repo Papex per il piano di sviluppo completo.
 
 ---
 

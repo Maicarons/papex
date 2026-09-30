@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex Desktop verwandelt [Papex](https://github.com/Maicarons/papex) — eine Open-Source-Plattform für wissenschaftliche Literatur — in einen vollständigen **Forschungs-Arbeitsbereich** auf dem Desktop: eine Local-First-Bibliothek, tiefes PDF-Lesen mit Markierungen & Notizen, Zitationsverwaltung, Offline-Volltextsuche und Cloud-Sync.
 
@@ -111,8 +111,6 @@ pnpm gen:types       # API-Typen aus openapi.json neu generieren
 pnpm sync:i18n       # zh/en-Wörterbücher aus dem Papex-Repo synchronisieren
 ```
 
-Testabdeckung: Frontend ≥80 % Anweisungsabdeckung in Kernmodulen; Rust ≥85 % in `commands/*`, `db/*` und `indexer/*`; E2E deckt die P0-Flows ab (Auth → Bibliothek → Lesen → Annotieren → Offline → Upload). Geräteübergreifende Szenarien (Desktop ↔ mobil ↔ Web) werden gemeinsam mit dem mobilen Client abgedeckt — siehe den [Entwicklungsplan](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md).
-
 ---
 
 ## Architektur (Highlights)
@@ -121,8 +119,6 @@ Testabdeckung: Frontend ≥80 % Anweisungsabdeckung in Kernmodulen; Rust ≥85 %
 - **Local-First**: SQLite `papex_local.db` für Cache / Annotationen / Fortschritt / Sync-Queue; tantivy für Offline-Volltext-Index (P2).
 - **Uploads**: PDF-Einreichung & -Import, Avatar, Paper-Cover — in Rust validiert, mit Fortschritt & Retry auf den Papex-Server hochgeladen.
 - **Typen**: aus dem Papex-Server-`openapi.json` generiert — nie von Hand geschrieben.
-
-Siehe [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) im Papex-Repo für den vollständigen Entwicklungsplan.
 
 ---
 

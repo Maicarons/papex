@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex Desktopは、オープンソースの学術文献プラットフォームである[Papex](https://github.com/Maicarons/papex)を、デスクトップ上で動く本格的な**研究ワークベンチ**に変えます。ローカルファーストのライブラリ、ハイライトとメモ付きの深いPDF閲覧、引用管理、オフライン全文検索、およびクラウド同期を備えます。
 
@@ -111,8 +111,6 @@ pnpm gen:types       # openapi.jsonからAPI型を再生成
 pnpm sync:i18n       # Papexリポジトリからzh/en辞書を同期
 ```
 
-テストカバレッジ: フロントエンドはコアモジュールでステートメントカバレッジ80%以上；Rustは `commands/*`、`db/*`、`indexer/*` で85%以上；E2EはP0フロー（認証 → ライブラリ → 読書 → 注釈 → オフライン → アップロード）をカバー。デバイス間シナリオ（デスクトップ ↔ モバイル ↔ Web）はモバイルクライアントとともにカバー — [開発計画](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md)参照。
-
 ---
 
 ## アーキテクチャ（要点）
@@ -121,8 +119,6 @@ pnpm sync:i18n       # Papexリポジトリからzh/en辞書を同期
 - **ローカルファースト**: キャッシュ／注釈／進捗／同期キュー用のSQLite `papex_local.db`；オフライン全文インデックスにtantivy（P2）。
 - **アップロード**: PDF投稿＆取り込み、アバター、論文表紙 — Rustで検証し、進捗とリトライ付きでPapexサーバーへアップロード。
 - **型**: Papexサーバーの `openapi.json` から生成 — 手書きは一切なし。
-
-全文の開発計画については、Papexリポジトリの [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) を参照してください。
 
 ---
 

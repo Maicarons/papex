@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS%20%7C%20iOS-lightgrey.svg)]()
 [![React Native](https://img.shields.io/badge/React%20Native-0.82-61dafb.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 O Papex App é o cliente móvel oficial do [Papex](https://github.com/Maicarons/papex), uma plataforma de literatura acadêmica de código aberto. Ele é projetado como um **substituto móvel da versão web**: leia artigos, gerencie sua conta e mantenha-se atualizado — em qualquer lugar.
 
@@ -103,8 +103,6 @@ npm run gen:types     # regenera os tipos da API a partir do openapi.json
 npm run sync:i18n     # sincroniza os dicionários zh/en do repositório Papex
 ```
 
-Cobertura de testes: testes unitários visam ≥80% de cobertura de statements nos módulos centrais (`lib/api`, `lib/security`, `lib/storage`, stores); E2E cobre os fluxos P0 (auth → navegar → ler → marcar → assinar → dispositivos). Cenários entre dispositivos são cobertos junto com o cliente desktop (veja o [plano de desenvolvimento](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)).
-
 ---
 
 ## Arquitetura (destaques)
@@ -113,8 +111,6 @@ Cobertura de testes: testes unitários visam ≥80% de cobertura de statements n
 - **Dados**: MMKV para sessão/preferências/cache; arquivos PDF em cache no sandbox do app com evicção LRU.
 - **i18n**: i18next, dicionários zh/en sincronizados do repositório Papex.
 - **Tipos**: gerados a partir do `openapi.json` do servidor Papex — nunca escritos à mão.
-
-Veja [`docs/development/papex-app.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md) no repositório Papex para o plano de desenvolvimento completo.
 
 ---
 

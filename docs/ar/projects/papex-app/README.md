@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS%20%7C%20iOS-lightgrey.svg)]()
 [![React Native](https://img.shields.io/badge/React%20Native-0.82-61dafb.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 تطبيق Papex هو العميل الرسمي للجوال لـ [Papex](https://github.com/Maicarons/papex)، وهي منصة أدبيات أكاديمية مفتوحة المصدر. صُمّم كـ **بديل جوال للنسخة الويب**: اقرأ الأوراق، وأدر حسابك، وابقَ على اطلاع — في أي مكان.
 
@@ -103,8 +103,6 @@ npm run gen:types     # إعادة توليد أنواع API من openapi.json
 npm run sync:i18n     # مزامنة قواميس zh/en من مستودع Papex
 ```
 
-تغطية الاختبار: تستهدف اختبارات الوحدة تغطية ≥80% للعبارات على الوحدات الأساسية (`lib/api` و`lib/security` و`lib/storage` والمتاجر)؛ ويغطي E2E تدفقات P0 (التوثيق ← التصفّح ← القراءة ← الإشارة المرجعية ← الاشتراك ← الأجهزة). تُغطى سيناريوهات الأجهزة المتعددة معًا مع عميل سطح المكتب (انظر [خطة التطوير](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)).
-
 ---
 
 ## البنية (أبرز النقاط)
@@ -113,8 +111,6 @@ npm run sync:i18n     # مزامنة قواميس zh/en من مستودع Papex
 - **البيانات**: MMKV لجلسة/تفضيلات/ذاكرة التخزين المؤقت؛ ملفات PDF مخزّنة مؤقتًا في صندوق الرمل للتطبيق مع إخلاء LRU.
 - **التعريب**: i18next، قواميس zh/en المزامنة من مستودع Papex.
 - **الأنواع**: مولّدة من `openapi.json` لخادم Papex — لا تُكتب يدويًا أبدًا.
-
-طالع [`docs/development/papex-app.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md) في مستودع Papex لخطة التطوير الكاملة.
 
 ---
 

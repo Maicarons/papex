@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-// These tests run against papers ingested from arXiv via `npm run db:seed-arxiv`.
+// These tests run against papers ingested from arXiv into the catalogue.
 // cs → 2608.18066 "On the Fragility of Self-Improving Agents…" (linked to cs.LG).
 
 test.describe("论文详情", () => {

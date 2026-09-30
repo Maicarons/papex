@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex Desktop은 오픈소스 학술 문헌 플랫폼인 [Papex](https://github.com/Maicarons/papex)를 데스크톱에 머무는 완전한 **연구 워크벤치**로 바꿉니다: 로컬 우선 라이브러리, 하이라이트와 메모가 있는 심층 PDF 열람, 인용 관리, 오프라인 전문 검색, 클라우드 동기화.
 
@@ -111,8 +111,6 @@ pnpm gen:types       # openapi.json에서 API 타입 재생성
 pnpm sync:i18n       # Papex 저장소에서 zh/en 사전 동기화
 ```
 
-테스트 커버리지: 프론트엔드 ≥80% 문장 커버리지(핵심 모듈), Rust ≥85% (`commands/*`, `db/*`, `indexer/*`); E2E는 P0 흐름(인증 → 라이브러리 → 읽기 → 주석 → 오프라인 → 업로드)을 커버. 기기 간 시나리오(데스크톱 ↔ 모바일 ↔ 웹)는 모바일 클라이언트와 함께 커버 — [개발 계획](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) 참조.
-
 ---
 
 ## 아키텍처 (하이라이트)
@@ -121,8 +119,6 @@ pnpm sync:i18n       # Papex 저장소에서 zh/en 사전 동기화
 - **로컬 우선**: 캐시 / 주석 / 진행 / 동기화 큐용 SQLite `papex_local.db`; 오프라인 전문 인덱스용 tantivy (P2).
 - **업로드**: PDF 투고 및 가져오기, 아바타, 논문 표지 — Rust에서 검증 후 진행 및 재시도와 함께 Papex 서버로 업로드.
 - **타입**: Papex 서버 `openapi.json`에서 생성 — 절대 손으로 작성하지 않음.
-
-전체 개발 계획은 Papex 저장소의 [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md)를 보세요.
 
 ---
 

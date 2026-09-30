@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-24c8db.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
 Papex Desktop turns [Papex](https://github.com/Maicarons/papex) — an open-source academic literature platform — into a full **research workbench** that lives on your desktop: a local-first library, deep PDF reading with highlights & notes, citation management, offline full-text search, and cloud sync.
 
@@ -111,8 +111,6 @@ pnpm gen:types       # regenerate API types from openapi.json
 pnpm sync:i18n       # sync zh/en dictionaries from the Papex repo
 ```
 
-Test coverage: frontend ≥80% statement coverage on core modules; Rust ≥85% on `commands/*`, `db/*` and `indexer/*`; E2E covers the P0 flows (auth → library → read → annotate → offline → upload). Cross-device scenarios (desktop ↔ mobile ↔ web) are covered together with the mobile client — see the [development plan](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md).
-
 ---
 
 ## Architecture (highlights)
@@ -121,8 +119,6 @@ Test coverage: frontend ≥80% statement coverage on core modules; Rust ≥85% o
 - **Local-first**: SQLite `papex_local.db` for cache / annotations / progress / sync queue; tantivy for offline full-text index (P2).
 - **Uploads**: PDF submission & import, avatar, paper cover — validated in Rust, uploaded to the Papex server with progress & retry.
 - **Types**: generated from the Papex server `openapi.json` — never hand-written.
-
-See [`docs/development/papex-desktop.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-desktop.md) in the Papex repo for the full development plan.
 
 ---
 

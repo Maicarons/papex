@@ -16,7 +16,8 @@ src/lib/push/       Web Push sender (VAPID, fire-and-forget)
 src/components/     Client components (fetch /api/...)
 drizzle/            SQL migrations + drizzle-kit meta journal
 packages/api-client Zero-dependency cross-end API client skeleton
-docs/               VitePress documentation site (9 languages)
+docs/               VitePress documentation site (9 languages) + project docs
+                    (UPGRADE.md, CONTRIBUTING.md)
 e2e/                Playwright specs (against dockerized Postgres + seeded data)
 ```
 
@@ -65,7 +66,7 @@ npx vitest run               # unit tests
 npm audit --registry=https://registry.npmjs.org --audit-level=high
 ```
 
-E2E (requires the dockerized DB, seeded via `npm run db:seed-arxiv`):
+E2E (requires the dockerized DB, seeded via `npm run db:seed`):
 
 ```bash
 npm run test:e2e             # playwright
@@ -75,7 +76,7 @@ npm run test:e2e             # playwright
 
 - A completed feature: schema migration + service + API + UI + openapi
   fragment + (unit or e2e) test. Incomplete features are the top source of
-  debt in this repo — see the "半成品治理" note in `NEXT-DIRECTIONS.md`.
+  debt in this repo — keep features complete or leave them out.
 - Privacy-aware reviews: public co-reviews, ORCID imports and push all respect
   user intent and stay optional.
 - Docs updates alongside behavior changes (`docs/`, `README*.md`).

@@ -1,7 +1,7 @@
 /**
  * @papex/api-client — zero-dependency typed client for the Papex HTTP API.
  *
- * Phase 0 of the cross-end plan (多端扩展方案): a shared API surface that the
+ * Shared API surface for cross-end clients that the
  * web app, React Native and Electron clients can all consume. The server's
  * OpenAPI document (/api/openapi.json, generated from route.openapi.ts
  * fragments) is the source of truth; this client mirrors the endpoints that

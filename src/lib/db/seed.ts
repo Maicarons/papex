@@ -389,7 +389,7 @@ async function main() {
   // NOTE: no demo papers are seeded here. Every paper in the catalogue MUST
   // carry a PDF (enforced by a CHECK constraint on paper_versions.pdf_url and
   // by the submission/import services). Demo/sample papers are populated with
-  // real arXiv papers via `npm run db:seed-arxiv` instead.
+  // real arXiv papers via a dedicated import instead.
 
   console.log("Seed complete.");
   process.exit(0);

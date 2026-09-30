@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS%20%7C%20iOS-lightgrey.svg)]()
 [![React Native](https://img.shields.io/badge/React%20Native-0.82-61dafb.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../../CONTRIBUTING.md)
 
 Papex Appは、オープンソースの学術文献プラットフォームである[Papex](https://github.com/Maicarons/papex)の公式モバイルクライアントです。Web版の**モバイル代替**として設計されており、論文を読み、アカウントを管理し、最新情報をどこでも確認できます。
 
@@ -103,8 +103,6 @@ npm run gen:types     # openapi.jsonからAPI型を再生成
 npm run sync:i18n     # Papexリポジトリからzh/en辞書を同期
 ```
 
-テストカバレッジ: 単体テストはコアモジュール（`lib/api`、`lib/security`、`lib/storage`、ストア）でステートメントカバレッジ80%以上を目標；E2EはP0フロー（認証 → 参照 → 読書 → ブックマーク → 購読 → デバイス）をカバー。デバイス間シナリオはデスクトップクライアントとともにカバーします（[開発計画](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md)参照）。
-
 ---
 
 ## アーキテクチャ（要点）
@@ -113,8 +111,6 @@ npm run sync:i18n     # Papexリポジトリからzh/en辞書を同期
 - **データ**: セッション／設定／キャッシュにMMKV；PDFファイルはアプリサンドボックスにLRU排除でキャッシュ。
 - **i18n**: i18next、Papexリポジトリから同期したzh/en辞書。
 - **型**: Papexサーバーの `openapi.json` から生成 — 手書きは一切なし。
-
-全文の開発計画については、Papexリポジトリの [`docs/development/papex-app.md`](https://github.com/Maicarons/papex/blob/main/docs/development/papex-app.md) を参照してください。
 
 ---
 
